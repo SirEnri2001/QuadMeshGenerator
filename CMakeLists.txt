@@ -15,11 +15,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_library(qmorph STATIC
   ./src/qmorph_main.cpp
+  ./src/qmorph.h
 )
 
 target_include_directories(qmorph PUBLIC
     ./3rdparty/eigen-3.2.8
-    ./src/animation
+)
+
+add_library(mesh STATIC
+  ./src/meshcomponents.cpp
+  ./src/meshcomponents.h
+)
+
+target_include_directories(mesh PUBLIC
+    ./3rdparty/eigen-3.2.8
 )
 
 # Set up executables/viewers
@@ -57,4 +66,4 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/tinyobj
 )
 
-target_link_libraries(GLMeshViewer PUBLIC qmorph glad glfw imgui tinyobj OpenFBX)
+target_link_libraries(GLMeshViewer PUBLIC qmorph mesh glad glfw imgui tinyobj OpenFBX)
