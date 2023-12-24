@@ -121,6 +121,8 @@ public:
 	}
 };
 
+class MeshOperator;
+
 class Mesh : public Component {
 	std::unique_ptr<std::vector<Vertex>> vertices;
 	std::unique_ptr<std::vector<Halfedge>> halfedges;
@@ -128,18 +130,6 @@ class Mesh : public Component {
 	int vIdSum = 0;
 	int heIdSum = 0;
 	int fIdSum = 0;
-public:
-	const std::vector<Vertex>& getVertices() {
-		return *vertices;
-	}
-
-	const std::vector<Halfedge>& getHalfedge() {
-		return *halfedges;
-	}
-
-	const std::vector<Face>& getFaces() {
-		return *faces;
-	}
 
 	Vertex* createVertex() {
 		vertices->push_back(Vertex(vIdSum++));
@@ -155,5 +145,39 @@ public:
 		faces->push_back(Face(fIdSum++));
 		return &faces->back();
 	}
+
+public:
+	const std::vector<Vertex>& getVertices() {
+		return *vertices;
+	}
+
+	const std::vector<Halfedge>& getHalfedge() {
+		return *halfedges;
+	}
+
+	const std::vector<Face>& getFaces() {
+		return *faces;
+	}
+
+	friend class MeshOperator;
 };
 
+class MeshOperator {
+	Mesh* mesh;
+public:
+	MeshOperator(Mesh* mesh):mesh(mesh)
+	{
+
+	}
+
+
+};
+
+class MeshRecorder {
+	Mesh* mesh;
+public:
+	MeshRecorder(Mesh* mesh) :mesh(mesh)
+	{
+
+	}
+};

@@ -45,7 +45,7 @@ add_subdirectory(./3rdparty/glfw-3.3.2)
 add_subdirectory(./3rdparty/glad)
 
 # Add ImGUI
-add_subdirectory(./3rdparty/imgui-1.77)
+add_subdirectory(./3rdparty/imgui-1.90)
 
 # Add tinyobj
 add_library(tinyobj STATIC
@@ -58,12 +58,23 @@ add_subdirectory(./3rdparty/OpenFBX)
 
 add_executable(GLMeshViewer
     ./src/glmeshviewer_main.cpp
+    ./src/glmeshviewer.cpp
+    ./src/glmeshviewer.h
+    ./src/camera.h
+    ./src/camera.cpp
+    ./src/shader.h
+    ./src/shader.cpp
+    ./src/drawable.h
+    ./src/drawable.cpp
+    ./src/objmodel.cpp
+    ./src/objmodel.h
+
 )
 
 target_include_directories(GLMeshViewer PUBLIC 
-    ./3rdparty/imgui-1.77
+    ./3rdparty/imgui-1.90
     ./3rdparty/glm
     ./3rdparty/tinyobj
 )
 
-target_link_libraries(GLMeshViewer PUBLIC qmorph mesh glad glfw imgui tinyobj OpenFBX)
+target_link_libraries(GLMeshViewer PUBLIC qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32)
