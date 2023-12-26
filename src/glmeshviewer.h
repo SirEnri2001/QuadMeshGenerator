@@ -12,7 +12,7 @@
 #include "camera.h"
 #include "shader.h"
 #include "drawable.h"
-#include "meshcomponents.h"
+#include "mesh/mesh.h"
 
 class Viewer
 {
@@ -58,6 +58,7 @@ protected:
 	Mesh mMesh;
 	MeshDisplay mMeshDisplay;
 	MeshOperator mMeshOperator;
+	MeshIO mMeshIO;
 	std::unique_ptr<Drawable> drawable;
 
 	// Screen size, update in each frame

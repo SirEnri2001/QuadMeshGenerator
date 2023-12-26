@@ -8,6 +8,10 @@ class Vertex;
 class Halfedge;
 class Face;
 class Mesh;
+class MeshOperator;
+class MeshDisplay;
+class MeshIO;
+class MeshRecorder;
 
 typedef std::pair<Halfedge*, Halfedge*> Edge;
 
@@ -181,7 +185,6 @@ public:
 	}
 };
 
-class MeshOperator;
 
 struct pairhash {
 public:
@@ -242,22 +245,11 @@ public:
 		return &faces[id];
 	}
 	friend class MeshOperator;
+	friend class MeshIO;
+	friend class MeshDisplay;
+	friend class MeshRecorder;
 };
 
-class MeshDisplay {
-	Mesh* mesh;
-public:
-	std::vector<glm::vec4> vertexBuffer;
-	std::vector<ID> indices;
-
-	std::vector<glm::vec4> lineSegment;
-	std::vector<glm::vec4> pointScatter;
-
-	glm::vec3 calculateSurfaceNormal(const Face* face);
-
-	MeshDisplay(Mesh* mesh);
-	void create();
-};
 
 //template<class ComponentT>
 //class MeshIterator {
@@ -285,13 +277,7 @@ public:
 //	}
 //};
 
-class MeshOperator {
-	Mesh* mesh;
-public:
-	MeshOperator(Mesh* mesh);
 
-	bool loadObj(const std::string& filename);
-};
 
 class MeshRecorder {
 	Mesh* mesh;

@@ -10,7 +10,7 @@ static void glfw_error_callback(int error, const char* description)
 Viewer::Viewer(const std::string& name) :
 	windowWidth(1920), windowHeight(1080),
 	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)),
-	mMeshOperator(&mMesh),mMeshDisplay(&mMesh)
+	mMeshOperator(&mMesh),mMeshDisplay(&mMesh), mMeshIO(&mMesh)
 	//changed camerea position value to (0, 500, 800) from (0, 100, 500)
 {
 	glfwSetErrorCallback(glfw_error_callback);
@@ -109,7 +109,7 @@ Viewer::Viewer(const std::string& name) :
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
 	drawable = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshOperator.loadObj("../obj/cow.obj");
+	mMeshIO.loadM("../test/data/mesh_214370.m");
 	mMeshDisplay.create();
 }
 

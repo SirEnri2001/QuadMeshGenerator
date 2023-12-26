@@ -23,8 +23,17 @@ target_include_directories(qmorph PUBLIC
 )
 
 add_library(mesh STATIC
-  ./src/meshcomponents.cpp
-  ./src/meshcomponents.h
+  ./src/mesh/meshcomponents.cpp
+  ./src/mesh/meshcomponents.h
+  ./src/mesh/mesh.h
+  ./src/mesh/meshdisplay.cpp
+  ./src/mesh/meshdisplay.h
+  ./src/mesh/meshio.cpp
+  ./src/mesh/meshio.h
+  ./src/mesh/meshoperator.h
+  ./src/mesh/meshoperator.cpp
+  ./src/mesh/misc/parser.h
+  ./src/mesh/misc/strutil.h
 )
 
 target_include_directories(mesh PUBLIC
