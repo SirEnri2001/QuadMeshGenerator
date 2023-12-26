@@ -9,7 +9,8 @@ static void glfw_error_callback(int error, const char* description)
 // Copy from ImGUI/examples/example_glfw_opengl3
 Viewer::Viewer(const std::string& name) :
 	windowWidth(1920), windowHeight(1080),
-	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0))
+	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)),
+	mMeshOperator(&mMesh),mMeshDisplay(&mMesh)
 	//changed camerea position value to (0, 500, 800) from (0, 100, 500)
 {
 	glfwSetErrorCallback(glfw_error_callback);
@@ -106,9 +107,10 @@ Viewer::Viewer(const std::string& name) :
 		"../shader/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
+	drawable = std::make_unique<Drawable>();
 	createGridGround();
-	mObjModel = std::make_unique<ObjModel>();
-	mObjModel->loadObj("../obj/cow.obj");
+	mMeshOperator.loadObj("../obj/cow.obj");
+	mMeshDisplay.create();
 }
 
 Viewer::~Viewer()
@@ -222,6 +224,7 @@ void Viewer::createGUIWindow()
 
 void Viewer::drawScene()
 {
+	
 	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(50));
 	glm::mat4 projView = mCamera.getProjView();
 	drawGridGround(projView);
@@ -231,8 +234,20 @@ void Viewer::drawScene()
 	mModelShader->setVec3("color", glm::vec3(0.8, 0.7, 0.6));
 	mModelShader->setMat4("uModel", model);
 	mModelShader->setMat3("uModelInvTr", glm::inverse(model));
+	glBindVertexArray(drawable->VAO);
 
-	mObjModel->drawObj();
+	// Allocate space and upload the data from CPU to GPU
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->IBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay.indices.size() * sizeof(GLuint), mMeshDisplay.indices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, drawable->VBO);
+	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay.vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay.vertexBuffer.data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+	glBindVertexArray(drawable->VAO);
+	glDrawElements(GL_TRIANGLES, mMeshDisplay.indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 void Viewer::setCallbacks()

@@ -29,6 +29,8 @@ add_library(mesh STATIC
 
 target_include_directories(mesh PUBLIC
     ./3rdparty/eigen-3.2.8
+    ./3rdparty/glm
+    ./3rdparty/tinyobj
 )
 
 # Set up executables/viewers

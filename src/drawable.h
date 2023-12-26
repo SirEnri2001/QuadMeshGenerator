@@ -11,6 +11,7 @@ public:
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		glGenBuffers(1, &EBO);
+		glGenBuffers(1, &IBO);
 	}
 
 	~Drawable()
@@ -18,10 +19,12 @@ public:
 		glDeleteBuffers(1, &VBO);
 		glDeleteBuffers(1, &EBO);
 		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &IBO);
 	}
 
 	GLuint VAO;
 	GLuint VBO;
+	GLuint IBO;
 	GLuint EBO;
 	int elementCount;
 };

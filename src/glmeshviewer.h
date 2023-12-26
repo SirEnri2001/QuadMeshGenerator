@@ -12,7 +12,7 @@
 #include "camera.h"
 #include "shader.h"
 #include "drawable.h"
-#include "objmodel.h"
+#include "meshcomponents.h"
 
 class Viewer
 {
@@ -55,8 +55,10 @@ protected:
 
 	// Some drawables
 	std::unique_ptr<Drawable> mGridGround;
-	std::unique_ptr<ObjModel> mObjModel;
-
+	Mesh mMesh;
+	MeshDisplay mMeshDisplay;
+	MeshOperator mMeshOperator;
+	std::unique_ptr<Drawable> drawable;
 
 	// Screen size, update in each frame
 	int windowWidth = 1920;
