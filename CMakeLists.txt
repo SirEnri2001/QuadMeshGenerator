@@ -14,8 +14,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 # Set up libraries
 
 add_library(qmorph STATIC
-  ./src/qmorph_main.cpp
-  ./src/qmorph.h
+  ./src/qmorph/frontedge_operator.cpp
+  ./src/qmorph/frontedge_operator.h
+  ./src/qmorph/qmorph.cpp
+  ./src/qmorph/qmorph.h
+  ./src/qmorph/qmorph_main.cpp
+  ./src/qmorph/qmorph_operator.cpp
+  ./src/qmorph/qmorph_operator.h
+  ./src/qmorph/sidedefine_operator.cpp
+  ./src/qmorph/sidedefine_operator.h
 )
 
 target_include_directories(qmorph PUBLIC
