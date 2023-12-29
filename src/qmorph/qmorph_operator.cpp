@@ -71,6 +71,7 @@ int QMorphOperator::doSmooth(int epoch) {
 		}
 		i++;
 	}
+	return 0;
 }
 
 int QMorphOperator::doSeam() {
@@ -142,7 +143,7 @@ int QMorphOperator::doSeam() {
 	//		return -1;
 	//	}
 	//} while (feIter = mesh->getNextFe(feIter), feIter != getFrontEdgeGroup());
-	//return 0;
+	return 0;
 }
 
 void QMorphOperator::create() {

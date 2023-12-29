@@ -56,11 +56,11 @@ protected:
 	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
 	glm::vec2 uv = glm::vec2(0,0);
-	bool boundary = false;
+	bool boundary = true;
+public:
 	inline Halfedge* getHalfedge() {
 		return this->halfedge;
 	}
-public:
 	Vertex(ID id);
 
 	Vertex();
@@ -105,6 +105,8 @@ public:
 	friend class MeshIO;
 	friend class MeshDisplay;
 	friend class MeshRecorder;
+	friend class Face;
+	friend class Halfedge;
 };
 
 class Halfedge : public Component {
@@ -116,6 +118,7 @@ protected:
 	Halfedge* sym = nullptr;
 
 	Face* face;
+public:
 	inline Vertex* getSource() {
 		return this->source;
 	}
@@ -134,7 +137,6 @@ protected:
 	inline Face* getFace() {
 		return face;
 	}
-public:
 	Halfedge(ID id);
 	Halfedge(const Halfedge& he);
 
@@ -161,6 +163,14 @@ public:
 	}
 	inline void setFace(Face* f) {
 		face = f;
+		if (f) {
+			target->boundary = false;
+			source->boundary = false;
+		}
+		else {
+			target->boundary = true;
+			source->boundary = true;
+		}
 	}
 	inline const Vertex* getSource() const {
 		return this->source;
@@ -207,11 +217,11 @@ public:
 
 class Face : public Component {
 protected:
-	Halfedge* halfedge = nullptr; 
+	Halfedge* halfedge = nullptr;
+public:
 	inline Halfedge* getHalfedge() {
 		return this->halfedge;
 	}
-public:
 	Face(ID id);
 
 	Face();
@@ -255,33 +265,41 @@ class Mesh {
 	ID heIdSum = 0;
 	ID fIdSum = 0;
 
+public:
+	Mesh();
 	Vertex* createVertex();
 
 	Halfedge* createHalfedge(Vertex* source, Vertex* target);
 
 	Face* createFace();
 
-	inline Halfedge* getHalfedge(Vertex* source, Vertex* target) {
+	void deleteFace(Face* face) {
+		Halfedge* he = face->getHalfedge();
+		do
+		{
+			he->setFace(nullptr);
+			
+		} while (he = he->getNext(), he!=face->getHalfedge());
+	}
+
+	inline const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const {
+		return vertexHalfedge.find({ source->getId(), target->getId() })->second;
+	}
+
+	inline Halfedge* getHalfedge(const Vertex* source, const Vertex* target) {
 		return vertexHalfedge[{source->getId(), target->getId()}];
 	}
 
-public:
-	Mesh();
-
-	inline const std::unordered_map<ID, Vertex>& getVertices() {
+	inline const std::unordered_map<ID, Vertex>& getVertices() const {
 		return vertices;
 	}
 
-	inline const std::unordered_map<ID, Halfedge>& getHalfedges() {
+	inline const std::unordered_map<ID, Halfedge>& getHalfedges() const {
 		return halfedges;
 	}
 
-	inline const std::unordered_map<ID, Face>& getFaces() {
+	inline const std::unordered_map<ID, Face>& getFaces() const {
 		return faces;
-	}
-
-	inline const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) {
-		return vertexHalfedge[{source->getId(), target->getId()}];
 	}
 
 	inline Vertex* vertexAt(ID id) {

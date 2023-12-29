@@ -1,8 +1,9 @@
 #pragma once
 #include "../mesh/mesh.h"
+#include "../mesh/meshoperator.h"
 #include <glm.hpp>
 
-class ComponentOperator : public MeshOperator {
+class ComponentOperator : public MeshInteriorOperator {
 public:
 	const Vertex* splitEdge(const Halfedge* he, glm::vec4 pos);
 	const Halfedge* swapEdge(const Halfedge* he);

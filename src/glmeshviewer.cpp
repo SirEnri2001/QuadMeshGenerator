@@ -1,4 +1,7 @@
 #include "glmeshviewer.h"
+#include "mesh/meshdisplay.h"
+#include "mesh/meshoperator.h"
+#include "mesh/meshio.h"
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -10,7 +13,10 @@ static void glfw_error_callback(int error, const char* description)
 Viewer::Viewer(const std::string& name) :
 	windowWidth(1920), windowHeight(1080),
 	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)),
-	mMeshOperator(&mMesh),mMeshDisplay(&mMesh), mMeshIO(&mMesh)
+	mMesh(std::make_unique<Mesh>()),
+	mMeshOperator(std::make_unique<MeshOperator>(mMesh.get())), 
+	mMeshDisplay(std::make_unique<MeshDisplay>(mMesh.get())),
+	mMeshIO(std::make_unique<MeshIO>(mMesh.get()))
 	//changed camerea position value to (0, 500, 800) from (0, 100, 500)
 {
 	glfwSetErrorCallback(glfw_error_callback);
@@ -104,13 +110,13 @@ Viewer::Viewer(const std::string& name) :
 
 	mPointShader = std::make_unique<Shader>("../glsl/point.vert.glsl", "../glsl/point.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
-		"../shader/curve.geom.glsl");
+		"../glsl/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
 	drawable = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO.loadM("../test/data/mesh_214370.m");
-	mMeshDisplay.create();
+	mMeshIO->loadM("../test/data/mesh_214370.m");
+	mMeshDisplay->create();
 }
 
 Viewer::~Viewer()
@@ -238,16 +244,16 @@ void Viewer::drawScene()
 
 	// Allocate space and upload the data from CPU to GPU
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay.indices.size() * sizeof(GLuint), mMeshDisplay.indices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->indices.size() * sizeof(GLuint), mMeshDisplay->indices.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, drawable->VBO);
-	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay.vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay.vertexBuffer.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->vertexBuffer.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
 	glBindVertexArray(drawable->VAO);
-	glDrawElements(GL_TRIANGLES, mMeshDisplay.indices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, mMeshDisplay->indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 void Viewer::setCallbacks()

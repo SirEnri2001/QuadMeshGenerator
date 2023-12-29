@@ -55,10 +55,10 @@ protected:
 
 	// Some drawables
 	std::unique_ptr<Drawable> mGridGround;
-	Mesh mMesh;
-	MeshDisplay mMeshDisplay;
-	MeshOperator mMeshOperator;
-	MeshIO mMeshIO;
+	std::unique_ptr<Mesh> mMesh;
+	std::unique_ptr<MeshDisplay> mMeshDisplay;
+	std::unique_ptr<MeshOperator> mMeshOperator;
+	std::unique_ptr<MeshIO> mMeshIO;
 	std::unique_ptr<Drawable> drawable;
 
 	// Screen size, update in each frame
