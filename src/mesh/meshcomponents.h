@@ -56,6 +56,10 @@ protected:
 	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
 	glm::vec2 uv = glm::vec2(0,0);
+	bool boundary = false;
+	inline Halfedge* getHalfedge() {
+		return this->halfedge;
+	}
 public:
 	Vertex(ID id);
 
@@ -65,7 +69,7 @@ public:
 
 	~Vertex();
 
-	inline Halfedge* getHalfedge() const {
+	inline const Halfedge* getHalfedge() const {
 		return this->halfedge;
 	}
 	inline void setHalfedge(Halfedge* halfedge) {
@@ -74,11 +78,11 @@ public:
 	inline void setPosition(glm::vec4 pos) {
 		position = pos;
 	}
-	inline glm::vec4 getPosition() {
+	inline glm::vec4 getPosition() const {
 		return position;
 	}
 
-	inline glm::vec3 getNormal() {
+	inline glm::vec3 getNormal() const {
 		return normal;
 	}
 
@@ -90,32 +94,53 @@ public:
 		this->uv = uv;
 	}
 
-	inline glm::vec2 getUV() {
+	inline glm::vec2 getUV() const {
 		return uv;
 	}
+
+	inline bool isBoundary() const {
+		return boundary;
+	}
+	friend class MeshInteriorOperator;
+	friend class MeshIO;
+	friend class MeshDisplay;
+	friend class MeshRecorder;
 };
 
 class Halfedge : public Component {
 protected:
-	Vertex* source=nullptr;
-	Vertex* target=nullptr;
-	Halfedge* next=nullptr;
-	Halfedge* prev=nullptr;
+	Vertex* source = nullptr;
+	Vertex* target = nullptr;
+	Halfedge* next = nullptr;
+	Halfedge* prev = nullptr;
 	Halfedge* sym = nullptr;
 
 	Face* face;
+	inline Vertex* getSource() {
+		return this->source;
+	}
+	inline Vertex* getTarget() {
+		return this->target;
+	}
+	inline Halfedge* getNext() {
+		return next;
+	}
+	inline Halfedge* getPrev() {
+		return prev;
+	}
+	inline Halfedge* getSym() {
+		return sym;
+	}
+	inline Face* getFace() {
+		return face;
+	}
 public:
 	Halfedge(ID id);
 	Halfedge(const Halfedge& he);
 
 	Halfedge();
 	~Halfedge();
-	inline Vertex* getSource() const {
-		return this->source;
-	}
-	inline Vertex* getTarget() const {
-		return this->target;
-	}
+
 	inline void setSource(Vertex* v) {
 		source = v;
 	}
@@ -134,24 +159,38 @@ public:
 		prev = he;
 		he->next = this;
 	}
-	inline Halfedge* getNext() {
-		return next;
-	}
-	inline Halfedge* getPrev() {
-		return prev;
-	}
-	inline Halfedge* getSym() {
-		return sym;
-	}
-	inline Face* getFace() {
-		return face;
-	}
 	inline void setFace(Face* f) {
 		face = f;
 	}
-	inline bool isBoundary() {
+	inline const Vertex* getSource() const {
+		return this->source;
+	}
+	inline const Vertex* getTarget() const {
+		return this->target;
+	}
+	inline const Halfedge* getNext() const {
+		return next;
+	}
+	inline const Halfedge* getPrev() const {
+		return prev;
+	}
+	inline const Halfedge* getSym() const {
+		return sym;
+	}
+	inline Face* getFace() const {
+		return face;
+	}
+
+	inline bool isBoundary() const {
 		return face == nullptr;
 	}
+	inline float getLength() const {
+		return glm::length(target->getPosition() - source->getPosition());
+	}
+	friend class MeshInteriorOperator;
+	friend class MeshIO;
+	friend class MeshDisplay;
+	friend class MeshRecorder;
 };
 
 //void setSym(Halfedge* he1, Halfedge* he2) {
@@ -168,7 +207,10 @@ public:
 
 class Face : public Component {
 protected:
-	Halfedge* halfedge = nullptr;
+	Halfedge* halfedge = nullptr; 
+	inline Halfedge* getHalfedge() {
+		return this->halfedge;
+	}
 public:
 	Face(ID id);
 
@@ -177,12 +219,17 @@ public:
 	Face(const Face& face);
 
 	~Face();
-	inline Halfedge* getHalfedge() const {
+	inline const Halfedge* getHalfedge() const {
 		return this->halfedge;
 	}
+	
 	inline void setHalfedge(Halfedge* he) {
 		halfedge = he;
 	}
+	friend class MeshInteriorOperator;
+	friend class MeshIO;
+	friend class MeshDisplay;
+	friend class MeshRecorder;
 };
 
 
@@ -214,6 +261,10 @@ class Mesh {
 
 	Face* createFace();
 
+	inline Halfedge* getHalfedge(Vertex* source, Vertex* target) {
+		return vertexHalfedge[{source->getId(), target->getId()}];
+	}
+
 public:
 	Mesh();
 
@@ -229,7 +280,7 @@ public:
 		return faces;
 	}
 
-	inline Halfedge* getHalfedge(Vertex* source, Vertex* target) {
+	inline const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) {
 		return vertexHalfedge[{source->getId(), target->getId()}];
 	}
 
@@ -244,7 +295,7 @@ public:
 	inline Face* faceAt(ID id) {
 		return &faces[id];
 	}
-	friend class MeshOperator;
+	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
 	friend class MeshRecorder;

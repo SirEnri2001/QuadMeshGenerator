@@ -1,4 +1,9 @@
-#include "meshcomponents.h"
-#include "meshdisplay.h"
-#include "meshio.h"
-#include "meshoperator.h"
+class Vertex;
+class Halfedge;
+class Face;
+class Mesh;
+class MeshRecorder;
+class MeshDisplay;
+class MeshIO;
+class MeshOperator;
+class MeshInteriorOperator;

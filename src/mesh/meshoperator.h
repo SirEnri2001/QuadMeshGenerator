@@ -1,9 +1,15 @@
-#include "meshcomponents.h"
+#pragma once
+#include "../mesh/mesh.h"
 
 class MeshOperator {
+protected:
 	Mesh* mesh;
 public:
 	MeshOperator(Mesh* mesh);
+	virtual void create();
+};
 
-	bool loadObj(const std::string& filename);
+class MeshInteriorOperator : public MeshOperator {
+public:
+	MeshInteriorOperator(Mesh* mesh);
 };

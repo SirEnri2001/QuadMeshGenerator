@@ -23,10 +23,18 @@ add_library(qmorph STATIC
   ./src/qmorph/qmorph_operator.h
   ./src/qmorph/sidedefine_operator.cpp
   ./src/qmorph/sidedefine_operator.h
+  ./src/qmorph/component_operator.h
+  ./src/qmorph/component_operator.cpp
+  ./src/qmorph/util.h
+  ./src/qmorph/util.cpp
+  ./src/qmorph/smoother.h
+  ./src/qmorph/smoother.cpp
+  ./src/qmorph/frontedge.h
 )
 
 target_include_directories(qmorph PUBLIC
     ./3rdparty/eigen-3.2.8
+    ./3rdparty/glm
 )
 
 add_library(mesh STATIC

@@ -4,7 +4,7 @@
 
 glm::vec3 MeshDisplay::calculateSurfaceNormal(const Face* face) {
 	glm::vec3 result(0, 0, 0);
-	Halfedge* he = face->getHalfedge();
+	const Halfedge* he = face->getHalfedge();
 	do {
 		result[0] +=
 			(he->getSource()->getPosition()[1] - he->getTarget()->getPosition()[1])
@@ -24,7 +24,7 @@ MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
 }
 void MeshDisplay::create() {
 	using namespace glm;
-	std::vector<Vertex*> vertsUntriangulated;
+	std::vector<const Vertex*> vertsUntriangulated;
 	int ind = 0;
 	for (auto& faceIndex : mesh->getFaces()) {
 		int index = faceIndex.first;
@@ -33,7 +33,7 @@ void MeshDisplay::create() {
 		glm::vec4 normal4 = glm::vec4(normal, 1.0);
 
 		vertsUntriangulated.clear();
-		Halfedge* he = face->getHalfedge();
+		const Halfedge* he = face->getHalfedge();
 		do {
 			vertsUntriangulated.push_back(he->getTarget());
 		} while (he = he->getNext(), he != face->getHalfedge());
@@ -53,7 +53,7 @@ void MeshDisplay::create() {
 		// trianglualte
 		// find the most left convex point
 		he = face->getHalfedge();
-		Vertex* currentConvex = nullptr;
+		const Vertex* currentConvex = nullptr;
 		do {
 			//  (v1)-->(v2)
 			//        /
@@ -73,7 +73,7 @@ void MeshDisplay::create() {
 
 		// convex polygon triangulate
 		if (true || currentConvex == nullptr) {
-			Halfedge* he = face->getHalfedge();
+			const Halfedge* he = face->getHalfedge();
 			int startInd = 1;
 			do {
 				vertexBuffer.push_back(he->getTarget()->getPosition());

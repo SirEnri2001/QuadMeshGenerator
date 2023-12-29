@@ -99,6 +99,8 @@ bool MeshIO::loadObj(const std::string& filename) {
 			he1 = he1->getNext()->getSym();
 		}
 		he->setPrev(he1);
+		he->getTarget()->boundary = true;
+		he->getSource()->boundary = true;
 	}
 	return true;
 }
@@ -218,6 +220,8 @@ bool MeshIO::loadM(const std::string& filename) {
 			he1 = he1->getNext()->getSym();
 		}
 		he->setPrev(he1);
+		he->getTarget()->boundary = true;
+		he->getSource()->boundary = true;
 	}
 	return true;
 }
