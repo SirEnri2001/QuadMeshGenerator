@@ -255,11 +255,11 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 
 	switch (horizontalSideSeek(lfe, rfe, resultUpSide)) {
 	case SideDefineResult::FrontEdgeContact:
-		compOperator->swapEdge(resultUpSide->getPrev());
+		compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
 		feOperator->seperateFrontLoop(resultUpSide->getNext());
 		return 1;
 	case SideDefineResult::Succeeded:
-		compOperator->swapEdge(resultUpSide->getPrev());
+		compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
 		setSide(lfe, resultUpSide->getNext());
 		return 0;
 	default:
@@ -275,7 +275,7 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 		glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
 		float* km = solveKMEquation(glm::vec3(v1), glm::vec3(v2), glm::vec3(bisector));
 		glm::vec4 p = bisector * (km[0] + FLT_EPSILON * 10.0F) + pivotVertex->getPosition();
-		const Vertex* spliter = compOperator->splitEdge(he2->getPrev(), p);
+		const Vertex* spliter = compOperator->splitEdge(he2->getPrev()->getMutable(), p);
 		const Halfedge* newHe = mesh->getHalfedge(pivotVertex, spliter);
 		assert(newHe);
 		setSide(lfe, newHe);
@@ -290,7 +290,7 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 		return 1;
 	case SideDefineResult::Succeeded:
 		setSide(lfe, NULL);
-		const Vertex* v = compOperator->splitEdge(resultUpSide,
+		const Vertex* v = compOperator->splitEdge(resultUpSide->getMutable(),
 			(resultUpSide->getSource()->getPosition() + resultUpSide->getTarget()->getPosition()) / 2.f);
 		resultUpSide = mesh->getHalfedge(lfe->he->getTarget(), v);
 		setSide(lfe, resultUpSide);
@@ -303,12 +303,28 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 	setSide(lfe, NULL);
 	setSide(rfe, NULL);
 	if (compOperator->isQuad(rfe->getNextFe()->he->getFace())) {
-		compOperator->buildQuad(lfe->he, rfe->he, rfe->getNextFe()->he->getPrev()->getSym());
+		compOperator->buildQuad(
+			lfe->he->getMutable(),
+			rfe->he->getMutable(),
+			rfe->getNextFe()->he->getPrev()->getSym()->getMutable(),
+			feOperator->edgeRecovery(
+				lfe->he->getSource()->getMutable(), 
+				rfe->getNextFe()->he->getPrev()->getSym()->getTarget()->getMutable()
+			)->getMutable()
+		);
 		rfe->top = lfe->he->getPrev();
 		setSide(lfe->getPrevFe(), rfe->top->getSym());
 	}
 	else if (compOperator->isQuad(lfe->getPrevFe()->he->getFace())) {
-		compOperator->buildQuad(lfe->getPrevFe()->he->getNext()->getSym(), lfe->he, rfe->he);
+		compOperator->buildQuad(
+			lfe->getPrevFe()->he->getNext()->getSym()->getMutable(), 
+			lfe->he->getMutable(),
+			rfe->he->getMutable(),
+			feOperator->edgeRecovery(
+				lfe->getPrevFe()->he->getNext()->getSym()->getSource()->getMutable(),
+				rfe->he->getTarget()->getMutable()
+			)->getMutable()
+		);
 		lfe->top = rfe->he->getNext();
 		setSide(rfe, lfe->top);
 	}
@@ -316,7 +332,15 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 		if (frontEdgeSideDefine(lfe->getPrevFe(), lfe)) { //fail to define side edge
 			return 1; //reclassify corner must be called again
 		}
-		compOperator->buildQuad(getLeftSide(lfe), lfe->he, rfe->he);
+		compOperator->buildQuad(
+			getLeftSide(lfe)->getMutable(),
+			lfe->he->getMutable(),
+			rfe->he->getMutable(),
+			feOperator->edgeRecovery(
+				getLeftSide(lfe)->getSource()->getMutable(),
+				rfe->he->getTarget()->getMutable()
+			)->getMutable()
+		);
 		setSide(lfe->getPrevFe(), lfe->he->getPrev()->getSym());
 		setSide(rfe, rfe->he->getNext());
 	}
@@ -377,7 +401,15 @@ int SideDefineOperator::doCornerGenerate() {
 				feOperator->setFront(rfeNext->he, false);
 				feOperator->setFront(rfe->he, false);
 				feOperator->setFront(lfe->he, false);
-				compOperator->buildQuad(lfe->he, rfe->he, rfeNext->he);
+				compOperator->buildQuad(
+					lfe->he->getMutable(),
+					rfe->he->getMutable(),
+					rfeNext->he->getMutable(),
+					feOperator->edgeRecovery(
+						lfe->he->getSource()->getMutable(),
+						rfeNext->he->getTarget()->getMutable()
+					)->getMutable()
+				);
 				const Halfedge* newFeHe = rfeNext->he->getNext()->getSym();
 				FrontEdge* newFe = feOperator->setFront(newFeHe, true);
 				feOperator->setNextFe(newFe, nnRfe);

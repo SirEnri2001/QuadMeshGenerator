@@ -124,7 +124,7 @@ int FrontEdgeOperator::initFrontEdgeGroup() {
 	v2 = longestFE->he->getTarget();
 	const Halfedge* longestHE = longestFE->he;
 	setFront(longestHE, false);
-	vNew = compOperator->splitEdge(longestHE,
+	vNew = compOperator->splitEdge(longestHE->getMutable(),
 		0.5f * (longestHE->getTarget()->getPosition() + longestHE->getSource()->getPosition()));
 
 	FrontEdge* fe1 = setFront(mesh->getHalfedge(v1, vNew), true);
@@ -220,7 +220,7 @@ int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
 	//         |v
 	//---fe2->(v1)--fe3-->
 	if (fe3->he->getTarget() == fe4->he->getSource() || fe1->he->getTarget() == fe2->he->getSource()) {
-		compOperator->swapEdge(cutPos);
+		compOperator->swapEdge(cutPos->getMutable());
 		return 0;
 	}
 
@@ -256,7 +256,7 @@ int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
 	sideOperator->setSide(fe2, NULL);
 	// ensure the connectivity (bidirection linked list)
 	if (std::min(count_fe1, count_fe2) % 2 == 1) {
-		const Vertex* mid = compOperator->splitEdge(cutPos, (vertex1->getPosition() + vertex2->getPosition()) / 2.0f);
+		const Vertex* mid = compOperator->splitEdge(cutPos->getMutable(), (vertex1->getPosition() + vertex2->getPosition()) / 2.0f);
 		FrontEdge* fe5 = setFront(mesh->getHalfedge(vertex2, mid), true);
 		FrontEdge* fe6 = setFront(mesh->getHalfedge(vertex1, mid), true);
 		FrontEdge* fe7 = setFront(mesh->getHalfedge(mid, vertex2), true);
@@ -367,4 +367,100 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 		popFrontEdgeGroup();
 	}
 	return true;
+}
+
+typedef struct FaceIterTreeNode
+{
+	struct FaceIterTreeNode* parent;
+	std::unique_ptr<struct FaceIterTreeNode> child[3];
+	const Halfedge* parentConnectedHe;
+	const Face* face;
+	int childNum;
+}FaceIterTreeNode;
+
+// Nc & Nd must not connected
+// Topology version of calculateRambdaSet
+std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* Nc, const Vertex* Nd) {
+	std::list<std::unique_ptr<FaceIterTreeNode>> roots;
+	std::list<FaceIterTreeNode*>faceIterTrees;
+	std::list<const Face*> traversedFace;
+
+	const Halfedge* he = Nc->getHalfedge();
+	// Init the face-face tree
+	do
+	{
+		if (compOperator->isQuad(he->getFace())) {
+			continue;
+		}
+		roots.push_back(std::make_unique<FaceIterTreeNode>());
+		traversedFace.push_back(he->getFace());
+		FaceIterTreeNode* root = roots.back().get();
+		root->parent = NULL;
+		root->parentConnectedHe = NULL;
+		//root->childNum = 0;
+		root->face = he->getFace();
+		faceIterTrees.push_back(root);
+	} while (he = he->getNext()->getSym(), he != Nc->getHalfedge());
+	assert(faceIterTrees.size() > 0); // find at least one triangular face around Nc
+	FaceIterTreeNode* targetTree = NULL;
+	// BFS traverse f-f tree until find the target vertex Nd
+	while (targetTree == NULL) {
+		FaceIterTreeNode* curTree = faceIterTrees.front();
+		faceIterTrees.pop_front();
+		int childIdx = 0;
+		const Halfedge* he = curTree->face->getHalfedge();
+		do {
+			const Face* attachedFace = he->getSym()->getFace();
+			if (attachedFace && !compOperator->isQuad(attachedFace)
+				&& find(traversedFace.begin(), traversedFace.end(), attachedFace) == traversedFace.end()
+				&& !isFront(he)
+				&& !sideOperator->isSide(he)
+				&& !sideOperator->isSide(he->getSym())
+				)
+			{
+				traversedFace.push_back(attachedFace);
+				std::unique_ptr<FaceIterTreeNode> unewNode = std::make_unique<FaceIterTreeNode>();
+				FaceIterTreeNode* newNode = unewNode.get();
+				newNode->face = attachedFace;
+				newNode->parentConnectedHe = he->getSym();
+				newNode->parent = curTree;
+				curTree->child[childIdx++] = std::move(unewNode);
+				curTree->childNum++;
+				if (he->getSym()->getNext()->getTarget() == Nd) {
+					targetTree = newNode;
+					break;
+				}
+				else {
+					faceIterTrees.push_back(newNode);
+				}
+			}
+		} while (he = he->getNext(), he != curTree->face->getHalfedge());
+	}
+	std::list<const Halfedge*>* rambdaSet = new std::list<const Halfedge*>();
+	while (targetTree->parent) {
+		rambdaSet->push_back(targetTree->parentConnectedHe);
+		targetTree = targetTree->parent;
+	}
+	return rambdaSet;
+}
+
+const Halfedge* FrontEdgeOperator::edgeRecovery(Vertex* Nc, Vertex* Nd) {
+	assert(Nd != Nc);
+	while (mesh->getHalfedge(Nc, Nd) == NULL) {
+		auto lambdaSet = calculateRambdaSet(Nc, Nd);
+		assert(lambdaSet);
+		while (lambdaSet->size() > 0) {
+			if (mesh->getHalfedge(
+				lambdaSet->front()->getNext()->getTarget(),
+				lambdaSet->front()->getSym()->getNext()->getTarget()
+			)) {
+				assert(lambdaSet->size() > 1);
+				lambdaSet->push_back(lambdaSet->front());
+				lambdaSet->pop_front();
+			}
+			compOperator->swapEdge(lambdaSet->front()->getMutable());
+			lambdaSet->pop_front();
+		}
+	}
+	return mesh->getHalfedge(Nc, Nd);
 }

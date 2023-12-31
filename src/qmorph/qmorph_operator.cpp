@@ -16,7 +16,11 @@ int QMorphOperator::doQMorphProcess() {
 			sideOperator->setSide(fe->getNextFe(), NULL);
 			sideOperator->setSide(fe->getNextFe()->getNextFe(), NULL);
 			sideOperator->setSide(fe->getPrevFe(), NULL);
-			compOperator->buildQuad(fe->getPrevFe()->getPrevFe()->he, fe->getPrevFe()->he, fe->he, fe->getNextFe()->he);
+			compOperator->buildQuad(
+				fe->getPrevFe()->getPrevFe()->he->getMutable(),
+				fe->getPrevFe()->he->getMutable(),
+				fe->he->getMutable(),
+				fe->getNextFe()->he->getMutable());
 			feOperator->setFront(fe->getPrevFe()->getPrevFe()->he, false);
 			feOperator->setFront(fe->getPrevFe()->he, false);
 			feOperator->setFront(fe->getNextFe()->he, false);
@@ -53,7 +57,10 @@ int QMorphOperator::doEdgeRecovery() {
 		if (iter->needTop) {
 			FrontEdge* frontHe = iter;
 			// left and right side & topology check
-			compOperator->buildQuad(sideOperator->getLeftSide(frontHe), frontHe->he, sideOperator->getRightSide(frontHe));
+			compOperator->buildQuad(
+				sideOperator->getLeftSide(frontHe)->getMutable(), 
+				frontHe->he->getMutable(), 
+				sideOperator->getRightSide(frontHe)->getMutable());
 			frontHe->setTop(frontHe->he->getNext()->getNext());
 		}
 	} while (iter = iter->getNextFe(), iter != feOperator->getFrontEdgeGroup());

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <glm.hpp>
+
 class Vertex;
 class Halfedge;
 class Face;
@@ -101,6 +102,11 @@ public:
 	inline bool isBoundary() const {
 		return boundary;
 	}
+
+	inline Vertex* getMutable() const {
+		return const_cast<Vertex*>(this);
+	}
+
 	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
@@ -197,6 +203,9 @@ public:
 	inline float getLength() const {
 		return glm::length(target->getPosition() - source->getPosition());
 	}
+	inline Halfedge* getMutable() const {
+		return const_cast<Halfedge*>(this);
+	}
 	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
@@ -236,6 +245,9 @@ public:
 	inline void setHalfedge(Halfedge* he) {
 		halfedge = he;
 	}
+	inline Face* getMutable() const {
+		return const_cast<Face*>(this);
+	}
 	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
@@ -267,11 +279,24 @@ class Mesh {
 
 public:
 	Mesh();
+	enum MeshState {
+
+	};
 	Vertex* createVertex();
 
 	Halfedge* createHalfedge(Vertex* source, Vertex* target);
 
 	Face* createFace();
+
+	void createFace(Halfedge* he) {
+		Face* face = createFace();
+		Halfedge* he1 = he;
+		do
+		{
+			he1->setFace(face);
+
+		} while (he1 = he1->getNext(), he1 != he);
+	}
 
 	void deleteFace(Face* face) {
 		Halfedge* he = face->getHalfedge();
@@ -280,14 +305,90 @@ public:
 			he->setFace(nullptr);
 			
 		} while (he = he->getNext(), he!=face->getHalfedge());
+		faces.erase(faces.find(face->getId()));
+	}
+
+	void deleteEdge(Halfedge* he) {
+
+		// set source & target vertex to another valid halfedge;
+		if (he->getNext()->getSym() != he) {
+			he->getTarget()->setHalfedge(he->getNext()->getSym());
+			he->getPrev()->setNext(he->getSym()->getNext());
+		}
+		else {
+			he->getTarget()->setHalfedge(nullptr);
+		}
+		if (he->getPrev()->getSym() != he) {
+			he->getSource()->setHalfedge(he->getPrev()->getSym());
+			he->getSym()->getPrev()->setNext(he->getNext());
+		}
+		else {
+			he->getSource()->setHalfedge(nullptr);
+		}
+
+		Vertex* v1 = he->getSource();
+		Vertex* v2 = he->getTarget();
+		vertexHalfedge[{v1->getId(), v2->getId()}] = nullptr;
+		vertexHalfedge[{v2->getId(), v1->getId()}] = nullptr;
+		halfedges.erase(halfedges.find(he->getSym()->getId()));
+		halfedges.erase(halfedges.find(he->getId()));
+	}
+
+	void deleteVertex(Vertex* v) {
+		vertices.erase(vertices.find(v->getId()));
+	}
+
+	inline Halfedge* getBoundary(Vertex* v) {
+		if (v->getHalfedge() == nullptr) {
+			return nullptr;
+		}
+		Halfedge* he = v->getHalfedge();
+		do {
+			if (he->isBoundary()) {
+				return he;
+			}
+		} while (he = he->getNext()->getSym(), he != v->getHalfedge());
+		return nullptr;
+	}
+
+	void createEdge(Vertex* v1, Vertex* v2) {
+		Halfedge* v1inbhe = getBoundary(v1);
+		Halfedge* v1outbhe = v1inbhe->getNext();
+		Halfedge* v2inbhe = getBoundary(v2);
+		Halfedge* v2outbhe = v2inbhe->getNext();
+		Halfedge* he12 = createHalfedge(v1, v2);
+		Halfedge* he21 = createHalfedge(v2, v1);
+		he12->setSym(he21);
+		if (v1inbhe) {
+			v1inbhe->setNext(he12);
+			he21->setNext(v1outbhe);
+		}
+		else {
+			he21->setNext(he12);
+		}
+		if (v2inbhe) {
+			he12->setNext(v2outbhe);
+			v2inbhe->setNext(he21);
+		}
+		else {
+			he12->setNext(he21);
+		}
 	}
 
 	inline const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const {
-		return vertexHalfedge.find({ source->getId(), target->getId() })->second;
+		auto& iter = vertexHalfedge.find({ source->getId(), target->getId() });
+		if (iter == vertexHalfedge.end()) {
+			return nullptr;
+		}
+		return iter->second;
 	}
 
 	inline Halfedge* getHalfedge(const Vertex* source, const Vertex* target) {
-		return vertexHalfedge[{source->getId(), target->getId()}];
+		auto iter = vertexHalfedge.find({ source->getId(), target->getId() });
+		if (iter == vertexHalfedge.end()) {
+			return nullptr;
+		}
+		return iter->second;
 	}
 
 	inline const std::unordered_map<ID, Vertex>& getVertices() const {

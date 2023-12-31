@@ -55,6 +55,7 @@ target_include_directories(mesh PUBLIC
     ./3rdparty/eigen-3.2.8
     ./3rdparty/glm
     ./3rdparty/tinyobj
+    ./3rdparty/boost_1_82_0
 )
 
 # Set up executables/viewers

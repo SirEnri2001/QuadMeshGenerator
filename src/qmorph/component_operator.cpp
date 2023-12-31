@@ -1,5 +1,6 @@
 #include "component_operator.h"
 #include "../mesh/meshcomponents.h"
+#include <queue>
 
 //             v1
 //            /  \
@@ -13,95 +14,230 @@
 //            \  /
 //             v2
 // Only allowed in triangular mesh
-const Vertex* ComponentOperator::splitEdge(const Halfedge* coldHe, glm::vec4 pos)
+const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 {
-	Halfedge* oldHe = const_cast<Halfedge*>(coldHe);
 	Halfedge* oldEdge = oldHe;
 	Vertex* newVertex = mesh->createVertex();
-	newVertex->setPosition(pos);
+	newVertex->setPosition(glm::vec4(pos,1.0));
 	const Vertex* va = oldHe->getSource();
 	const Vertex* vb = oldHe->getTarget();
 	const Vertex* v1 = oldHe->getNext()->getTarget();
 	const Vertex* v2 = oldHe->getSym()->getNext()->getTarget();
 	bool isBoundary0 = oldHe->isBoundary();
 	bool isBoundary1 = oldHe->getSym()->isBoundary();
-	Halfedge* bhe1 = NULL, * bhe2 = NULL;
-
-	if (isBoundary0) {
-		bhe1 = oldHe->getPrev();
-		bhe2 = oldHe->getNext();
-	}
-	if (isBoundary1) {
-		bhe1 = oldHe->getSym()->getNext()->getSym();
-		bhe2 = oldHe->getSym()->getPrev()->getSym();
-	}
-
 	if (!isBoundary0) {
 		mesh->deleteFace(oldHe->getFace());
 	}
 	if (!isBoundary1) {
 		mesh->deleteFace(oldHe->getSym()->getFace());
 	}
-	return nullptr;
-	//mesh->setFace(oldHe, NULL);
-	//setFace(halfedgeSym(oldHe), NULL);
-	//unsetHalfedge(halfedgeVertex(oldHe), oldHe);
-	//unsetHalfedge(halfedgeVertex(halfedgeSym(oldHe)), halfedgeSym(oldHe));
-	//disconnect(oldEdge);
-	//deleteEdge(oldEdge);
-	//createEdge(va, newVertex);
-	//createEdge(newVertex, vb);
-	//if (!isBoundary0) {
-	//	createFace(newVertex, vb, v1);
-	//	createFace(va, newVertex, v1);
-	//}
-	//if (!isBoundary1) {
-	//	createFace(newVertex, va, v2);
-	//	createFace(vb, newVertex, v2);
-	//}
+	mesh->deleteEdge(oldEdge);
+	mesh->createEdge(va->getMutable(), newVertex);
+	mesh->createEdge(newVertex, vb->getMutable());
+	if (!isBoundary0) {
+		mesh->createEdge(newVertex, v1->getMutable());
+		mesh->createFace(mesh->getHalfedge(newVertex, v1));
+		mesh->createFace(mesh->getHalfedge(v1, newVertex));
+	}
+	if (!isBoundary1) {
+		mesh->createEdge(newVertex, v2->getMutable());
+		mesh->createFace(mesh->getHalfedge(newVertex, v2));
+		mesh->createFace(mesh->getHalfedge(v2, newVertex));
+	}
+	return newVertex;
+}
 
-	//if (isBoundary0) {
-	//	setNextHalfedge(bhe1, vertexHalfedge(va, newVertex));
-	//	setNextHalfedge(vertexHalfedge(va, newVertex), vertexHalfedge(newVertex, vb));
-	//	setNextHalfedge(vertexHalfedge(newVertex, vb), bhe2);
-	//}
+Halfedge* ComponentOperator::swapEdge(Halfedge* oldEdge)
+{
+	Halfedge* he1 = oldEdge;
+	Halfedge* he2 = oldEdge->getSym();
+	Halfedge* hePrev = oldEdge->getPrev();
 
-	//if (isBoundary1) {
-	//	setPrevHalfedge(halfedgeSym(bhe1), vertexHalfedge(newVertex, va));
-	//	setPrevHalfedge(vertexHalfedge(newVertex, va), vertexHalfedge(vb, newVertex));
-	//	setPrevHalfedge(vertexHalfedge(vb, newVertex), halfedgeSym(bhe2));
-	//}
-	//return newVertex;
+	Vertex* va = he1->getSource();
+	Vertex* vb = he1->getTarget();
+	Vertex* v1 = he1->getNext()->getTarget();
+	Vertex* v2 = he2->getNext()->getTarget();
+	mesh->deleteFace(he1->getFace());
+	mesh->deleteFace(he2->getFace());
+	mesh->deleteEdge(oldEdge);
+
+	mesh->createEdge(v1, v2);
+	mesh->createFace(mesh->getHalfedge(v1, v2));
+	mesh->createFace(mesh->getHalfedge(v2, v1));
+	return hePrev->getPrev();
+}
+
+const Halfedge* ComponentOperator::splitFace(Vertex* v1, Vertex* v2) {
+	// find the face that contains v1 and v2
+	Face* face = nullptr;
+	Halfedge* he = v1->getHalfedge();
+
+	do {
+		Halfedge* he1 = he;
+		do {
+			if (he1->getTarget() == v2) {
+				face = he->getFace();
+			}
+		} while (he1 = he1->getNext(), he1 != he);
+	} while (he = he->getNext()->getSym(), he != v1->getHalfedge());
+	mesh->deleteFace(face);
+	mesh->createEdge(v1, v2);
+	mesh->createFace(mesh->getHalfedge(v1, v2));
+	mesh->createFace(mesh->getHalfedge(v2, v1));
+	return mesh->getHalfedge(v1, v2);
+}
+
+void ComponentOperator::deleteVertexMergeFace(Vertex* tar)
+{
+	if (!tar->getHalfedge()) {
+		mesh->deleteVertex(tar);
+		return;
+	}
+	while (tar->getHalfedge()) {
+		deleteEdgeMergeFace(tar->getHalfedge());
+	}
+	mesh->deleteVertex(tar);
+	return;
+}
+
+void ComponentOperator::deleteEdgeMergeFace(Halfedge* tar)
+{
+	// <--he1-(va)<-he4---
+	//         ^|
+	//      hea||heb
+	//         |v
+	//---he2->(vb)--he3-->
+	Vertex* va = tar->getTarget();
+	Vertex* vb = tar->getSource();
+	Halfedge* hea = tar;
+	Halfedge* he1 = tar->getNext();
+	Halfedge* he2 = tar->getPrev();
+	mesh->deleteFace(tar->getFace());
+	mesh->deleteFace(tar->getSym()->getFace());
+	mesh->deleteEdge(tar);
+	mesh->createFace(he1);
+	if (he2->isBoundary()) {
+		// island hole
+		mesh->createFace(he2);
+	}
+	return;
+}
+
+void ComponentOperator::clearFace(std::vector<Halfedge*> heVector) {
+	std::vector<Vertex*> vVector;
+	for (auto& he : heVector) {
+		vVector.push_back(he->getSource());
+	}
+	for (int i = 0; i < heVector.size(); i++) {
+		//           v2
+		//     ^     ^
+		//      \   he2
+		//    curHe  |
+		//        \  |
+		//         \ |
+		// v0--he1-->v1
+		// 
+		//  he1==heVector[i]
+		std::list<Vertex*> q;
+		Halfedge* he1 = heVector[i];
+		Halfedge* he2 = heVector[(i + 1) % heVector.size()];
+		Vertex* v0 = he1->getSource();
+		Vertex* v1 = he1->getTarget();
+		Vertex* v2 = he2->getTarget();
+		Halfedge* curHe = he1->getNext();
+		std::unordered_map<Vertex*, bool> markDelete;
+		while (curHe != he2)
+		{
+			auto vViter = find(vVector.begin(), vVector.end(), curHe->getTarget());
+			if (vViter != vVector.end()) {
+				curHe =  curHe->getSym()->getNext();
+				deleteEdgeMergeFace(mesh->getHalfedge(v1, *vViter));
+				continue;
+			}
+			if (std::find(q.begin(), q.end(), curHe->getTarget())!=q.end()) {
+				q.push_back(curHe->getTarget());
+			}
+			curHe = curHe->getSym()->getNext();
+		}
+		while (!q.empty()) {
+			//HalfedgeHandle he = vertexHalfedge(q.front());
+			//assert(q.front() == halfedgeTarget(vertexHalfedge(q.front())));
+			if (q.front()->getHalfedge()) {
+				Halfedge* he = q.front()->getHalfedge();
+				do {
+					if (std::find(vVector.begin(), vVector.end(), he->getSource()) == vVector.end()
+						&& std::find(q.begin(), q.end(), he->getSource()) != q.end()) {
+						q.push_back(he->getSource());
+					}
+				} while (he = he->getNext()->getSym(), he != q.front()->getHalfedge());
+			}
+			deleteVertexMergeFace(q.front());
+			q.pop_back();
+		}
+	}
+}
+
+void ComponentOperator::clearFace(std::initializer_list<Halfedge*> heList)
+{
+	clearFace(std::vector<Halfedge*>(heList));
+}
+
+int ComponentOperator::numQuad(const Halfedge* edge)
+{
+	int num = 0;
+	if (edge->getFace() != NULL && isQuad(edge->getFace()))
+		num++;
+	if (edge->getSym()->getFace() != NULL && isQuad(edge->getSym()->getFace()))
+		num++;
+	return num;
+}
+
+int ComponentOperator::numQuad(const Halfedge* edge, const Halfedge* edge1)
+{
+	int num = 0;
+	if (edge->getFace() != NULL && isQuad(edge->getFace()))
+		num++;
+	if (edge1->getFace() != NULL && isQuad(edge1->getFace()))
+		num++;
+	return num;
+}
+
+int ComponentOperator::numTriangles(const Vertex* vert) {
+	assert(vert != NULL);
+	int num = 0;
+	const Halfedge* he = vert->getHalfedge();
+	if (he == nullptr) {
+		return 0;
+	}
+	do {
+		if (!isQuad(he->getFace()))
+			num++;
+	} while (he = he->getNext()->getSym(), he != vert->getHalfedge());
+	return num;
+}
+
+int ComponentOperator::numQuad(const Vertex* vert) {
+	assert(vert != NULL);
+	int num = 0;
+	const Halfedge* he = vert->getHalfedge();
+	if (he == nullptr) {
+		return 0;
+	}
+	do {
+		if (isQuad(he->getFace()))
+			num++;
+	} while (he = he->getNext()->getSym(), he != vert->getHalfedge());
+	return num;
 }
 
 
-
-//EdgeHandle CToolMesh::swapEdge(EdgeHandle oldEdge)
-//{
-//	bool debug = false;
-//	topology_assert(!isBoundary(oldEdge), { edgeHalfedge(oldEdge, 0) });
-//	HalfedgeHandle he1 = halfedge_handle(oldEdge, 0);
-//	HalfedgeHandle he2 = halfedge_handle(oldEdge, 1);
-//
-//	VertexHandle va = halfedgeSource(he1);
-//	VertexHandle vb = halfedgeTarget(he1);
-//	VertexHandle v1 = halfedgeTarget(halfedgeNext(he1));
-//	VertexHandle v2 = halfedgeTarget(halfedgeNext(he2));
-//	deleteFace(edgeFace1(oldEdge));
-//	deleteFace(edgeFace2(oldEdge));
-//	setFace(edgeHalfedge(oldEdge, 0), NULL);
-//	setFace(edgeHalfedge(oldEdge, 1), NULL);
-//	unsetHalfedge(halfedgeVertex(edgeHalfedge(oldEdge, 0)), edgeHalfedge(oldEdge, 0));
-//	unsetHalfedge(halfedgeVertex(edgeHalfedge(oldEdge, 1)), edgeHalfedge(oldEdge, 1));
-//	disconnect(oldEdge);
-//	deleteEdge(oldEdge);
-//	createEdge(v1, v2);
-//	createFace(v1, va, v2);
-//	FaceHandle face = createFace(v2, vb, v1);
-//	he1 = halfedge_handle(face);
-//	if (halfedgeSource(he1) == v2)
-//		he1 = halfedgePrev(he1);
-//	if (halfedgeTarget(he1) == v1)
-//		he1 = halfedgeNext(he1);
-//	return halfedgeEdge(he1);
-//}
+bool ComponentOperator::isQuad(const Face* face)
+{
+	assert(face);
+	int vertNum = 0;
+	const Halfedge* he = face->getHalfedge();
+	do {
+		vertNum++;
+	} while (he = he->getNext(), he != face->getHalfedge());
+	return vertNum == 4;
+}
