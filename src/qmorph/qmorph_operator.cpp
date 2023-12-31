@@ -60,7 +60,12 @@ int QMorphOperator::doEdgeRecovery() {
 			compOperator->buildQuad(
 				sideOperator->getLeftSide(frontHe)->getMutable(), 
 				frontHe->he->getMutable(), 
-				sideOperator->getRightSide(frontHe)->getMutable());
+				sideOperator->getRightSide(frontHe)->getMutable(),
+				feOperator->edgeRecovery(
+					sideOperator->getLeftSide(frontHe)->getSource()->getMutable(),
+					sideOperator->getRightSide(frontHe)->getMutable()->getTarget()
+				)->getMutable()
+			);
 			frontHe->setTop(frontHe->he->getNext()->getNext());
 		}
 	} while (iter = iter->getNextFe(), iter != feOperator->getFrontEdgeGroup());

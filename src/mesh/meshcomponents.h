@@ -122,8 +122,7 @@ protected:
 	Halfedge* next = nullptr;
 	Halfedge* prev = nullptr;
 	Halfedge* sym = nullptr;
-
-	Face* face;
+	Face* face = nullptr;
 public:
 	inline Vertex* getSource() {
 		return this->source;

@@ -1,8 +1,6 @@
 #pragma once
 #include "../mesh/mesh.h"
 #include <string>
-#include <sstream>
-#include <boost/stacktrace.hpp>
 
 class MeshOperator {
 protected:
@@ -13,16 +11,12 @@ public:
 };
 
 struct MutableComponent {
-	std::stringstream code;
 	union Component
 	{
 		Vertex* vertex;
 		Halfedge* halfedge;
 		Face* face;
 	};
-	MutableComponent() {
-		code << boost::stacktrace::stacktrace();
-	}
 };
 
 class MeshInteriorOperator : public MeshOperator {

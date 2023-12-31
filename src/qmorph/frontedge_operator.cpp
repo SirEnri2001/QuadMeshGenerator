@@ -464,3 +464,39 @@ const Halfedge* FrontEdgeOperator::edgeRecovery(Vertex* Nc, Vertex* Nd) {
 	}
 	return mesh->getHalfedge(Nc, Nd);
 }
+
+const Vertex* ComponentOperator::mergeEdge(Vertex* va, Vertex* vb) {
+	//     v1
+	//    /  \   /
+	//   /    \ /
+	//  va----vb---
+	//   \    / \
+	//    \  /   \
+	//     v2
+	Halfedge* he1 = mesh->getHalfedge(va, vb);
+	Halfedge* he2 = he1->getSym();
+	while (
+		he1->getNext()->getSym()->getPrev()->getSource()
+		== he1->getPrev()->getSym()->getNext()->getTarget()) {
+		deleteVertexMergeFace(he1->getNext()->getTarget());
+	}
+	Vertex* v1 = he1->getNext()->getTarget();
+	Vertex* v2 = he2->getNext()->getTarget();
+	std::list<Vertex*> vbConnectedVertices;
+
+	Halfedge* he = vb->getHalfedge();
+	do {
+		if (he->getSource() != va && he->getSource() != v1 && he->getSource() != v2) {
+			Halfedge* outHeAttr = new Halfedge(*he->getSym());
+			Halfedge* inHeAttr = new Halfedge();
+			vbConnectedVertices.push_back(he->getSource());
+		}
+	} while (he = he->getNext()->getSym(), he != vb->getHalfedge());
+	deleteVertexMergeFace(vb);
+	for (std::list<Vertex*>::iterator iter = vbConnectedVertices.begin(); iter != vbConnectedVertices.end(); ++iter) {
+		splitFace(va, *iter);
+		Halfedge* inwardHe = mesh->getHalfedge(*iter, va);
+		assert(inwardHe);
+	}
+	return va;
+}

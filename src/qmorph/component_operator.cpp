@@ -241,3 +241,108 @@ bool ComponentOperator::isQuad(const Face* face)
 	} while (he = he->getNext(), he != face->getHalfedge());
 	return vertNum == 4;
 }
+
+float ComponentOperator::angle(glm::vec3 cp1, const Vertex* pivot, glm::vec3 cp2) {
+	using namespace glm;
+	vec3 v1 = cp1 - vec3(pivot->getPosition());
+	vec3 v2 = cp2 - vec3(pivot->getPosition());
+	return degrees(acos_limited(dot(v1,v2) / (length(v1) * length(v2))));
+}
+
+float ComponentOperator::angle(const Halfedge* bhe, const Halfedge* bhe_next) {
+	using namespace glm;
+	vec3 BA = vec3(bhe->getSource()->getPosition() - bhe->getTarget()->getPosition());
+	vec3 BC = vec3(bhe_next->getTarget()->getPosition() - bhe_next->getSource()->getPosition());
+	vec3 normal = cross(vec3(bhe->getNext()->getTarget()->getPosition() - bhe->getTarget()->getPosition()),
+		vec3(bhe->getSource()->getPosition() - bhe->getTarget()->getPosition())
+	);
+	vec3 p = bhe->getTarget()->getPosition();
+	float res;
+	if (dot(normal, cross(BC,BA)) < 0.0) {
+		res = 360.0F - acos_limited(dot(BC, BA) / (length(BC) * length(BA))) / M_PI * 180;
+	}
+	else {
+		res = acos_limited(dot(BA, BC) / (length(BA) * length(BC))) / M_PI * 180;
+	}
+	if (res != res) {
+		assert(false);
+	}
+	return res;
+}
+
+float ComponentOperator::angle(glm::vec3 cpoint, const Halfedge* he) {
+	using namespace glm;
+	vec3 cp1 = he->getTarget()->getPosition() - he->getSource()->getPosition();
+	vec3 cp2 = cpoint - vec3(he->getSource()->getPosition());
+	/*if (normalOfVertex(mesh, halfedgeSource(he)) * (cp2 ^ cp1) < 0.0) {
+		return 360.0 - acos(cp1 * cp2 / (cp1.norm() * cp2.norm())) / PI * 180;
+	}*/
+	return acos_limited(dot(cp2, cp1) / (length(cp1) * length(cp2))) / M_PI * 180;
+}
+
+// calculate the bisector of angle between he1 & he1_next. result based on local coordination.
+// he1 and he1_next must be connected and continous. 
+glm::vec4 ComponentOperator::bisect(const Halfedge* he1, const Halfedge* he1_next) {
+	using namespace glm;
+	vec3 joint;
+	//assert(he1 == nextBoundaryHalfedge(he1_next) || he1_next == nextBoundaryHalfedge(he1));
+	//--he1-->--he1_next-->
+	joint = he1->getTarget()->getPosition();
+	//<--v1--.--v2-->
+	vec3 cp1 = vec3(he1->getSource()->getPosition()) - joint;
+	vec3 cp2 = vec3(he1_next->getTarget()->getPosition()) - joint;
+	cp1 = normalize(cp1);
+	cp2 = normalize(cp2);
+	vec3 cp3 = cp1 + cp2;
+	vec3 localNormal = normalVertex(he1->getSource());
+	localNormal = normalize(localNormal);
+	if (length(cross(cp2, cp1)) < 1e-4 && dot(cp2, cp1) < 0.0) {
+		vec3 bisector = cross(cp1, localNormal);
+		bisector = normalize(bisector);
+		return vec4(bisector, 1.0);
+	}
+	if (dot(cross(cp2, cp1), localNormal) < 0) {
+		cp3 = -cp3;
+	}
+	return vec4(normalize(cp3), 1.0);
+}
+
+glm::vec3 ComponentOperator::normalVertex(const Vertex* vertex) {
+	using namespace glm;
+	vec3 vsum(0.0, 0.0, 0.0);
+	const Halfedge* he = vertex->getHalfedge();
+	do {
+		vec3 a, b, c;
+		a = he->getTarget()->getPosition();
+		b = he->getNext()->getTarget()->getPosition();
+		c = he->getPrev()->getSource()->getPosition();
+		vsum += cross(c - b, a - b);
+	} while (he = he->getNext()->getSym(), he != vertex->getHalfedge());
+	return normalize(vsum);
+}
+
+int ComponentOperator::faceEdges(const Face* face) {
+	int count = 0;
+	const Halfedge* he = face->getHalfedge();
+	do {
+		count++;
+	} while (he = he->getNext(), he != face->getHalfedge());
+	return count;
+}
+
+float ComponentOperator::acos_limited(float x) {
+	if (x > 1.0) {
+		std::cerr << "WARNING: acos_limited: x > 1.0" << std::endl;
+		return 0.0;
+	}
+	if (x < -1.0) {
+		std::cerr << "WARNING: acos_limited: x < -1.0" << std::endl;
+		return M_PI;
+	}
+	return acos(x);
+}
+
+ComponentOperator::ComponentOperator(Mesh* mesh) : MeshInteriorOperator(mesh) {
+
+}
+

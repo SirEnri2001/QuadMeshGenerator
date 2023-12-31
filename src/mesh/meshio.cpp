@@ -198,18 +198,15 @@ bool MeshIO::loadM(const std::string& filename) {
 			continue;
 		}
 	}
-	Halfedge* bHe = nullptr;
 	// init sym halfedges
 	for (auto& idHe : mesh->getHalfedges()) {
-		Halfedge* he = mesh->halfedgeAt(idHe.first);
+		Halfedge* he = idHe.second.getMutable();
 		if (he->getSym() == nullptr) {
 			he->setSym(mesh->createHalfedge(he->getTarget(), he->getSource()));
-			bHe = he->getSym();
 			continue;
 		}
 		he->setSym(mesh->getHalfedge(he->getTarget(), he->getSource()));
 	}
-
 	for (auto& idHe : mesh->getHalfedges()) {
 		Halfedge* he = mesh->halfedgeAt(idHe.first);
 		if (!he->isBoundary()) {

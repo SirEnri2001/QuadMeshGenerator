@@ -42,5 +42,5 @@ public:
 	bool proceedNextFeLoop(bool reclasssify = true);
 	const Halfedge* edgeRecovery(Vertex*, Vertex*); //return a CTHEdgeHandle* source former param and target latter
 	std::list<const Halfedge*>* calculateRambdaSet(const Vertex*, const Vertex*);
-
+	const Vertex* mergeEdge(Vertex* va, Vertex* vb);
 };

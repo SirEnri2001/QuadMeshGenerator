@@ -4,6 +4,9 @@
 #include <glm.hpp>
 #include <vector>
 #include <list>
+#include <iostream>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 class ComponentOperator : public MeshInteriorOperator {
 public:
@@ -34,15 +37,9 @@ public:
 	void buildQuad(Halfedge* left, Halfedge* bottom, Halfedge* right, Halfedge* top) {
 		clearFace({ left,bottom,right,top });
 	}
-	int faceEdges(const Face* face) {
-		int count = 0;
-		const Halfedge* he = face->getHalfedge();
-		do {
-			count++;
-		} while (he = he->getNext(), he != face->getHalfedge());
-		return count;
-	}
+	int faceEdges(const Face* face);
 
 	const Halfedge* splitFace(Vertex* v1, Vertex* v2);
+	float acos_limited(float x);
 	ComponentOperator(Mesh* mesh);
 };
