@@ -108,15 +108,17 @@ Viewer::Viewer(const std::string& name) :
 	/* Our initializaton */
 	//setCallbacks();
 
-	mPointShader = std::make_unique<Shader>("../glsl/point.vert.glsl", "../glsl/point.frag.glsl");
+	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
 		"../glsl/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
-	drawable = std::make_unique<Drawable>();
+	meshShading = std::make_unique<Drawable>();
+	meshFrame = std::make_unique<Drawable>();
 	createGridGround();
 	mMeshIO->loadM("../test/data/mesh_214370.m");
 	mMeshDisplay->create();
+	mMeshDisplay->createFrame();
 }
 
 Viewer::~Viewer()
@@ -172,6 +174,7 @@ void Viewer::mainLoop()
 			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Another Window", &show_another_window);
+			ImGui::Checkbox("Display Frame", &displayFrame);
 
 			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -192,14 +195,14 @@ void Viewer::mainLoop()
 			mCamera.PolarZoom(io.MouseWheel * 300);
 		}
 		// 3. Show another simple window.
-		if (show_another_window)
-		{
-			ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-			ImGui::Text("Hello from another window!");
-			if (ImGui::Button("Close Me"))
-				show_another_window = false;
-			ImGui::End();
-		}
+		//if (show_another_window)
+		//{
+		//	ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+		//	ImGui::Text("Hello from another window!");
+		//	if (ImGui::Button("Close Me"))
+		//		show_another_window = false;
+		//	ImGui::End();
+		//}
 
 		// Rendering
 		ImGui::Render();
@@ -210,7 +213,6 @@ void Viewer::mainLoop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
 		drawScene();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -240,20 +242,39 @@ void Viewer::drawScene()
 	mModelShader->setVec3("color", glm::vec3(0.8, 0.7, 0.6));
 	mModelShader->setMat4("uModel", model);
 	mModelShader->setMat3("uModelInvTr", glm::inverse(model));
-	glBindVertexArray(drawable->VAO);
-
+	glBindVertexArray(meshShading->VAO);
 	// Allocate space and upload the data from CPU to GPU
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshShading->IBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->indices.size() * sizeof(GLuint), mMeshDisplay->indices.data(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, drawable->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, meshShading->VBO);
 	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->vertexBuffer.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
-	glBindVertexArray(drawable->VAO);
+	glBindVertexArray(meshShading->VAO);
 	glDrawElements(GL_TRIANGLES, mMeshDisplay->indices.size(), GL_UNSIGNED_INT, 0);
+
+	if (displayFrame) {
+		mPointShader->use();
+		mPointShader->setMat4("uProjView", projView);
+		mPointShader->setVec3("uLightPos", mCamera.eye);
+		mPointShader->setVec3("color", glm::vec3(1, 0, 1));
+		mPointShader->setMat4("uModel", model);
+		mPointShader->setMat3("uModelInvTr", glm::inverse(model));
+		glBindVertexArray(meshFrame->VAO);
+		// Allocate space and upload the data from CPU to GPU
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->frameIndices.size() * sizeof(GLuint), mMeshDisplay->frameIndices.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, meshFrame->VBO);
+		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->frameVertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->frameVertexBuffer.data(), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+		glBindVertexArray(meshFrame->VAO);
+		glDrawElements(GL_LINES, mMeshDisplay->frameIndices.size(), GL_UNSIGNED_INT, 0);
+	}
 }
 
 void Viewer::setCallbacks()

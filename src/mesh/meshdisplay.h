@@ -7,6 +7,9 @@ public:
 	std::vector<glm::vec4> vertexBuffer;
 	std::vector<ID> indices;
 
+	std::vector<glm::vec4> frameVertexBuffer;
+	std::vector<ID> frameIndices;
+
 	std::vector<glm::vec4> lineSegment;
 	std::vector<glm::vec4> pointScatter;
 
@@ -14,4 +17,5 @@ public:
 
 	MeshDisplay(Mesh* mesh);
 	void create();
+	void createFrame();
 };

@@ -16,9 +16,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 add_library(qmorph STATIC
   ./src/qmorph/frontedge_operator.cpp
   ./src/qmorph/frontedge_operator.h
-  ./src/qmorph/qmorph.cpp
-  ./src/qmorph/qmorph.h
-  ./src/qmorph/qmorph_main.cpp
   ./src/qmorph/qmorph_operator.cpp
   ./src/qmorph/qmorph_operator.h
   ./src/qmorph/sidedefine_operator.cpp

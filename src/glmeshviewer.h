@@ -59,7 +59,8 @@ protected:
 	std::unique_ptr<MeshDisplay> mMeshDisplay;
 	std::unique_ptr<MeshOperator> mMeshOperator;
 	std::unique_ptr<MeshIO> mMeshIO;
-	std::unique_ptr<Drawable> drawable;
+	std::unique_ptr<Drawable> meshShading;
+	std::unique_ptr<Drawable> meshFrame;
 
 	// Screen size, update in each frame
 	int windowWidth = 1920;
@@ -77,4 +78,6 @@ protected:
 private:
 	bool showDemoWindow = true;
 	bool showAnotherWindow = false;
+
+	bool displayFrame = true;
 };

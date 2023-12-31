@@ -127,3 +127,16 @@ void MeshDisplay::create() {
 		//}
 	}
 }
+
+void MeshDisplay::createFrame() {
+	int i = 0;
+	for (auto& idHe : mesh->getHalfedges()) {
+		const Halfedge* he = &idHe.second;
+		if (he->getSource()->getId() < he->getTarget()->getId()) {
+			frameVertexBuffer.push_back(he->getSource()->getPosition());
+			frameVertexBuffer.push_back(he->getTarget()->getPosition());
+			frameIndices.push_back(i++);
+			frameIndices.push_back(i++);
+		}
+	}
+}
