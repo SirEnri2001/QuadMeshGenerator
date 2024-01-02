@@ -4,8 +4,9 @@
 #include <glm.hpp>
 
 
-class Smoother : public MeshInteriorOperator
+class Smoother
 {
+	Mesh* mesh;
 public:
 	//glm::vec3 getDelC(VertexHandle Ni, HalfedgeHandle ife, HalfedgeHandle ofe);
 	//void boundaryEdgeSmooth(HalfedgeHandle ofe);

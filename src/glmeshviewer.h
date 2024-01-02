@@ -8,11 +8,13 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <memory>
+#include <thread>
 
 #include "camera.h"
 #include "shader.h"
 #include "drawable.h"
 #include "mesh/mesh.h"
+#include "test_operator.h"
 
 class Viewer
 {
@@ -49,6 +51,7 @@ protected:
 
 	// Some shaders
 	std::unique_ptr<Shader> mPointShader;
+	std::unique_ptr<Shader> mLineShader;
 	std::unique_ptr<Shader> mCurveShader;
 	std::unique_ptr<Shader> mModelShader;
 	std::unique_ptr<Shader> mGridShader;
@@ -59,8 +62,14 @@ protected:
 	std::unique_ptr<MeshDisplay> mMeshDisplay;
 	std::unique_ptr<MeshOperator> mMeshOperator;
 	std::unique_ptr<MeshIO> mMeshIO;
+
 	std::unique_ptr<Drawable> meshShading;
 	std::unique_ptr<Drawable> meshFrame;
+	std::unique_ptr<Drawable> heSelect;
+
+	std::unique_ptr<std::thread> mThread;
+	
+	std::unique_ptr<TestOperator> testOperator;
 
 	// Screen size, update in each frame
 	int windowWidth = 1920;
@@ -80,4 +89,6 @@ private:
 	bool showAnotherWindow = false;
 
 	bool displayFrame = true;
+	float lineWidth = 5.0f;
+	float modelScale = 500.f;
 };

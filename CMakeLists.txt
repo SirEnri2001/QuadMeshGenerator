@@ -92,7 +92,8 @@ add_executable(GLMeshViewer
     ./src/drawable.cpp
     ./src/objmodel.cpp
     ./src/objmodel.h
-
+    ./src/test_operator.cpp
+    ./src/test_operator.h
 )
 
 target_include_directories(GLMeshViewer PUBLIC 

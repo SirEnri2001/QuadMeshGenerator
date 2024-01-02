@@ -12,3 +12,7 @@ void MeshOperator::create() {
 MeshInteriorOperator::MeshInteriorOperator(Mesh* mesh) : MeshOperator(mesh) {
 
 }
+
+MeshUserOperator::MeshUserOperator(Mesh* mesh) : MeshOperator(mesh) {
+
+}

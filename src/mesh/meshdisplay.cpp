@@ -129,14 +129,24 @@ void MeshDisplay::create() {
 }
 
 void MeshDisplay::createFrame() {
-	int i = 0;
-	for (auto& idHe : mesh->getHalfedges()) {
-		const Halfedge* he = &idHe.second;
-		if (he->getSource()->getId() < he->getTarget()->getId()) {
-			frameVertexBuffer.push_back(he->getSource()->getPosition());
-			frameVertexBuffer.push_back(he->getTarget()->getPosition());
-			frameIndices.push_back(i++);
-			frameIndices.push_back(i++);
-		}
+	for (int i = 0; i < mesh->getHalfedges().size(); i++) {
+		const Halfedge* he = &mesh->getHalfedges().at(i);
+		frameVertexBuffer.push_back(he->getSource()->getPosition());
+		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameVertexBuffer.push_back(he->getTarget()->getPosition());
+		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameIndices.push_back(2*i);
+		frameIndices.push_back(2*i+1);
 	}
+}
+
+void MeshDisplay::markHalfedge(const Halfedge* he, glm::vec4 color) {
+	frameVertexBuffer[he->getId() * 4 + 1] = glm::vec4(1, 0, 0, 1);
+	frameVertexBuffer[he->getId() * 4 + 3] = glm::vec4(0, 0, 1, 1);
+
+
+	frameVertexBuffer[he->getSym()->getId() * 4 + 3] = glm::vec4(1, 0, 0, 1);
+	frameVertexBuffer[he->getSym()->getId() * 4 + 1] = glm::vec4(0, 0, 1, 1);
+
+	markCount++;
 }

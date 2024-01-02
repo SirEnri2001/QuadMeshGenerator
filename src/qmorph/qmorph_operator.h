@@ -7,7 +7,7 @@ class SideDefineOperator;
 class FrontEdgeOperator;
 class Smoother;
 
-class QMorphOperator : public MeshOperator {
+class QMorphOperator : public MeshUserOperator {
 	std::shared_ptr<FrontEdgeOperator> feOperator;
 	std::shared_ptr<SideDefineOperator> sideOperator;
 	std::shared_ptr<ComponentOperator> compOperator;
@@ -18,4 +18,5 @@ public:
 	int doSmooth(int epoch = 2);
 	int doSeam();
 	void create();
+	QMorphOperator(Mesh* mesh);
 };

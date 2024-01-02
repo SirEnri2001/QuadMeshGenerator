@@ -23,3 +23,9 @@ class MeshInteriorOperator : public MeshOperator {
 public:
 	MeshInteriorOperator(Mesh* mesh);
 };
+
+class MeshUserOperator : public MeshOperator {
+public:
+	virtual void operator()() = 0;
+	MeshUserOperator(Mesh* mesh);
+};

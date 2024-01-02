@@ -45,7 +45,7 @@ Viewer::Viewer(const std::string& name) :
 	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
-
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	// Create window with graphics context
 	window = glfwCreateWindow(windowWidth, windowHeight, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
 	if (window == nullptr)
@@ -109,16 +109,19 @@ Viewer::Viewer(const std::string& name) :
 	//setCallbacks();
 
 	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl");
+	mLineShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
 		"../glsl/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
 	meshShading = std::make_unique<Drawable>();
 	meshFrame = std::make_unique<Drawable>();
+	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_214370.m");
+	mMeshIO->loadObj("../test/obj/cow.obj");
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
+	testOperator = std::make_unique<TestOperator>(mMesh.get());
 }
 
 Viewer::~Viewer()
@@ -168,6 +171,7 @@ void Viewer::mainLoop()
 		{
 			static float f = 0.0f;
 			static int counter = 0;
+			static int heDisplayId = 0;
 
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
@@ -176,11 +180,21 @@ void Viewer::mainLoop()
 			ImGui::Checkbox("Another Window", &show_another_window);
 			ImGui::Checkbox("Display Frame", &displayFrame);
 
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-				counter++;
+			ImGui::SliderFloat("Frame Line Width", &lineWidth, 1.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
+			ImGui::DragInt("drag int", &heDisplayId, 1, 0, mMesh->getHalfedges().size());
+			if (ImGui::Button("Display Halfedge"))
+				mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heDisplayId));
+			/*const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
+			static int item_current = 0;
+			ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
+			*/
+			if (ImGui::Button("Process Operator")) {
+				static TestOperator testOper(mMesh.get());
+				testOper.setDisplay(mMeshDisplay.get());
+				mThread = std::make_unique<std::thread>(testOper);
+				
+			}
 			ImGui::SameLine();
 			ImGui::Text("counter = %d", counter);
 
@@ -233,13 +247,13 @@ void Viewer::createGUIWindow()
 void Viewer::drawScene()
 {
 	
-	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(50));
+	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(modelScale));
 	glm::mat4 projView = mCamera.getProjView();
 	drawGridGround(projView);
 	mModelShader->use();
 	mModelShader->setMat4("uProjView", projView);
 	mModelShader->setVec3("uLightPos", mCamera.eye);
-	mModelShader->setVec3("color", glm::vec3(0.8, 0.7, 0.6));
+	mModelShader->setVec3("uColor", glm::vec3(0.8, 0.8, 0.8));
 	mModelShader->setMat4("uModel", model);
 	mModelShader->setMat3("uModelInvTr", glm::inverse(model));
 	glBindVertexArray(meshShading->VAO);
@@ -249,7 +263,6 @@ void Viewer::drawScene()
 	glBindBuffer(GL_ARRAY_BUFFER, meshShading->VBO);
 	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->vertexBuffer.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
@@ -257,12 +270,16 @@ void Viewer::drawScene()
 	glDrawElements(GL_TRIANGLES, mMeshDisplay->indices.size(), GL_UNSIGNED_INT, 0);
 
 	if (displayFrame) {
+
 		mPointShader->use();
 		mPointShader->setMat4("uProjView", projView);
 		mPointShader->setVec3("uLightPos", mCamera.eye);
-		mPointShader->setVec3("color", glm::vec3(1, 0, 1));
+		mPointShader->setVec3("uColor", glm::vec3(0, 0, 0));
 		mPointShader->setMat4("uModel", model);
 		mPointShader->setMat3("uModelInvTr", glm::inverse(model));
+		mPointShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
+		mPointShader->setInt("markCount", 5);
+		glLineWidth(lineWidth);
 		glBindVertexArray(meshFrame->VAO);
 		// Allocate space and upload the data from CPU to GPU
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);
@@ -271,9 +288,12 @@ void Viewer::drawScene()
 		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->frameVertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->frameVertexBuffer.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 		//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
 		glBindVertexArray(meshFrame->VAO);
 		glDrawElements(GL_LINES, mMeshDisplay->frameIndices.size(), GL_UNSIGNED_INT, 0);
+		glLineWidth(1.0f);
 	}
 }
 

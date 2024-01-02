@@ -2,7 +2,7 @@
 #include "util.h"
 #include "../mesh/meshcomponents.h"
 
-Smoother::Smoother(Mesh* mesh) : MeshInteriorOperator(mesh) {
+Smoother::Smoother(Mesh* mesh) {
 	
 }
 //

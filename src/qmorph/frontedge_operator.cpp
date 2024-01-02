@@ -93,12 +93,14 @@ int FrontEdgeOperator::initFrontEdgeGroup() {
 			continue;
 		}
 		const Halfedge* curHe = he;
-		FrontEdge* fe;
-		FrontEdge* prevFe;
+		FrontEdge* fe = nullptr;
 		do {
 			FrontEdge* curFe = setFront(curHe->getSym(), true);
 			FrontEdge* nextFe = setFront(curHe->getPrev()->getSym(), true);
 			setNextFe(curFe, nextFe);
+			if (fe == nullptr) {
+				fe = curFe;
+			}
 			curHe = curHe->getPrev();
 			i++;
 		} while (curHe != he);

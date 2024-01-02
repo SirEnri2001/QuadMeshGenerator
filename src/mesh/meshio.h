@@ -8,4 +8,6 @@ public:
 	~MeshIO();
 	bool loadObj(const std::string& filename);
 	bool loadM(const std::string& filename);
+	bool writeM(const std::string& filename);
+	bool writeObj(const std::string& filename);
 };

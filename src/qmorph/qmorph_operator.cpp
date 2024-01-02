@@ -167,3 +167,7 @@ void QMorphOperator::create() {
 	compOperator->create();
 	smoother = new Smoother(mesh);
 }
+
+QMorphOperator::QMorphOperator(Mesh* mesh) : MeshUserOperator(mesh) {
+
+}

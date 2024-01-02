@@ -90,7 +90,7 @@ bool MeshIO::loadObj(const std::string& filename) {
 	}
 
 	for (auto& idHe : mesh->getHalfedges()) {
-		Halfedge* he = mesh->halfedgeAt(idHe.first);
+		Halfedge* he = (&idHe.second)->getMutable();
 		if (!he->isBoundary()) {
 			continue;
 		}
@@ -142,6 +142,7 @@ bool MeshIO::loadM(const std::string& filename) {
 				token = stokenizer.getToken();
 				p[i] = strutil::parseString<float>(token);
 			}
+			p[3] = 1.0f;
 
 			Vertex* v = mesh->createVertex();
 			v->setPosition(p);
@@ -220,5 +221,55 @@ bool MeshIO::loadM(const std::string& filename) {
 		he->getTarget()->boundary = true;
 		he->getSource()->boundary = true;
 	}
+	return true;
+}
+
+bool MeshIO::writeObj(const std::string& filename) {
+	const char* output = filename.c_str();
+	std::fstream _os(output, std::fstream::out);
+	if (_os.fail())
+	{
+		fprintf(stderr, "Error is opening file %s\n", output);
+		return false;
+	}
+
+	int vid = 1;
+	for (int id = 0; id < mesh->getVertices().size(); id++) {
+		_os << "v";
+		for (int i = 0; i < 3; i++)
+		{
+			_os << " " << mesh->getVertices().at(id).getPosition()[i];
+		}
+		_os << std::endl;
+	}
+	//for (int id = 0; id < mesh->getVertices().size(); id++) {
+	//	_os << "vt";
+	//	for (int i = 0; i < 2; i++)
+	//	{
+	//		_os << " " << mesh->getVertices().at(i).getPosition()[i];
+	//	}
+	//	_os << std::endl;
+	//}
+	//for (int id = 0; id < mesh->getVertices().size(); id++) {
+	//	_os << "vn";
+	//	for (int i = 0; i < 3; i++)
+	//	{
+	//		_os << " " << mesh->getVertices().at(i).getPosition()[i];
+	//	}
+	//	_os << std::endl;
+	//}
+	for (auto& idFace : mesh->getFaces()) {
+		const Face* face = &idFace.second;
+		_os << "f";
+
+		const Halfedge* he = face->getHalfedge();
+
+		do {
+			int vid = he->getTarget()->getId();
+			_os << " " << vid+1 << "/" << vid+1 << "/" << vid+1;
+		} while (he = he->getNext(), he != face->getHalfedge());
+		_os << std::endl;
+	}
+	_os.close();
 	return true;
 }
