@@ -84,6 +84,8 @@ private:
 	bool displayFrame = true;
 	float lineWidth = 0.001f;
 	float modelScale = 500.f;
+	float halfedgeOffset = 0.002;
+	float halfedgeLengthOffset = 0.009;
 
 	void callDebugBreak() {
 		__debugbreak();

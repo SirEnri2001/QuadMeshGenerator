@@ -3,6 +3,8 @@
 #include "mesh/meshoperator.h"
 #include "mesh/meshio.h"
 
+#include <future>
+
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -47,7 +49,7 @@ Viewer::Viewer(const std::string& name) :
 #endif
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	// Create window with graphics context
-	window = glfwCreateWindow(windowWidth, windowHeight, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Mesh Viewer", nullptr, nullptr);
 	if (window == nullptr)
 		return;
 	glfwMakeContextCurrent(window);
@@ -109,7 +111,7 @@ Viewer::Viewer(const std::string& name) :
 	//setCallbacks();
 
 	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
-		"../glsl/point3d.geom.glsl");
+		"../glsl/halfedge3d.geom.glsl");
 	mLineShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
 		"../glsl/curve.geom.glsl");
@@ -174,31 +176,26 @@ void Viewer::mainLoop()
 			static float f = 0.0f;
 			static int counter = 0;
 			static int heDisplayId = 0;
-
+			static std::future<void> fu;
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Display Frame", &displayFrame);
 
 			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
+			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
 			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
 			//ImGui::DragInt("Halfedge Display ID", &heDisplayId, 1, 0, mMesh->getHalfedges().size());
 			//if (ImGui::Button("Display Halfedge"))
 			//	mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heDisplayId));
 			if (ImGui::Button("Process Test Operation")) {
-				if (mThread) { // Before create new thread, first check existing thread
-					mThread->join();
-				}
 				static TestOperator testOper(mMesh.get());
 				testOper.setDisplay(mMeshDisplay.get());
-				mThread = std::make_unique<std::thread>(testOper);
+				fu = testOper.async();
 			}
-
 			if (ImGui::Button("Process Q-Morph Operation")) {
-				if (mThread) {
-					mThread->join();
-				}
 				static QMorphOperator qmorphOper(mMesh.get());
-				mThread = std::make_unique<std::thread>(qmorphOper);
+				fu = qmorphOper.async();
 			}
 
 			if (ImGui::Button("Debug Break")) {
@@ -207,6 +204,19 @@ void Viewer::mainLoop()
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
+			if (fu.valid()) {
+				try
+				{
+					fu.get();
+					std::cout << "mission complete!\n";
+				}
+				catch (...)
+				{
+					std::cout << "execution failed" << std::endl;
+				}
+				mMeshDisplay->create();
+				mMeshDisplay->createFrame();
+			}
 		}
 		if (!io.WantCaptureMouse && ImGui::IsMouseDown(1)) {
 			mCamera.PolarRotateAboutX(-io.MouseDelta.y/ windowHeight*1000.f);
@@ -278,6 +288,8 @@ void Viewer::drawScene()
 		mPointShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
 		mPointShader->setInt("markCount", 5);
 		mPointShader->setFloat("thickness", lineWidth);
+		mPointShader->setFloat("halfedgeOffset", halfedgeOffset);
+		mPointShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset);
 		glBindVertexArray(meshFrame->VAO);
 		// Allocate space and upload the data from CPU to GPU
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);

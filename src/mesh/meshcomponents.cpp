@@ -101,7 +101,7 @@ Halfedge* Mesh::createHalfedge(Vertex* source, Vertex* target) {
 }
 
 Mesh::Mesh() {
-
+	meshAssert = std::make_unique<MeshAssert>();
 }
 
 
@@ -153,6 +153,7 @@ const Face* Mesh::createFace(Halfedge* he) {
 }
 
 void Mesh::deleteFace(Face* face) {
+	face->setDeleted(true);
 	Halfedge* he = face->getHalfedge();
 	do
 	{
@@ -163,7 +164,8 @@ void Mesh::deleteFace(Face* face) {
 }
 
 void Mesh::deleteEdge(Halfedge* he) {
-
+	he->setDeleted(true);
+	he->getSym()->setDeleted(true);
 	// set source & target vertex to another valid halfedge;
 	if (he->getNext()->getSym() != he) {
 		he->getTarget()->setHalfedge(he->getNext()->getSym());
@@ -223,4 +225,239 @@ void Mesh::createEdge(Vertex* v1, Vertex* v2) {
 	else {
 		he12->setNext(he21);
 	}
+}
+
+void Component::setId(ID id) {
+	validate(this);
+	this->id = id;
+}
+
+ID Component::getId() const {
+	validate(this);
+	return this->id;
+}
+
+bool Component::isValid() const {
+	validate(this);
+	return valid;
+}
+
+bool Component::isDisplayed() const {
+	validate(this);
+	return displayed;
+}
+
+void Component::setDeleted(bool val) {
+	validate(this);
+	deleted = val;
+}
+
+Halfedge* Vertex::getHalfedge() {
+	validate(this);
+	return this->halfedge;
+}
+const Halfedge* Vertex::getHalfedge() const {
+	validate(this);
+	return this->halfedge;
+}
+void Vertex::setHalfedge(Halfedge* halfedge) {
+	validate(this);
+	this->halfedge = halfedge;
+}
+void Vertex::setPosition(glm::vec4 pos) {
+	validate(this);
+	position = pos;
+}
+glm::vec4 Vertex::getPosition() const {
+	validate(this);
+	return position;
+}
+
+glm::vec3 Vertex::getNormal() const {
+	validate(this);
+	return normal;
+}
+
+void Vertex::setNormal(glm::vec3 n) {
+	validate(this);
+	normal = n;
+}
+
+void Vertex::setUV(glm::vec2 uv) {
+	validate(this);
+	this->uv = uv;
+}
+
+glm::vec2 Vertex::getUV() const {
+	validate(this);
+	return uv;
+}
+
+bool Vertex::isBoundary() const {
+	validate(this);
+	return boundary;
+}
+
+Vertex* Vertex::getMutable() const {
+	validate(this);
+	return const_cast<Vertex*>(this);
+}
+
+Vertex* Halfedge::getSource() {
+	validate(this);
+	return this->source;
+}
+Vertex* Halfedge::getTarget() {
+	validate(this);
+	return this->target;
+}
+Halfedge* Halfedge::getNext() {
+	validate(this);
+	return next;
+}
+Halfedge* Halfedge::getPrev() {
+	validate(this);
+	return prev;
+}
+Halfedge* Halfedge::getSym() {
+	validate(this);
+	return sym;
+}
+Face* Halfedge::getFace() {
+	validate(this);
+	return face;
+}
+void Halfedge::setSource(Vertex* v) {
+	validate(this);
+	source = v;
+}
+void Halfedge::setTarget(Vertex* v) {
+	validate(this);
+	target = v;
+}
+void Halfedge::setSym(Halfedge* he) {
+	validate(this);
+	sym = he;
+	he->sym = this;
+}
+void Halfedge::setNext(Halfedge* he) {
+	validate(this);
+	next = he;
+	he->prev = this;
+}
+void Halfedge::setPrev(Halfedge* he) {
+	validate(this);
+	prev = he;
+	he->next = this;
+}
+void Halfedge::setFace(Face* f) {
+	validate(this);
+	face = f;
+	if (f) {
+		target->boundary = false;
+		source->boundary = false;
+	}
+	else {
+		target->boundary = true;
+		source->boundary = true;
+	}
+}
+const Vertex* Halfedge::getSource() const {
+	validate(this);
+	return this->source;
+}
+const Vertex* Halfedge::getTarget() const {
+	validate(this);
+	return this->target;
+}
+const Halfedge* Halfedge::getNext() const {
+	validate(this);
+	return next;
+}
+const Halfedge* Halfedge::getPrev() const {
+	validate(this);
+	return prev;
+}
+const Halfedge* Halfedge::getSym() const {
+	validate(this);
+	return sym;
+}
+const Face* Halfedge::getFace() const {
+	validate(this);
+	return face;
+}
+bool Halfedge::isBoundary() const {
+	validate(this);
+	return face == nullptr;
+}
+float Halfedge::getLength() const {
+	validate(this);
+	return glm::length(target->getPosition() - source->getPosition());
+}
+Halfedge* Halfedge::getMutable() const {
+	validate(this);
+	return const_cast<Halfedge*>(this);
+}
+const Halfedge* Face::getHalfedge() const {
+	validate(this);
+	return this->halfedge;
+}
+Halfedge* Face::getHalfedge() {
+	validate(this);
+	return this->halfedge;
+}
+void Face::setHalfedge(Halfedge* he) {
+	validate(this);
+	halfedge = he;
+}
+Face* Face::getMutable() const {
+	validate(this);
+	return const_cast<Face*>(this);
+}
+const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) const {
+	validate(this);
+	auto& iter = vertexHalfedge.find({ source->getId(), target->getId() });
+	if (iter == vertexHalfedge.end()) {
+		return nullptr;
+	}
+	return iter->second;
+}
+
+Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) {
+	validate(this);
+	auto iter = vertexHalfedge.find({ source->getId(), target->getId() });
+	if (iter == vertexHalfedge.end()) {
+		return nullptr;
+	}
+	return iter->second;
+}
+
+const std::unordered_map<ID, Vertex>& Mesh::getVertices() const {
+	validate(this);
+	return vertices;
+}
+
+const std::unordered_map<ID, Halfedge>& Mesh::getHalfedges() const {
+	validate(this);
+	return halfedges;
+}
+
+const std::unordered_map<ID, Face>& Mesh::getFaces() const {
+	validate(this);
+	return faces;
+}
+
+Vertex* Mesh::vertexAt(ID id) {
+	validate(this);
+	return &vertices[id];
+}
+
+Halfedge* Mesh::halfedgeAt(ID id) {
+	validate(this);
+	return &halfedges[id];
+}
+
+Face* Mesh::faceAt(ID id) {
+	validate(this);
+	return &faces[id];
 }

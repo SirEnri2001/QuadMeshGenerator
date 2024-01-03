@@ -3,9 +3,10 @@
 #include <boost/stacktrace.hpp>
 #include <sstream>
 
-void MeshAssert::error(std::string& msg) {
+void MeshAssert::_error(std::string& msg) {
 	std::stringstream ss;
 	ss << boost::stacktrace::stacktrace();
 	traceback = ss.str();
+	__debugbreak();
 	std::terminate();
 }

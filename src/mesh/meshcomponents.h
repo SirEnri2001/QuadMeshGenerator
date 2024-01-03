@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <glm.hpp>
+#include "meshassert.h"
 
 class Vertex;
 class Halfedge;
@@ -15,6 +16,7 @@ class MeshIO;
 class MeshRecorder;
 class MeshAttribute;
 class MeshNormal;
+class MeshAssert;
 
 typedef std::pair<Halfedge*, Halfedge*> Edge;
 
@@ -29,28 +31,16 @@ protected:
 	ID id;
 	bool valid = true;
 	bool displayed = false;
+	bool deleted = false;
 public:
 	Component(ID id);
-
 	Component(const Component& comp);
-
 	~Component();
-
-	inline void setId(ID id) {
-		this->id = id;
-	}
-
-	inline ID getId() const {
-		return this->id;
-	}
-
-	inline bool isValid() const {
-		return valid;
-	}
-
-	inline bool isDisplayed() const {
-		return displayed;
-	}
+	void setId(ID id);
+	ID getId() const;
+	bool isValid() const;
+	bool isDisplayed() const;
+	void setDeleted(bool val);
 };
 
 class Vertex : public Component {
@@ -61,9 +51,7 @@ protected:
 	glm::vec2 uv = glm::vec2(0,0);
 	bool boundary = true;
 public:
-	inline Halfedge* getHalfedge() {
-		return this->halfedge;
-	}
+
 	Vertex(ID id);
 
 	Vertex();
@@ -71,50 +59,19 @@ public:
 	Vertex(const Vertex& v);
 
 	~Vertex();
-
-	inline const Halfedge* getHalfedge() const {
-		return this->halfedge;
-	}
-	inline void setHalfedge(Halfedge* halfedge) {
-		this->halfedge = halfedge;
-	}
-	inline void setPosition(glm::vec4 pos) {
-		position = pos;
-	}
-	inline glm::vec4 getPosition() const {
-		return position;
-	}
-
-	inline glm::vec3 getNormal() const {
-		return normal;
-	}
-
-	inline void setNormal(glm::vec3 n) {
-		normal = n;
-	}
-
-	inline void setUV(glm::vec2 uv) {
-		this->uv = uv;
-	}
-
-	inline glm::vec2 getUV() const {
-		return uv;
-	}
-
-	inline bool isBoundary() const {
-		return boundary;
-	}
-
-	inline Vertex* getMutable() const {
-		return const_cast<Vertex*>(this);
-	}
-
-	friend class MeshInteriorOperator;
-	friend class MeshIO;
-	friend class MeshDisplay;
-	friend class MeshRecorder;
-	friend class Face;
+	Halfedge* getHalfedge();
+	const Halfedge* getHalfedge() const;
+	void setHalfedge(Halfedge* halfedge);
+	void setPosition(glm::vec4 pos);
+	glm::vec4 getPosition() const;
+	glm::vec3 getNormal() const;
+	void setNormal(glm::vec3 n);
+	void setUV(glm::vec2 uv);
+	glm::vec2 getUV() const;
+	bool isBoundary() const;
+	Vertex* getMutable() const;
 	friend class Halfedge;
+	friend class MeshIO;
 };
 
 class Halfedge : public Component {
@@ -126,90 +83,31 @@ protected:
 	Halfedge* sym = nullptr;
 	Face* face = nullptr;
 public:
-	inline Vertex* getSource() {
-		return this->source;
-	}
-	inline Vertex* getTarget() {
-		return this->target;
-	}
-	inline Halfedge* getNext() {
-		return next;
-	}
-	inline Halfedge* getPrev() {
-		return prev;
-	}
-	inline Halfedge* getSym() {
-		return sym;
-	}
-	inline Face* getFace() {
-		return face;
-	}
 	Halfedge(ID id);
 	Halfedge(const Halfedge& he);
-
 	Halfedge();
 	~Halfedge();
-
-	inline void setSource(Vertex* v) {
-		source = v;
-	}
-	inline void setTarget(Vertex* v) {
-		target = v;
-	}
-	inline void setSym(Halfedge* he) {
-		sym = he;
-		he->sym = this;
-	}
-	inline void setNext(Halfedge* he) {
-		next = he;
-		he->prev = this;
-	}
-	inline void setPrev(Halfedge* he) {
-		prev = he;
-		he->next = this;
-	}
-	inline void setFace(Face* f) {
-		face = f;
-		if (f) {
-			target->boundary = false;
-			source->boundary = false;
-		}
-		else {
-			target->boundary = true;
-			source->boundary = true;
-		}
-	}
-	inline const Vertex* getSource() const {
-		return this->source;
-	}
-	inline const Vertex* getTarget() const {
-		return this->target;
-	}
-	inline const Halfedge* getNext() const {
-		return next;
-	}
-	inline const Halfedge* getPrev() const {
-		return prev;
-	}
-	inline const Halfedge* getSym() const {
-		return sym;
-	}
-	inline Face* getFace() const {
-		return face;
-	}
-
-	inline bool isBoundary() const {
-		return face == nullptr;
-	}
-	inline float getLength() const {
-		return glm::length(target->getPosition() - source->getPosition());
-	}
-	inline Halfedge* getMutable() const {
-		return const_cast<Halfedge*>(this);
-	}
-	friend class MeshIO;
-	friend class MeshDisplay;
-	friend class MeshRecorder;
+	Vertex* getSource();
+	Vertex* getTarget();
+	Halfedge* getNext();
+	Halfedge* getPrev();
+	Halfedge* getSym();
+	Face* getFace();
+	void setSource(Vertex* v);
+	void setTarget(Vertex* v);
+	void setSym(Halfedge* he);
+	void setNext(Halfedge* he);
+	void setPrev(Halfedge* he);
+	void setFace(Face* f);
+	const Vertex* getSource() const;
+	const Vertex* getTarget() const;
+	const Halfedge* getNext() const;
+	const Halfedge* getPrev() const;
+	const Halfedge* getSym() const;
+	const Face* getFace() const;
+	bool isBoundary() const;
+	float getLength() const;
+	Halfedge* getMutable() const;
 };
 
 //void setSym(Halfedge* he1, Halfedge* he2) {
@@ -228,26 +126,15 @@ class Face : public Component {
 protected:
 	Halfedge* halfedge = nullptr;
 public:
-	inline Halfedge* getHalfedge() {
-		return this->halfedge;
-	}
+
 	Face(ID id);
-
 	Face();
-
 	Face(const Face& face);
-
 	~Face();
-	inline const Halfedge* getHalfedge() const {
-		return this->halfedge;
-	}
-	
-	inline void setHalfedge(Halfedge* he) {
-		halfedge = he;
-	}
-	inline Face* getMutable() const {
-		return const_cast<Face*>(this);
-	}
+	const Halfedge* getHalfedge() const;
+	Halfedge* getHalfedge();
+	void setHalfedge(Halfedge* he);
+	Face* getMutable() const;
 	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
@@ -265,10 +152,6 @@ public:
 };
 
 class Mesh {
-	struct SourceTargetID {
-		ID sourceID;
-		ID targetID;
-	};
 	std::unordered_map<ID, Vertex> vertices;
 	std::unordered_map<ID, Halfedge> halfedges;
 	std::unordered_map<ID, Face> faces;
@@ -276,6 +159,7 @@ class Mesh {
 	ID vIdSum = 0;
 	ID heIdSum = 0;
 	ID fIdSum = 0;
+	std::unique_ptr<MeshAssert> meshAssert;
 public:
 	Mesh();
 	Vertex* createVertex();
@@ -287,48 +171,15 @@ public:
 		vertices.erase(vertices.find(v->getId()));
 	}
 	Halfedge* getBoundary(Vertex* v);
-
 	void createEdge(Vertex* v1, Vertex* v2);
-
-	inline const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const {
-		auto& iter = vertexHalfedge.find({ source->getId(), target->getId() });
-		if (iter == vertexHalfedge.end()) {
-			return nullptr;
-		}
-		return iter->second;
-	}
-
-	inline Halfedge* getHalfedge(const Vertex* source, const Vertex* target) {
-		auto iter = vertexHalfedge.find({ source->getId(), target->getId() });
-		if (iter == vertexHalfedge.end()) {
-			return nullptr;
-		}
-		return iter->second;
-	}
-
-	inline const std::unordered_map<ID, Vertex>& getVertices() const {
-		return vertices;
-	}
-
-	inline const std::unordered_map<ID, Halfedge>& getHalfedges() const {
-		return halfedges;
-	}
-
-	inline const std::unordered_map<ID, Face>& getFaces() const {
-		return faces;
-	}
-
-	inline Vertex* vertexAt(ID id) {
-		return &vertices[id];
-	}
-
-	inline Halfedge* halfedgeAt(ID id) {
-		return &halfedges[id];
-	}
-
-	inline Face* faceAt(ID id) {
-		return &faces[id];
-	}
+	const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const;
+	Halfedge* getHalfedge(const Vertex* source, const Vertex* target);
+	const std::unordered_map<ID, Vertex>& getVertices() const;
+	const std::unordered_map<ID, Halfedge>& getHalfedges() const;
+	const std::unordered_map<ID, Face>& getFaces() const;
+	Vertex* vertexAt(ID id);
+	Halfedge* halfedgeAt(ID id);
+	Face* faceAt(ID id);
 	//std::unique_ptr<MeshNormal> attribNormal;
 	//std::unique_ptr<MeshUV> attribUV;
 	friend class MeshInteriorOperator;
