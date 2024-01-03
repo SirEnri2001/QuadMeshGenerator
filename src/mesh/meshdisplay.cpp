@@ -19,6 +19,16 @@ glm::vec3 MeshDisplay::calculateSurfaceNormal(const Face* face) {
 	return glm::normalize(result);
 }
 
+glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
+	glm::vec3 result(0, 0, 0);
+	const Halfedge* he = vertex->getHalfedge();
+	do {
+		if(he->getFace())
+			result += calculateSurfaceNormal(he->getFace());
+	} while (he = he->getNext()->getSym(), he != vertex->getHalfedge());
+	return glm::normalize(result);
+}
+
 MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
 
 }
@@ -133,20 +143,20 @@ void MeshDisplay::createFrame() {
 		const Halfedge* he = &mesh->getHalfedges().at(i);
 		frameVertexBuffer.push_back(he->getSource()->getPosition());
 		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getSource()),0));
 		frameVertexBuffer.push_back(he->getTarget()->getPosition());
 		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getTarget()), 0));
 		frameIndices.push_back(2*i);
 		frameIndices.push_back(2*i+1);
 	}
 }
 
 void MeshDisplay::markHalfedge(const Halfedge* he, glm::vec4 color) {
-	frameVertexBuffer[he->getId() * 4 + 1] = glm::vec4(1, 0, 0, 1);
-	frameVertexBuffer[he->getId() * 4 + 3] = glm::vec4(0, 0, 1, 1);
-
-
-	frameVertexBuffer[he->getSym()->getId() * 4 + 3] = glm::vec4(1, 0, 0, 1);
-	frameVertexBuffer[he->getSym()->getId() * 4 + 1] = glm::vec4(0, 0, 1, 1);
+	frameVertexBuffer[he->getId() * 6 + 1] = glm::vec4(1, 0, 0, 1);
+	frameVertexBuffer[he->getId() * 6 + 4] = glm::vec4(0, 0, 1, 1);
+	frameVertexBuffer[he->getSym()->getId() * 6 + 4] = glm::vec4(1, 0, 0, 1);
+	frameVertexBuffer[he->getSym()->getId() * 6 + 1] = glm::vec4(0, 0, 1, 1);
 
 	markCount++;
 }

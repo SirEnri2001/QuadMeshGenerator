@@ -168,6 +168,11 @@ void QMorphOperator::create() {
 	smoother = new Smoother(mesh);
 }
 
+void QMorphOperator::operator()() {
+	create();
+	doQMorphProcess();
+}
+
 QMorphOperator::QMorphOperator(Mesh* mesh) : MeshUserOperator(mesh) {
 
 }

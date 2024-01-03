@@ -27,6 +27,8 @@ add_library(qmorph STATIC
   ./src/qmorph/smoother.h
   ./src/qmorph/smoother.cpp
   ./src/qmorph/frontedge.h
+  ./src/qmorph/qmorph_display.cpp
+  ./src/qmorph/qmorph_display.h
 )
 
 target_include_directories(qmorph PUBLIC
@@ -46,6 +48,14 @@ add_library(mesh STATIC
   ./src/mesh/meshoperator.cpp
   ./src/mesh/misc/parser.h
   ./src/mesh/misc/strutil.h
+  ./src/mesh/meshassert.h
+  ./src/mesh/meshassert.cpp
+  ./src/mesh/meshattribute.h
+  ./src/mesh/meshattribute.cpp
+  ./src/mesh/meshnormal.h
+  ./src/mesh/meshnormal.cpp
+  ./src/mesh/meshuv.h
+  ./src/mesh/meshuv.cpp
 )
 
 target_include_directories(mesh PUBLIC

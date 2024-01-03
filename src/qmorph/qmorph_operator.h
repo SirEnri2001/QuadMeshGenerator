@@ -1,3 +1,4 @@
+#pragma once
 #include "../mesh/mesh.h"
 #include "../mesh/meshoperator.h"
 #include <memory>
@@ -19,4 +20,5 @@ public:
 	int doSeam();
 	void create();
 	QMorphOperator(Mesh* mesh);
+	void operator()() override;
 };

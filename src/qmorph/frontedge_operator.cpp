@@ -334,18 +334,12 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 			}
 			continue;
 		}
-
 		newFhe = fhe->getTop()->getSym();
-
-
 		if (compOperator->isQuad(newFhe->getFace()) || compOperator->isQuad(newFhe->getSym()->getFace()))
 		{
 			if (compOperator->isQuad(newFhe->getFace()) && compOperator->isQuad(newFhe->getSym()->getFace())) {
 				continue;
 			}
-
-			// Build the new front edge list
-			// Mark all the front elements.
 			newFe = setFront(newFhe, true);
 			if (prevNewFe) {
 				setNextFe(prevNewFe, newFe);

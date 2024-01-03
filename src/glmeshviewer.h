@@ -15,6 +15,7 @@
 #include "drawable.h"
 #include "mesh/mesh.h"
 #include "test_operator.h"
+#include "qmorph/qmorph_operator.h"
 
 class Viewer
 {
@@ -31,20 +32,11 @@ public:
 	// Draw all of the scene here
 	virtual void drawScene();
 
-	// Set all callback functions
-	virtual void setCallbacks();
-
-	// Some callback functions
-	virtual void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-	virtual void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	virtual void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-	virtual void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
-
 protected:
 	virtual void createGridGround();
 	virtual void drawGridGround(const glm::mat4& projViewModel);
 
-	bool show_demo_window = true;
+	bool show_demo_window = false;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	GLFWwindow* window;
@@ -70,6 +62,7 @@ protected:
 	std::unique_ptr<std::thread> mThread;
 	
 	std::unique_ptr<TestOperator> testOperator;
+	std::unique_ptr<QMorphOperator> qmorphOperator;
 
 	// Screen size, update in each frame
 	int windowWidth = 1920;
@@ -89,6 +82,10 @@ private:
 	bool showAnotherWindow = false;
 
 	bool displayFrame = true;
-	float lineWidth = 5.0f;
+	float lineWidth = 0.001f;
 	float modelScale = 500.f;
+
+	void callDebugBreak() {
+		__debugbreak();
+	}
 };

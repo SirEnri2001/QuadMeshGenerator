@@ -1,3 +1,4 @@
+class Component;
 class Vertex;
 class Halfedge;
 class Face;

@@ -58,7 +58,7 @@ bool MeshIO::loadObj(const std::string& filename) {
 		int indexSum = 0;
 		for (auto& numVerticesPerFace : shapes[s].mesh.num_face_vertices) {
 			std::vector<Vertex*> verts;
-			Face* face = mesh->createFace();
+			Face* face = mesh->createFace(nullptr)->getMutable();
 			Halfedge* he = nullptr, * hePrev = nullptr;
 			for (int i = 0; i < numVerticesPerFace; i++) {
 				Vertex* v1 = mesh->vertexAt(shapes[s].mesh.indices[indexSum + i].vertex_index);
@@ -81,7 +81,7 @@ bool MeshIO::loadObj(const std::string& filename) {
 	// init sym halfedges
 	for (auto& idHe : mesh->getHalfedges()) {
 		Halfedge* he = mesh->halfedgeAt(idHe.first);
-		if (he->getSym() == nullptr) {
+		if (mesh->getHalfedge(he->getTarget(), he->getSource()) == nullptr) {
 			he->setSym(mesh->createHalfedge(he->getTarget(), he->getSource()));
 			bHe = he->getSym();
 			continue;
@@ -176,7 +176,7 @@ bool MeshIO::loadM(const std::string& filename) {
 				v.push_back(fileIdVertex[vid]);
 			}
 
-			Face* face = mesh->createFace();
+			Face* face = mesh->createFace(nullptr)->getMutable();
 			Halfedge* he = nullptr, * hePrev = nullptr;
 			for (int i = 0; i < v.size(); i++) {
 				Vertex* v1 = v[i];
@@ -202,7 +202,7 @@ bool MeshIO::loadM(const std::string& filename) {
 	// init sym halfedges
 	for (auto& idHe : mesh->getHalfedges()) {
 		Halfedge* he = idHe.second.getMutable();
-		if (he->getSym() == nullptr) {
+		if (mesh->getHalfedge(he->getTarget(), he->getSource())==nullptr) {
 			he->setSym(mesh->createHalfedge(he->getTarget(), he->getSource()));
 			continue;
 		}

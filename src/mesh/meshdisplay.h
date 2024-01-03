@@ -16,6 +16,7 @@ public:
 	int markCount = 0;
 
 	glm::vec3 calculateSurfaceNormal(const Face* face);
+	glm::vec3 calculateVertexNormal(const Vertex* vertex);
 
 	MeshDisplay(Mesh* mesh);
 	void create();

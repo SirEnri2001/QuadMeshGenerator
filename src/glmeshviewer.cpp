@@ -108,7 +108,8 @@ Viewer::Viewer(const std::string& name) :
 	/* Our initializaton */
 	//setCallbacks();
 
-	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl");
+	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
+		"../glsl/point3d.geom.glsl");
 	mLineShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
 		"../glsl/curve.geom.glsl");
@@ -118,10 +119,11 @@ Viewer::Viewer(const std::string& name) :
 	meshFrame = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadObj("../test/obj/cow.obj");
+	mMeshIO->loadM("../test/data/mesh_214370.m");
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
+	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 }
 
 Viewer::~Viewer()
@@ -173,30 +175,35 @@ void Viewer::mainLoop()
 			static int counter = 0;
 			static int heDisplayId = 0;
 
-			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-			ImGui::Checkbox("Another Window", &show_another_window);
 			ImGui::Checkbox("Display Frame", &displayFrame);
 
-			ImGui::SliderFloat("Frame Line Width", &lineWidth, 1.0f, 10.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
-			ImGui::DragInt("drag int", &heDisplayId, 1, 0, mMesh->getHalfedges().size());
-			if (ImGui::Button("Display Halfedge"))
-				mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heDisplayId));
-			/*const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
-			static int item_current = 0;
-			ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
-			*/
-			if (ImGui::Button("Process Operator")) {
+			//ImGui::DragInt("Halfedge Display ID", &heDisplayId, 1, 0, mMesh->getHalfedges().size());
+			//if (ImGui::Button("Display Halfedge"))
+			//	mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heDisplayId));
+			if (ImGui::Button("Process Test Operation")) {
+				if (mThread) { // Before create new thread, first check existing thread
+					mThread->join();
+				}
 				static TestOperator testOper(mMesh.get());
 				testOper.setDisplay(mMeshDisplay.get());
 				mThread = std::make_unique<std::thread>(testOper);
-				
 			}
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
+
+			if (ImGui::Button("Process Q-Morph Operation")) {
+				if (mThread) {
+					mThread->join();
+				}
+				static QMorphOperator qmorphOper(mMesh.get());
+				mThread = std::make_unique<std::thread>(qmorphOper);
+			}
+
+			if (ImGui::Button("Debug Break")) {
+				callDebugBreak();
+			}
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
@@ -208,15 +215,6 @@ void Viewer::mainLoop()
 		else if (!io.WantCaptureMouse && io.MouseWheel != 0.0f) {
 			mCamera.PolarZoom(io.MouseWheel * 300);
 		}
-		// 3. Show another simple window.
-		//if (show_another_window)
-		//{
-		//	ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-		//	ImGui::Text("Hello from another window!");
-		//	if (ImGui::Button("Close Me"))
-		//		show_another_window = false;
-		//	ImGui::End();
-		//}
 
 		// Rendering
 		ImGui::Render();
@@ -279,7 +277,7 @@ void Viewer::drawScene()
 		mPointShader->setMat3("uModelInvTr", glm::inverse(model));
 		mPointShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
 		mPointShader->setInt("markCount", 5);
-		glLineWidth(lineWidth);
+		mPointShader->setFloat("thickness", lineWidth);
 		glBindVertexArray(meshFrame->VAO);
 		// Allocate space and upload the data from CPU to GPU
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);
@@ -287,94 +285,14 @@ void Viewer::drawScene()
 		glBindBuffer(GL_ARRAY_BUFFER, meshFrame->VBO);
 		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->frameVertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->frameVertexBuffer.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
-		//glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(2*sizeof(glm::vec4)));
 		glBindVertexArray(meshFrame->VAO);
 		glDrawElements(GL_LINES, mMeshDisplay->frameIndices.size(), GL_UNSIGNED_INT, 0);
-		glLineWidth(1.0f);
 	}
-}
-
-void Viewer::setCallbacks()
-{
-	glfwSetWindowUserPointer(window, this);
-	glfwSetKeyCallback(window,
-		[](GLFWwindow* window, int key, int scancode, int action, int mods)
-		{
-			static_cast<Viewer*>(glfwGetWindowUserPointer(window))->keyCallback(window, key, scancode, action, mods);
-		});
-	glfwSetCursorPosCallback(window,
-		[](GLFWwindow* window, double xpos, double ypos)
-		{
-			static_cast<Viewer*>(glfwGetWindowUserPointer(window))->cursorPosCallback(window, xpos, ypos);
-		});
-	glfwSetScrollCallback(window,
-		[](GLFWwindow* window, double xoffset, double yoffset)
-		{
-			static_cast<Viewer*>(glfwGetWindowUserPointer(window))->scrollCallBack(window, xoffset, yoffset);
-		});
-	glfwSetMouseButtonCallback(window,
-		[](GLFWwindow* window, int button, int action, int mods)
-		{
-			static_cast<Viewer*>(glfwGetWindowUserPointer(window))->mouseButtonCallback(window, button, action, mods);
-		});
-}
-
-void Viewer::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) { mHoldLeftButton = true; }
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) { mHoldLeftButton = false; }
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) { mHoldMidButton = true; }
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) { mHoldMidButton = false; }
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) { mHoldRightButton = true; }
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) { mHoldRightButton = false; }
-}
-
-void Viewer::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) { mHoldLCtrl = true; }
-	else if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) { mHoldLCtrl = false; }
-}
-
-void Viewer::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-{
-	if (mHoldLCtrl)
-	{
-		if (mFirstMouse)
-		{
-			mLastX = xpos;
-			mLastY = ypos;
-			mFirstMouse = false;
-		}
-
-		int deltaX = xpos - mLastX;
-		int deltaY = mLastY - ypos; // reversed since y-coordinates go from bottom to top
-		bool moveLeftRight = std::abs(deltaX) > std::abs(deltaY);
-		bool moveUpDown = !moveLeftRight;
-		if (mHoldLeftButton)  // Rotate
-		{
-			if (moveLeftRight) mCamera.PolarRotateAboutY(-deltaX * 0.1f);
-			else if (moveUpDown) mCamera.PolarRotateAboutX(deltaY * 0.1f);
-		}
-		else if (mHoldMidButton) // Zoom
-		{
-			if (moveUpDown) mCamera.PolarZoom(deltaY);
-		}
-		else if (mHoldRightButton)
-		{
-			if (moveLeftRight) mCamera.PolarPanX(-deltaX * 0.5);
-			else if (moveUpDown) mCamera.PolarPanY(-deltaY * 0.5);
-		}
-
-		mLastX = xpos;
-		mLastY = ypos;
-	}
-}
-
-void Viewer::scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
-{
 }
 
 void Viewer::createGridGround()
