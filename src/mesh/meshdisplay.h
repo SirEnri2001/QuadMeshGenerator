@@ -27,4 +27,5 @@ public:
 	void markFace(const Face* face, glm::vec4 color = glm::vec4(1, 0.5, 0.5, 1));
 	void markBoundaries();
 	void markVertex(const Vertex* vertex);
+	void markHalfedgeCycle(const Halfedge* he);
 };

@@ -25,10 +25,16 @@ glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 	if (he == nullptr) {
 		return glm::vec3(0, 1, 0);
 	}
+	bool hasFace = false;
 	do {
-		if(he->getFace())
+		if (he->getFace()) {
 			result += calculateSurfaceNormal(he->getFace());
+			hasFace = true;
+		}
 	} while (he = he->getNext()->getSym(), he != vertex->getHalfedge());
+	if (!hasFace) {
+		return glm::vec3(0, 1, 0);
+	}
 	return glm::normalize(result);
 }
 
@@ -184,8 +190,8 @@ void MeshDisplay::createFrame() {
 }
 
 void MeshDisplay::markHalfedge(const Halfedge* he, glm::vec4 color) {
-	frameVertexBuffer[he->getId() * 6 + 1] = glm::vec4(1, 0, 0, 1);
-	frameVertexBuffer[he->getId() * 6 + 4] = glm::vec4(0, 0, 1, 1);
+	frameVertexBuffer[he->getId() * 6 + 1] = glm::vec4(0, 0, 1, 1);
+	frameVertexBuffer[he->getId() * 6 + 4] = glm::vec4(1, 0, 0, 1);
 
 	markCount++;
 }
@@ -212,4 +218,11 @@ void MeshDisplay::markVertex(const Vertex* vertex) {
 	pointScatter.push_back(glm::vec4(1, 0, 0, 1));
 	pointScatter.push_back(glm::vec4(calculateVertexNormal(vertex),0));
 	pointIndices.push_back(pointIndices.size());
+}
+
+void MeshDisplay::markHalfedgeCycle(const Halfedge* he) {
+	const Halfedge* he1 = he;
+	do {
+		markHalfedge(he);
+	} while (he = he->getNext(), he != he1);
 }

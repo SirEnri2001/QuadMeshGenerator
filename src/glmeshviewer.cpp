@@ -182,6 +182,8 @@ void Viewer::mainLoop()
 			static int faceId = 0;
 			static int vertId = 0;
 			static std::future<void> fu;
+			static const Halfedge* he = nullptr;
+			static const Vertex* v = nullptr;
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Display Frame", &displayFrame);
@@ -209,7 +211,18 @@ void Viewer::mainLoop()
 				}
 				else {
 					mMeshDisplay->markVertex(&mMesh->getVertices().at(vertId));
+					v = &mMesh->getVertices().at(vertId);
 				}
+			ImGui::SameLine();
+			if (ImGui::Button("Vertex.Halfedge")) {
+				if (!v) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else {
+					mMeshDisplay->markHalfedge(v->getHalfedge());
+					he = v->getHalfedge();
+				}
+			}
 			ImGui::DragInt("Halfedge ID", &heId, 1, 0, mMesh->getHalfedgeIdTotal() - 1);
 			if (ImGui::Button("Display Halfedge"))
 				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
@@ -218,6 +231,37 @@ void Viewer::mainLoop()
 				else
 				{
 					mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heId));
+					he = &mMesh->getHalfedges().at(heId);
+				}
+			ImGui::SameLine();
+			if (ImGui::Button("Display Next"))
+				if (!he) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else
+				{
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he->getNext());
+					he = he->getNext();
+				}
+			ImGui::SameLine();
+			if (ImGui::Button("Display Prev"))
+				if (!he) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else
+				{
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he->getPrev());
+					he = he->getPrev();
+				}
+			if (ImGui::Button("Display Halfedge Cycle"))
+				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else
+				{
+					mMeshDisplay->markHalfedgeCycle(&mMesh->getHalfedges().at(heId));
 				}
 			if (ImGui::Button("Display Boundaries")) {
 				mMeshDisplay->markBoundaries();

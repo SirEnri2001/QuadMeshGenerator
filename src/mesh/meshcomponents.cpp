@@ -202,6 +202,12 @@ Halfedge* Mesh::getBoundary(Vertex* v) {
 	return nullptr;
 }
 
+//  <-v1outbhe-[v1]<-v1inbhe-
+//              ^|
+//              |he12
+//           he21|
+//              |v
+//   -v2inbhe->[v2]-v2outbhe->
 void Mesh::createEdge(Vertex* v1, Vertex* v2) {
 	Halfedge* v1inbhe = getBoundary(v1);
 	Halfedge* v1outbhe = v1inbhe ? v1inbhe->getNext() : nullptr;

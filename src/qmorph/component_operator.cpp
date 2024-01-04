@@ -32,18 +32,34 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 		mesh->deleteFace(oldHe->getSym()->getFace());
 	}
 	mesh->deleteEdge(oldEdge);
-	//mesh->createEdge(va->getMutable(), newVertex);
+	mesh->createEdge(va->getMutable(), newVertex);
 	//mesh->createEdge(newVertex, vb->getMutable());
-	//if (!isBoundary0) {
-	//	mesh->createEdge(newVertex, v1->getMutable());
-	//	mesh->createFace(mesh->getHalfedge(newVertex, v1));
-	//	mesh->createFace(mesh->getHalfedge(v1, newVertex));
-	//}
-	//if (!isBoundary1) {
-	//	mesh->createEdge(newVertex, v2->getMutable());
-	//	mesh->createFace(mesh->getHalfedge(newVertex, v2));
-	//	mesh->createFace(mesh->getHalfedge(v2, newVertex));
-	//}
+	/*if (!isBoundary0) {
+		bool patched = false;
+		if (mesh->getHalfedge(newVertex, va)->isBoundary()) {
+			mesh->createFace(mesh->getHalfedge(newVertex, va));
+			patched = true;
+		}
+		mesh->createEdge(newVertex, v1->getMutable());
+		mesh->createFace(mesh->getHalfedge(newVertex, v1));
+		mesh->createFace(mesh->getHalfedge(v1, newVertex));
+		if (patched) {
+			mesh->deleteFace(mesh->getHalfedge(newVertex, va)->getFace());
+		}
+	}
+	if (!isBoundary1) {
+		bool patched = false;
+		if (mesh->getHalfedge(newVertex, va)->isBoundary()) {
+			mesh->createFace(mesh->getHalfedge(newVertex, va));
+			patched = true;
+		}
+		mesh->createEdge(newVertex, v2->getMutable());
+		mesh->createFace(mesh->getHalfedge(newVertex, v2));
+		mesh->createFace(mesh->getHalfedge(v2, newVertex));
+		if (patched) {
+			mesh->deleteFace(mesh->getHalfedge(newVertex, va)->getFace());
+		}
+	}*/
 	return newVertex;
 }
 
