@@ -22,6 +22,9 @@ glm::vec3 MeshDisplay::calculateSurfaceNormal(const Face* face) {
 glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 	glm::vec3 result(0, 0, 0);
 	const Halfedge* he = vertex->getHalfedge();
+	if (he == nullptr) {
+		return glm::vec3(0, 1, 0);
+	}
 	do {
 		if(he->getFace())
 			result += calculateSurfaceNormal(he->getFace());

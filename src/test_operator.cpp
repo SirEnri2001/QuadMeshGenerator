@@ -16,6 +16,8 @@ void TestOperator::create() {
 void TestOperator::proceed() {
 	const Halfedge* he = &mesh->getHalfedges().at(id);
 	compOperator->splitEdge(he->getMutable(), glm::vec3((he->getSource()->getPosition() + he->getTarget()->getPosition()) * 0.5f));
+	
+	
 	//if (!he->isBoundary()) {
 	//	mesh->deleteFace(he->getFace()->getMutable());
 	//}

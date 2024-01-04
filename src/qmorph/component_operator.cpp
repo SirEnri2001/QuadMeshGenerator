@@ -32,8 +32,8 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 		mesh->deleteFace(oldHe->getSym()->getFace());
 	}
 	mesh->deleteEdge(oldEdge);
-	mesh->createEdge(va->getMutable(), newVertex);
-	mesh->createEdge(newVertex, vb->getMutable());
+	//mesh->createEdge(va->getMutable(), newVertex);
+	//mesh->createEdge(newVertex, vb->getMutable());
 	//if (!isBoundary0) {
 	//	mesh->createEdge(newVertex, v1->getMutable());
 	//	mesh->createFace(mesh->getHalfedge(newVertex, v1));

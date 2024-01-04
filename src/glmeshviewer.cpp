@@ -195,14 +195,30 @@ void Viewer::mainLoop()
 				mMeshDisplay->createFrame();
 			}
 			ImGui::DragInt("Face ID", &faceId, 1, 0, mMesh->getFaceIdTotal() - 1);
-			if (ImGui::Button("Display Face")&& mMesh->getFaces().find(faceId)!=mMesh->getFaces().cend())
-				mMeshDisplay->markFace(&mMesh->getFaces().at(faceId));
+			if (ImGui::Button("Display Face"))
+				if (mMesh->getFaces().find(faceId) == mMesh->getFaces().cend()) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else {
+					mMeshDisplay->markFace(&mMesh->getFaces().at(faceId));
+				}
 			ImGui::DragInt("Vertex ID", &vertId, 1, 0, mMesh->getVertexIdTotal() - 1);
-			if (ImGui::Button("Display Vertex") && mMesh->getVertices().find(faceId) != mMesh->getVertices().cend())
-				mMeshDisplay->markVertex(&mMesh->getVertices().at(vertId));
+			if (ImGui::Button("Display Vertex"))
+				if (mMesh->getVertices().find(vertId) == mMesh->getVertices().cend()) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else {
+					mMeshDisplay->markVertex(&mMesh->getVertices().at(vertId));
+				}
 			ImGui::DragInt("Halfedge ID", &heId, 1, 0, mMesh->getHalfedgeIdTotal() - 1);
-			if (ImGui::Button("Display Halfedge") && mMesh->getHalfedges().find(heId)!=mMesh->getHalfedges().cend())
-				mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heId));
+			if (ImGui::Button("Display Halfedge"))
+				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else
+				{
+					mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heId));
+				}
 			if (ImGui::Button("Display Boundaries")) {
 				mMeshDisplay->markBoundaries();
 			}
@@ -224,6 +240,18 @@ void Viewer::mainLoop()
 			}
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			// Always center this window when appearing
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+			if (ImGui::BeginPopupModal("Error Marking Component", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text("Cannot find target component to mark!");
+				ImGui::Separator();
+				if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+				ImGui::SetItemDefaultFocus();
+				ImGui::EndPopup();
+			}
 			ImGui::End();
 			if (fu.valid()) {
 				try
@@ -335,7 +363,7 @@ void Viewer::drawScene()
 		mPointShader->setVec3("uColor", glm::vec3(1, 0, 0));
 		glBindVertexArray(meshPoint->VAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshPoint->IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->frameIndices.size() * sizeof(GLuint), mMeshDisplay->frameIndices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->pointIndices.size() * sizeof(GLuint), mMeshDisplay->pointIndices.data(), GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, meshPoint->VBO);
 		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->pointScatter.size() * sizeof(glm::vec4), mMeshDisplay->pointScatter.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
