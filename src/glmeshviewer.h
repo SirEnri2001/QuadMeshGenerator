@@ -42,11 +42,12 @@ protected:
 	GLFWwindow* window;
 
 	// Some shaders
-	std::unique_ptr<Shader> mPointShader;
+	std::unique_ptr<Shader> mHalfedgeShader;
 	std::unique_ptr<Shader> mLineShader;
 	std::unique_ptr<Shader> mCurveShader;
 	std::unique_ptr<Shader> mModelShader;
 	std::unique_ptr<Shader> mGridShader;
+	std::unique_ptr<Shader> mPointShader;
 
 	// Some drawables
 	std::unique_ptr<Drawable> mGridGround;
@@ -58,6 +59,7 @@ protected:
 	std::unique_ptr<Drawable> meshShading;
 	std::unique_ptr<Drawable> meshFrame;
 	std::unique_ptr<Drawable> heSelect;
+	std::unique_ptr<Drawable> meshPoint;
 
 	std::unique_ptr<std::thread> mThread;
 	

@@ -56,6 +56,8 @@ add_library(mesh STATIC
   ./src/mesh/meshnormal.cpp
   ./src/mesh/meshuv.h
   ./src/mesh/meshuv.cpp
+  ./src/mesh/meshrecorder.cpp
+  ./src/mesh/meshrecorder.h
 )
 
 target_include_directories(mesh PUBLIC

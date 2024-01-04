@@ -110,15 +110,17 @@ Viewer::Viewer(const std::string& name) :
 	/* Our initializaton */
 	//setCallbacks();
 
-	mPointShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
+	mHalfedgeShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
 		"../glsl/halfedge3d.geom.glsl");
 	mLineShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
 	mCurveShader = std::make_unique<Shader>("../glsl/curve.vert.glsl", "../glsl/curve.frag.glsl",
 		"../glsl/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
+	mPointShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
 	meshShading = std::make_unique<Drawable>();
 	meshFrame = std::make_unique<Drawable>();
+	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
 	mMeshIO->loadM("../test/data/mesh_214370.m");
@@ -175,7 +177,9 @@ void Viewer::mainLoop()
 		{
 			static float f = 0.0f;
 			static int counter = 0;
-			static int heDisplayId = 0;
+			static int heId = 0;
+			static int faceId = 0;
+			static int vertId = 0;
 			static std::future<void> fu;
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
@@ -185,15 +189,31 @@ void Viewer::mainLoop()
 			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
 			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
 			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
-			//ImGui::DragInt("Halfedge Display ID", &heDisplayId, 1, 0, mMesh->getHalfedges().size());
-			//if (ImGui::Button("Display Halfedge"))
-			//	mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heDisplayId));
+			if (ImGui::Button("Refresh Model")) {
+				mMeshDisplay->create();
+				mMeshDisplay->createFrame();
+			}
+			ImGui::DragInt("Face ID", &faceId, 1, 0, mMesh->getFaceIdTotal() - 1);
+			if (ImGui::Button("Display Face")&& mMesh->getFaces().find(faceId)!=mMesh->getFaces().cend())
+				mMeshDisplay->markFace(&mMesh->getFaces().at(faceId));
+			ImGui::DragInt("Vertex ID", &vertId, 1, 0, mMesh->getVertexIdTotal() - 1);
+			if (ImGui::Button("Display Vertex") && mMesh->getVertices().find(faceId) != mMesh->getVertices().cend())
+				mMeshDisplay->markVertex(&mMesh->getVertices().at(vertId));
+			ImGui::DragInt("Halfedge ID", &heId, 1, 0, mMesh->getHalfedgeIdTotal() - 1);
+			if (ImGui::Button("Display Halfedge") && mMesh->getHalfedges().find(heId)!=mMesh->getHalfedges().cend())
+				mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heId));
+			if (ImGui::Button("Display Boundaries")) {
+				mMeshDisplay->markBoundaries();
+			}
 			if (ImGui::Button("Process Test Operation")) {
+				mMesh->setIntegrityCheck(true);
 				static TestOperator testOper(mMesh.get());
 				testOper.setDisplay(mMeshDisplay.get());
+				testOper.setId(heId);
 				fu = testOper.async();
 			}
 			if (ImGui::Button("Process Q-Morph Operation")) {
+				mMesh->setIntegrityCheck(true);
 				static QMorphOperator qmorphOper(mMesh.get());
 				fu = qmorphOper.async();
 			}
@@ -271,25 +291,27 @@ void Viewer::drawScene()
 	glBindBuffer(GL_ARRAY_BUFFER, meshShading->VBO);
 	glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->vertexBuffer.size() * sizeof(glm::vec4), mMeshDisplay->vertexBuffer.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
 	glBindVertexArray(meshShading->VAO);
 	glDrawElements(GL_TRIANGLES, mMeshDisplay->indices.size(), GL_UNSIGNED_INT, 0);
 
 	if (displayFrame) {
 
-		mPointShader->use();
-		mPointShader->setMat4("uProjView", projView);
-		mPointShader->setVec3("uLightPos", mCamera.eye);
-		mPointShader->setVec3("uColor", glm::vec3(0, 0, 0));
-		mPointShader->setMat4("uModel", model);
-		mPointShader->setMat3("uModelInvTr", glm::inverse(model));
-		mPointShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
-		mPointShader->setInt("markCount", 5);
-		mPointShader->setFloat("thickness", lineWidth);
-		mPointShader->setFloat("halfedgeOffset", halfedgeOffset);
-		mPointShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset);
+		mHalfedgeShader->use();
+		mHalfedgeShader->setMat4("uProjView", projView);
+		mHalfedgeShader->setVec3("uLightPos", mCamera.eye);
+		mHalfedgeShader->setVec3("uColor", glm::vec3(0, 0, 0));
+		mHalfedgeShader->setMat4("uModel", model);
+		mHalfedgeShader->setMat3("uModelInvTr", glm::inverse(model));
+		mHalfedgeShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
+		mHalfedgeShader->setInt("markCount", 5);
+		mHalfedgeShader->setFloat("thickness", lineWidth);
+		mHalfedgeShader->setFloat("halfedgeOffset", halfedgeOffset);
+		mHalfedgeShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset);
 		glBindVertexArray(meshFrame->VAO);
 		// Allocate space and upload the data from CPU to GPU
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);
@@ -304,6 +326,21 @@ void Viewer::drawScene()
 		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(2*sizeof(glm::vec4)));
 		glBindVertexArray(meshFrame->VAO);
 		glDrawElements(GL_LINES, mMeshDisplay->frameIndices.size(), GL_UNSIGNED_INT, 0);
+		
+		mPointShader->use();
+		mPointShader->setFloat("uSize", 5.0);
+		mPointShader->setMat4("uModel", model);
+		mPointShader->setMat4("uProjView", projView);
+		mPointShader->setVec3("uColor", glm::vec3(1, 0, 0));
+		glBindVertexArray(meshPoint->VAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshPoint->IBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->frameIndices.size() * sizeof(GLuint), mMeshDisplay->frameIndices.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, meshPoint->VBO);
+		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->pointScatter.size() * sizeof(glm::vec4), mMeshDisplay->pointScatter.data(), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+		glBindVertexArray(meshPoint->VAO);
+		glDrawElements(GL_POINTS, mMeshDisplay->pointIndices.size(), GL_UNSIGNED_INT, 0);
 	}
 }
 

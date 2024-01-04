@@ -34,11 +34,19 @@ MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
 }
 void MeshDisplay::create() {
 	using namespace glm;
+	indices.clear();
+	vertexBuffer.clear();
+	vertexBufferOffset.clear();
 	std::vector<const Vertex*> vertsUntriangulated;
 	int ind = 0;
-	for (auto& faceIndex : mesh->getFaces()) {
-		int index = faceIndex.first;
-		const Face* face = &faceIndex.second;
+	int faceId = 0;
+	for (int faceId = 0; faceId < mesh->getFaceIdTotal(); faceId++) {
+		int index = faceId;
+		auto& idFace = mesh->getFaces().find(faceId);
+		if (idFace == mesh->getFaces().cend()) {
+			continue;
+		}
+		const Face* face = &idFace->second;
 		glm::vec3 normal = calculateSurfaceNormal(face);
 		glm::vec4 normal4 = glm::vec4(normal, 1.0);
 
@@ -48,15 +56,19 @@ void MeshDisplay::create() {
 			vertsUntriangulated.push_back(he->getTarget());
 		} while (he = he->getNext(), he != face->getHalfedge());
 		if (vertsUntriangulated.size() == 3) {
+			vertexBufferOffset[face->getId()] = ind;
 			indices.push_back(ind++);
 			indices.push_back(ind++);
 			indices.push_back(ind++);
 			vertexBuffer.push_back(vertsUntriangulated[0]->getPosition());
 			vertexBuffer.push_back(normal4);
+			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
 			vertexBuffer.push_back(vertsUntriangulated[1]->getPosition());
 			vertexBuffer.push_back(normal4);
+			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
 			vertexBuffer.push_back(vertsUntriangulated[2]->getPosition());
 			vertexBuffer.push_back(normal4);
+			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
 			continue;
 		}
 
@@ -85,9 +97,11 @@ void MeshDisplay::create() {
 		if (true || currentConvex == nullptr) {
 			const Halfedge* he = face->getHalfedge();
 			int startInd = 1;
+			vertexBufferOffset[face->getId()] = ind;
 			do {
 				vertexBuffer.push_back(he->getTarget()->getPosition());
 				vertexBuffer.push_back(normal4);
+				vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
 				if (he == face->getHalfedge()->getNext() || he == face->getHalfedge()->getPrev()) {
 					continue;
 				}
@@ -139,11 +153,25 @@ void MeshDisplay::create() {
 }
 
 void MeshDisplay::createFrame() {
-	for (int i = 0; i < mesh->getHalfedges().size(); i++) {
+	frameIndices.clear();
+	frameVertexBuffer.clear();
+	pointScatter.clear();
+	pointIndices.clear();
+	for (int i = 0; i < mesh->getHalfedgeIdTotal(); i++) {
+		auto& idHe = mesh->getHalfedges().find(i);
+		if (idHe == mesh->getHalfedges().cend()) {
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
+			continue;
+		}
 		const Halfedge* he = &mesh->getHalfedges().at(i);
 		frameVertexBuffer.push_back(he->getSource()->getPosition());
 		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
-		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getSource()),0));
+		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getSource()), 0));
 		frameVertexBuffer.push_back(he->getTarget()->getPosition());
 		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
 		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getTarget()), 0));
@@ -157,4 +185,26 @@ void MeshDisplay::markHalfedge(const Halfedge* he, glm::vec4 color) {
 	frameVertexBuffer[he->getId() * 6 + 4] = glm::vec4(0, 0, 1, 1);
 
 	markCount++;
+}
+
+void MeshDisplay::markFace(const Face* face, glm::vec4 color) {
+	int startId = vertexBufferOffset[face->getId()];
+	int endId = face->getId() < mesh->getFaceIdTotal() - 1 ?
+		vertexBufferOffset[face->getId() + 1] : 
+		vertexBuffer.size()/3;
+	for (int i = startId; i < endId; i++) {
+		vertexBuffer[i * 3 + 2] = color;
+	}
+}
+
+void MeshDisplay::markBoundaries() {
+	for (auto& idHe : mesh->getHalfedges()) {
+		if(idHe.second.isBoundary())
+			markHalfedge(&idHe.second);
+	}
+}
+
+void MeshDisplay::markVertex(const Vertex* vertex) {
+	pointScatter.push_back(vertex->getPosition());
+	pointIndices.push_back(pointIndices.size());
 }

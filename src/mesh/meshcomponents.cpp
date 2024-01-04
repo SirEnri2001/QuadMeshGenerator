@@ -131,12 +131,10 @@ Mesh::Mesh() {
 //	}
 //};
 
-MeshRecorder::MeshRecorder(Mesh* mesh) :mesh(mesh)
-{
-
-}
-
 const Face* Mesh::createFace(Halfedge* he) {
+	if (integrityCheck) {
+		validate(he);
+	}
 	int id = fIdSum++;
 	faces[id] = Face(id);
 	Face* face = &faces[id];
@@ -149,6 +147,7 @@ const Face* Mesh::createFace(Halfedge* he) {
 		he1->setFace(face);
 
 	} while (he1 = he1->getNext(), he1 != he);
+	face->setHalfedge(he);
 	return face;
 }
 
@@ -415,7 +414,9 @@ Face* Face::getMutable() const {
 	return const_cast<Face*>(this);
 }
 const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) const {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	auto& iter = vertexHalfedge.find({ source->getId(), target->getId() });
 	if (iter == vertexHalfedge.end()) {
 		return nullptr;
@@ -424,7 +425,9 @@ const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) co
 }
 
 Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	auto iter = vertexHalfedge.find({ source->getId(), target->getId() });
 	if (iter == vertexHalfedge.end()) {
 		return nullptr;
@@ -433,31 +436,59 @@ Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) {
 }
 
 const std::unordered_map<ID, Vertex>& Mesh::getVertices() const {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return vertices;
 }
 
 const std::unordered_map<ID, Halfedge>& Mesh::getHalfedges() const {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return halfedges;
 }
 
 const std::unordered_map<ID, Face>& Mesh::getFaces() const {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return faces;
 }
 
 Vertex* Mesh::vertexAt(ID id) {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return &vertices[id];
 }
 
 Halfedge* Mesh::halfedgeAt(ID id) {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return &halfedges[id];
 }
 
 Face* Mesh::faceAt(ID id) {
-	validate(this);
+	if (integrityCheck) {
+		validate(this);
+	}
 	return &faces[id];
+}
+
+void Mesh::setIntegrityCheck(bool val) {
+	integrityCheck = val;
+}
+
+ID Mesh::getHalfedgeIdTotal() {
+	return heIdSum;
+}
+
+ID Mesh::getFaceIdTotal() {
+	return fIdSum;
+}
+
+ID Mesh::getVertexIdTotal() {
+	return vIdSum;
 }

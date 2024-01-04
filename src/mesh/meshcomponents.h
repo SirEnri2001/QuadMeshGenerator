@@ -19,11 +19,6 @@ class MeshNormal;
 class MeshAssert;
 
 typedef std::pair<Halfedge*, Halfedge*> Edge;
-
-enum ComponentType {
-	VERTEX, HALFEDGE, FACE
-};
-
 typedef unsigned int ID;
 
 class Component {
@@ -160,6 +155,7 @@ class Mesh {
 	ID heIdSum = 0;
 	ID fIdSum = 0;
 	std::unique_ptr<MeshAssert> meshAssert;
+	bool integrityCheck = false;
 public:
 	Mesh();
 	Vertex* createVertex();
@@ -180,6 +176,10 @@ public:
 	Vertex* vertexAt(ID id);
 	Halfedge* halfedgeAt(ID id);
 	Face* faceAt(ID id);
+	void setIntegrityCheck(bool val);
+	ID getHalfedgeIdTotal();
+	ID getFaceIdTotal();
+	ID getVertexIdTotal();
 	//std::unique_ptr<MeshNormal> attribNormal;
 	//std::unique_ptr<MeshUV> attribUV;
 	friend class MeshInteriorOperator;
@@ -214,11 +214,3 @@ public:
 //		iter = components->cbegin();
 //	}
 //};
-
-
-
-class MeshRecorder {
-	Mesh* mesh;
-public:
-	MeshRecorder(Mesh* mesh);
-};

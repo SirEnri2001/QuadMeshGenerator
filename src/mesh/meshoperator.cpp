@@ -18,6 +18,10 @@ MeshUserOperator::MeshUserOperator(Mesh* mesh) : MeshOperator(mesh) {
 }
 
 std::future<void> MeshUserOperator::async() {
+    if (mThread) {
+        mThread->join();
+        prm = std::promise<void>();
+    }
     mThread = std::make_unique<std::thread>([this] {
         try
         {

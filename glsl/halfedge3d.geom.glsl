@@ -22,8 +22,8 @@ void main()
     vec4 normal = (nor[0]+nor[1])/2.0;
     vec4 tangent = vec4(normalize(cross(vec3(normal), vec3(pos2-pos1))),0);
     vec4 direction = vec4(normalize(vec3(pos2) - vec3(pos1)),0.0);
-    vec4 p1 = pos1 - tangent*halfedgeOffset + direction*halfedgeLengthOffset;
-    vec4 p2 = pos2 - tangent*halfedgeOffset - direction*halfedgeLengthOffset;
+    vec4 p1 = pos1 + tangent*halfedgeOffset + direction*halfedgeLengthOffset;
+    vec4 p2 = pos2 + tangent*halfedgeOffset - direction*halfedgeLengthOffset;
     vec4 coords[4];
     coords[0] = p1 + tangent*thickness+offset*normal;
     coords[1] = p1 - tangent*thickness+offset*normal;
