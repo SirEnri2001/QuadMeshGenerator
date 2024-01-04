@@ -206,5 +206,7 @@ void MeshDisplay::markBoundaries() {
 
 void MeshDisplay::markVertex(const Vertex* vertex) {
 	pointScatter.push_back(vertex->getPosition());
+	pointScatter.push_back(glm::vec4(1, 0, 0, 1));
+	pointScatter.push_back(glm::vec4(calculateVertexNormal(vertex),0));
 	pointIndices.push_back(pointIndices.size());
 }

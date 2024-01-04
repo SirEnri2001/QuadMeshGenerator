@@ -117,7 +117,8 @@ Viewer::Viewer(const std::string& name) :
 		"../glsl/curve.geom.glsl");
 	mModelShader = std::make_unique<Shader>("../glsl/model.vert.glsl", "../glsl/model.frag.glsl");
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
-	mPointShader = std::make_unique<Shader>("../glsl/line.vert.glsl", "../glsl/line.frag.glsl");
+	mPointShader = std::make_unique<Shader>("../glsl/point.vert.glsl", "../glsl/point.frag.glsl",
+		"../glsl/point.geom.glsl");
 	meshShading = std::make_unique<Drawable>();
 	meshFrame = std::make_unique<Drawable>();
 	meshPoint = std::make_unique<Drawable>();
@@ -338,7 +339,11 @@ void Viewer::drawScene()
 		glBindBuffer(GL_ARRAY_BUFFER, meshPoint->VBO);
 		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->pointScatter.size() * sizeof(glm::vec4), mMeshDisplay->pointScatter.data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
 		glBindVertexArray(meshPoint->VAO);
 		glDrawElements(GL_POINTS, mMeshDisplay->pointIndices.size(), GL_UNSIGNED_INT, 0);
 	}
