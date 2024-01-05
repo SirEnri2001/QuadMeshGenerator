@@ -33,8 +33,8 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 	}
 	mesh->deleteEdge(oldEdge);
 	mesh->createEdge(va->getMutable(), newVertex);
-	//mesh->createEdge(newVertex, vb->getMutable());
-	/*if (!isBoundary0) {
+	mesh->createEdge(newVertex, vb->getMutable());
+	if (!isBoundary0) {
 		bool patched = false;
 		if (mesh->getHalfedge(newVertex, va)->isBoundary()) {
 			mesh->createFace(mesh->getHalfedge(newVertex, va));
@@ -49,17 +49,17 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 	}
 	if (!isBoundary1) {
 		bool patched = false;
-		if (mesh->getHalfedge(newVertex, va)->isBoundary()) {
-			mesh->createFace(mesh->getHalfedge(newVertex, va));
+		if (mesh->getHalfedge(va, newVertex)->isBoundary()) {
+			mesh->createFace(mesh->getHalfedge(va, newVertex));
 			patched = true;
 		}
 		mesh->createEdge(newVertex, v2->getMutable());
 		mesh->createFace(mesh->getHalfedge(newVertex, v2));
 		mesh->createFace(mesh->getHalfedge(v2, newVertex));
 		if (patched) {
-			mesh->deleteFace(mesh->getHalfedge(newVertex, va)->getFace());
+			mesh->deleteFace(mesh->getHalfedge(va, newVertex)->getFace());
 		}
-	}*/
+	}
 	return newVertex;
 }
 

@@ -14,7 +14,7 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	const Halfedge* he = &mesh->getHalfedges().at(id);
+	const Halfedge* he = &mesh->getHalfedges().at(0);
 	compOperator->splitEdge(he->getMutable(), glm::vec3((he->getSource()->getPosition() + he->getTarget()->getPosition()) * 0.5f));
 	
 	

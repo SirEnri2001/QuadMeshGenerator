@@ -221,6 +221,7 @@ void Viewer::mainLoop()
 				else {
 					mMeshDisplay->markHalfedge(v->getHalfedge());
 					he = v->getHalfedge();
+					heId = he->getId();
 				}
 			}
 			ImGui::DragInt("Halfedge ID", &heId, 1, 0, mMesh->getHalfedgeIdTotal() - 1);
@@ -230,30 +231,42 @@ void Viewer::mainLoop()
 				}
 				else
 				{
-					mMeshDisplay->markHalfedge(&mMesh->getHalfedges().at(heId));
 					he = &mMesh->getHalfedges().at(heId);
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he);
 				}
 			ImGui::SameLine();
-			if (ImGui::Button("Display Next"))
+			if (ImGui::Button("Next"))
 				if (!he) {
 					ImGui::OpenPopup("Error Marking Component");
 				}
 				else
 				{
-					mMeshDisplay->createFrame();
-					mMeshDisplay->markHalfedge(he->getNext());
 					he = he->getNext();
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he);
 				}
 			ImGui::SameLine();
-			if (ImGui::Button("Display Prev"))
+			if (ImGui::Button("Prev"))
 				if (!he) {
 					ImGui::OpenPopup("Error Marking Component");
 				}
 				else
 				{
-					mMeshDisplay->createFrame();
-					mMeshDisplay->markHalfedge(he->getPrev());
 					he = he->getPrev();
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he);
+				}
+			ImGui::SameLine();
+			if (ImGui::Button("Sym"))
+				if (!he) {
+					ImGui::OpenPopup("Error Marking Component");
+				}
+				else
+				{
+					he = he->getSym();
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedge(he);
 				}
 			if (ImGui::Button("Display Halfedge Cycle"))
 				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
@@ -261,7 +274,8 @@ void Viewer::mainLoop()
 				}
 				else
 				{
-					mMeshDisplay->markHalfedgeCycle(&mMesh->getHalfedges().at(heId));
+					mMeshDisplay->createFrame();
+					mMeshDisplay->markHalfedgeCycle(he);
 				}
 			if (ImGui::Button("Display Boundaries")) {
 				mMeshDisplay->markBoundaries();

@@ -163,19 +163,30 @@ void Mesh::deleteFace(Face* face) {
 }
 
 void Mesh::deleteEdge(Halfedge* he) {
+	//  <-v1outbhe-[v1]<-v1inbhe-
+	//              ^|
+	//              |he12
+	//           he21|
+	//              |v
+	//   -v2inbhe->[v2]-v2outbhe->
+	Halfedge* he21 = he;
+	Halfedge* he12 = he->getSym();
+	Halfedge* v1outbhe = he21->getNext();
+	Halfedge* v1inbhe = he12->getPrev();
+	Halfedge* v2inbhe = he21->getPrev();
+	Halfedge* v2outbhe = he12->getNext();
 	he->setDeleted(true);
 	he->getSym()->setDeleted(true);
-	// set source & target vertex to another valid halfedge;
-	if (he->getNext()->getSym() != he) {
-		he->getTarget()->setHalfedge(he->getNext()->getSym());
-		he->getPrev()->setNext(he->getSym()->getNext());
+	if (v1outbhe != he12) {
+		he21->getTarget()->setHalfedge(v1inbhe);
+		v1inbhe->setNext(v1outbhe);
 	}
 	else {
 		he->getTarget()->setHalfedge(nullptr);
 	}
-	if (he->getPrev()->getSym() != he) {
-		he->getSource()->setHalfedge(he->getPrev()->getSym());
-		he->getSym()->getPrev()->setNext(he->getNext());
+	if (v2outbhe != he21) {
+		he->getSource()->setHalfedge(v2inbhe);
+		v2inbhe->setNext(v2outbhe);
 	}
 	else {
 		he->getSource()->setHalfedge(nullptr);
