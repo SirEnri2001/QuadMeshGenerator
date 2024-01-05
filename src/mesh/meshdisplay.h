@@ -2,6 +2,7 @@
 #include "meshcomponents.h"
 
 class MeshDisplay {
+protected:
 	Mesh* mesh;
 public:
 	std::vector<glm::vec4> vertexBuffer;
@@ -26,7 +27,9 @@ public:
 	MeshDisplay(Mesh* mesh);
 	void create();
 	void createFrame();
-	void markHalfedge(const Halfedge* he, glm::vec4 color = glm::vec4(1, 0, 1, 1));
+	void markHalfedge(const Halfedge* he, 
+		glm::vec4 sourceColor = glm::vec4(0, 0, 1, 1), 
+		glm::vec4 targetColor = glm::vec4(1,0,0,1));
 	void markFace(const Face* face, glm::vec4 color = glm::vec4(1, 0.5, 0.5, 1));
 	void markBoundaries();
 	void markVertex(const Vertex* vertex);

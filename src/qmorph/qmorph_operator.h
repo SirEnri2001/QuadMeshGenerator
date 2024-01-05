@@ -7,8 +7,10 @@ class ComponentOperator;
 class SideDefineOperator;
 class FrontEdgeOperator;
 class Smoother;
+class QMorphDisplay;
 
 class QMorphOperator : public MeshUserOperator {
+protected:
 	std::shared_ptr<FrontEdgeOperator> feOperator;
 	std::shared_ptr<SideDefineOperator> sideOperator;
 	std::shared_ptr<ComponentOperator> compOperator;
@@ -21,4 +23,5 @@ public:
 	void create();
 	QMorphOperator(Mesh* mesh);
 	void operator()() override;
+	friend class QMorphDisplay;
 };

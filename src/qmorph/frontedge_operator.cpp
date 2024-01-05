@@ -27,6 +27,7 @@ FrontEdgeOperator::FrontEdgeOperator(Mesh* mesh) :MeshOperator(mesh) {
 void FrontEdgeOperator::create(std::shared_ptr<ComponentOperator>& compOper, std::shared_ptr<SideDefineOperator>& sideOper) {
 	compOperator = compOper;
 	sideOperator = sideOper;
+	initFrontEdgeGroup();
 }
 
 FrontEdge* FrontEdgeOperator::getFront(const Halfedge* he) {
@@ -302,6 +303,11 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 	int i = 0;
 	do
 	{
+		//
+		//  --fe-->     --fe-->
+		//         ^  |
+		//         fe fe
+		//         |  v
 		if (fhe->getNextFe()->he == fhe->he->getSym()) {
 			setFront(fhe->he, false);
 			setFront(fhe->getNextFe()->he, false);

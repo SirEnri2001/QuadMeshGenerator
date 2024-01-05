@@ -249,7 +249,6 @@ int ComponentOperator::numQuad(const Vertex* vert) {
 
 bool ComponentOperator::isQuad(const Face* face)
 {
-	assert(face);
 	int vertNum = 0;
 	const Halfedge* he = face->getHalfedge();
 	do {

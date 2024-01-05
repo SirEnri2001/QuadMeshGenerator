@@ -150,10 +150,12 @@ void Smoother::triangleInteriorSmooth(const Vertex* vertex, bool legacyWeight = 
 	// average point position
 	glm::vec3 averagePos(0.0, 0.0, 0.0);
 	int count = 0;
-	for (auto& idV : mesh->getVertices()) {
-		averagePos = averagePos + glm::vec3(idV.second.getPosition());
+	const Halfedge* he = vertex->getHalfedge();
+	do {
+
+		averagePos = averagePos + glm::vec3(he->getSource()->getPosition());
 		count++;
-	}
+	} while (he = he->getNext()->getSym(), he != vertex->getHalfedge());
 	averagePos = averagePos / (float)count;
 	Vertex* v = const_cast<Vertex*>(vertex);
 	v->setPosition(glm::vec4(averagePos, 1));

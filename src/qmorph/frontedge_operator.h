@@ -6,6 +6,7 @@
 struct FrontEdge;
 class ComponentOperator;
 class SideDefineOperator;
+class QMorphDisplay;
 class FrontEdgeOperator : public MeshOperator {
 	std::unordered_map<const Halfedge*, FrontEdge> heToFe;
 	std::unordered_map<const Vertex*, int> frontEdgeCount;
@@ -43,4 +44,5 @@ public:
 	const Halfedge* edgeRecovery(Vertex*, Vertex*); //return a CTHEdgeHandle* source former param and target latter
 	std::list<const Halfedge*>* calculateRambdaSet(const Vertex*, const Vertex*);
 	const Vertex* mergeEdge(Vertex* va, Vertex* vb);
+	friend class QMorphDisplay;
 };

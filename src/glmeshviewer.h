@@ -53,6 +53,7 @@ protected:
 	std::unique_ptr<Drawable> mGridGround;
 	std::unique_ptr<Mesh> mMesh;
 	std::unique_ptr<MeshDisplay> mMeshDisplay;
+	std::unique_ptr<QMorphDisplay> mQMorphDisplay;
 	std::unique_ptr<MeshOperator> mMeshOperator;
 	std::unique_ptr<MeshIO> mMeshIO;
 

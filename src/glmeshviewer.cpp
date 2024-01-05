@@ -2,6 +2,7 @@
 #include "mesh/meshdisplay.h"
 #include "mesh/meshoperator.h"
 #include "mesh/meshio.h"
+#include "qmorph/qmorph_display.h"
 
 #include <future>
 
@@ -125,10 +126,12 @@ Viewer::Viewer(const std::string& name) :
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
 	mMeshIO->loadM("../test/data/mesh_214370.m");
-	mMeshDisplay->create();
-	mMeshDisplay->createFrame();
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
+	qmorphOperator->create();
+	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
+	mMeshDisplay->create();
+	mMeshDisplay->createFrame();
 }
 
 Viewer::~Viewer()
@@ -186,17 +189,17 @@ void Viewer::mainLoop()
 		{
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-			ImGui::Checkbox("Display Frame", &displayFrame);
-
-			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
-			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
-			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
+			//ImGui::Checkbox("Display Frame", &displayFrame);
+			//ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			//ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
+			//ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
+			//ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
 			if (ImGui::Button("Refresh Model")) {
 				mMeshDisplay->create();
 				mMeshDisplay->createFrame();
 			}
 			ImGui::DragInt("Face ID", &faceId, 1, 0, mMesh->getFaceIdTotal() - 1);
+			ImGui::SameLine();
 			if (ImGui::Button("Display Face"))
 				if (mMesh->getFaces().find(faceId) == mMesh->getFaces().cend()) {
 					ImGui::OpenPopup("Error Marking Component");
@@ -205,6 +208,7 @@ void Viewer::mainLoop()
 					mMeshDisplay->markFace(&mMesh->getFaces().at(faceId));
 				}
 			ImGui::DragInt("Vertex ID", &vertId, 1, 0, mMesh->getVertexIdTotal() - 1);
+			ImGui::SameLine();
 			if (ImGui::Button("Display Vertex"))
 				if (mMesh->getVertices().find(vertId) == mMesh->getVertices().cend()) {
 					ImGui::OpenPopup("Error Marking Component");
@@ -268,7 +272,8 @@ void Viewer::mainLoop()
 					mMeshDisplay->createFrame();
 					mMeshDisplay->markHalfedge(he);
 				}
-			if (ImGui::Button("Display Halfedge Cycle"))
+			ImGui::SameLine();
+			if (ImGui::Button("Cycle"))
 				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
 					ImGui::OpenPopup("Error Marking Component");
 				}
@@ -277,27 +282,36 @@ void Viewer::mainLoop()
 					mMeshDisplay->createFrame();
 					mMeshDisplay->markHalfedgeCycle(he);
 				}
-			if (ImGui::Button("Display Boundaries")) {
+			ImGui::SameLine();
+			if (ImGui::Button("Boundaries")) {
 				mMeshDisplay->markBoundaries();
 			}
-			if (ImGui::Button("Process Test Operation")) {
-				mMesh->setIntegrityCheck(true);
-				static TestOperator testOper(mMesh.get());
-				testOper.setDisplay(mMeshDisplay.get());
-				testOper.setId(heId);
-				fu = testOper.async();
-			}
+			//if (ImGui::Button("Process Test Operation")) {
+			//	mMesh->setIntegrityCheck(true);
+			//	static TestOperator testOper(mMesh.get());
+			//	testOper.setDisplay(mMeshDisplay.get());
+			//	testOper.setId(heId);
+			//	fu = testOper.async();
+			//}
 			if (ImGui::Button("Process Q-Morph Operation")) {
 				mMesh->setIntegrityCheck(true);
 				static QMorphOperator qmorphOper(mMesh.get());
 				fu = qmorphOper.async();
 			}
 
+			if (ImGui::Button("Mark Front Edges")) {
+				mQMorphDisplay->markFrontEdges();
+			}
+
+			if (ImGui::Button("Mark Front Edge Classes")) {
+				mQMorphDisplay->markFrontEdgeClass();
+			}
+
 			if (ImGui::Button("Debug Break")) {
 				callDebugBreak();
 			}
 
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			// Always center this window when appearing
 			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

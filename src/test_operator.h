@@ -1,10 +1,9 @@
 #include "mesh/mesh.h"
 #include "mesh/meshoperator.h"
-#include "qmorph/component_operator.h"
+#include "qmorph/qmorph_operator.h"
 #include <future>
 
-class TestOperator : public MeshUserOperator {
-	ComponentOperator* compOperator;
+class TestOperator : public QMorphOperator {
 	int id = 0;
 public:
 	MeshDisplay* display;

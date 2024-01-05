@@ -4,7 +4,7 @@ struct FrontEdge {
 	const Halfedge* top;
 	FrontEdge* prevFe;
 	FrontEdge* nextFe;
-	bool needTop = false;
+	bool needTop = true;
 	bool rightCornerSharp = false;
 
 	FrontEdge* getPrevFe() const {
