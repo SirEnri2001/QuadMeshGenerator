@@ -226,3 +226,34 @@ void MeshDisplay::markHalfedgeCycle(const Halfedge* he) {
 		markHalfedge(he);
 	} while (he = he->getNext(), he != he1);
 }
+
+float MeshDisplay::getLinePointDistance(glm::vec4 point, glm::vec4 lineDirection, glm::vec4 pointOnLine) {
+	using namespace glm;
+	vec3 line = normalize(vec3(lineDirection));
+	vec3 pointDirection = vec3(point - pointOnLine);
+	float dotProduct = dot(line, pointDirection);
+	float angle_radius = acos(dotProduct / length(pointDirection));
+	return sin(angle_radius) * length(pointDirection);
+}
+
+const Vertex* MeshDisplay::selectVertex(glm::vec4 eye, glm::vec4 ray) {
+	using namespace glm;
+	float minDistance = FLT_MAX;
+	const Vertex* selectedVertex = nullptr;
+	for (auto& idV : mesh->getVertices()) {
+		const Vertex* v = &idV.second;
+		//if (dot(calculateVertexNormal(v), vec3(ray)) > 0) {
+		//	continue;
+		//}
+		//std::cout << getLinePointDistance(modelMat * v->getPosition(), ray, eye) << std::endl;
+		if (getLinePointDistance(modelMat * v->getPosition(), ray, eye) > vertexSize) {
+			continue;
+		}
+		float distance = length(vec3(eye) - vec3(modelMat * v->getPosition()));
+		if (distance < minDistance) {
+			minDistance = distance;
+			selectedVertex = v;
+		}
+	}
+	return selectedVertex;
+}

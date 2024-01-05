@@ -158,6 +158,14 @@ void Viewer::mainLoop()
 	while (!glfwWindowShouldClose(window))
 #endif
 	{
+		static const Halfedge* he = nullptr;
+		static const Vertex* v = nullptr;
+		static float f = 0.0f;
+		static int counter = 0;
+		static int heId = 0;
+		static int faceId = 0;
+		static int vertId = 0;
+		static std::future<void> fu;
 		// Poll and handle events (inputs, window resize, etc.)
 		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
 		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
@@ -176,14 +184,6 @@ void Viewer::mainLoop()
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
 		{
-			static float f = 0.0f;
-			static int counter = 0;
-			static int heId = 0;
-			static int faceId = 0;
-			static int vertId = 0;
-			static std::future<void> fu;
-			static const Halfedge* he = nullptr;
-			static const Vertex* v = nullptr;
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Display Frame", &displayFrame);
@@ -312,11 +312,19 @@ void Viewer::mainLoop()
 			}
 		}
 		if (!io.WantCaptureMouse && ImGui::IsMouseDown(1)) {
-			mCamera.PolarRotateAboutX(-io.MouseDelta.y/ windowHeight*1000.f);
-			mCamera.PolarRotateAboutY(-io.MouseDelta.x/ windowWidth*1000.f);
+			mCamera.PolarRotateAboutX(-io.MouseDelta.y / windowHeight * 1000.f);
+			mCamera.PolarRotateAboutY(-io.MouseDelta.x / windowWidth * 1000.f);
 		}
 		else if (!io.WantCaptureMouse && io.MouseWheel != 0.0f) {
 			mCamera.PolarZoom(io.MouseWheel * 300);
+		}
+		else if (!io.WantCaptureMouse && ImGui::IsMouseDown(0)) {
+			v = mMeshDisplay->selectVertex(glm::vec4(mCamera.eye, 1.0), mCamera.getRay(io.MousePos.x,io.MousePos.y));
+			if (v) {
+				mMeshDisplay->createFrame();
+				mMeshDisplay->markVertex(v);
+				vertId = v->getId();
+			}
 		}
 
 		// Rendering
@@ -347,7 +355,6 @@ void Viewer::createGUIWindow()
 
 void Viewer::drawScene()
 {
-	
 	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(modelScale));
 	glm::mat4 projView = mCamera.getProjView();
 	drawGridGround(projView);
@@ -419,6 +426,8 @@ void Viewer::drawScene()
 		glBindVertexArray(meshPoint->VAO);
 		glDrawElements(GL_POINTS, mMeshDisplay->pointIndices.size(), GL_UNSIGNED_INT, 0);
 	}
+
+	mMeshDisplay->modelMat = model;
 }
 
 void Viewer::createGridGround()

@@ -110,3 +110,17 @@ void Camera::PolarRecomputeAttributes()
 	up = glm::normalize(glm::vec3(sphericalTransform * glm::vec4(upOrigin, 0.0f)));
 	right = glm::normalize(glm::cross(glm::normalize(ref - eye), up));
 }
+
+glm::vec4 Camera::getRay(int x, int y) {
+	using namespace glm;
+
+	// transform screen coordinate into -1 ~ 1
+	auto sx = (2.f * x / width) - 1.f;
+	auto sy = 1.f - (2.f * y / height);
+
+	// get the ray from camera eye
+	auto len = length(ref - eye);
+	auto V = up * len * tan(radians(fovy) / 2);
+	auto H = right * len * aspect * tan(radians(fovy) / 2);
+	return vec4(normalize(ref + sx * H + sy * V - eye), 0);
+}

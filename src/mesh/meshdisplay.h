@@ -16,9 +16,12 @@ public:
 	std::vector<glm::vec4> pointScatter;
 	std::vector<ID> pointIndices;
 	int markCount = 0;
+	float vertexSize = 5.0f;
 
 	glm::vec3 calculateSurfaceNormal(const Face* face);
 	glm::vec3 calculateVertexNormal(const Vertex* vertex);
+	glm::mat4 modelMat;
+	float getLinePointDistance(glm::vec4 point, glm::vec4 lineDirection, glm::vec4 pointOnLine);
 
 	MeshDisplay(Mesh* mesh);
 	void create();
@@ -28,4 +31,5 @@ public:
 	void markBoundaries();
 	void markVertex(const Vertex* vertex);
 	void markHalfedgeCycle(const Halfedge* he);
+	const Vertex* selectVertex(glm::vec4 eye, glm::vec4 ray);
 };
