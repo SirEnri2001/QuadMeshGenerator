@@ -51,7 +51,7 @@ void MeshDisplay::create() {
 	int faceId = 0;
 	for (int faceId = 0; faceId < mesh->getFaceIdTotal(); faceId++) {
 		int index = faceId;
-		auto& idFace = mesh->getFaces().find(faceId);
+		auto idFace = mesh->getFaces().find(faceId);
 		if (idFace == mesh->getFaces().cend()) {
 			continue;
 		}
@@ -167,7 +167,7 @@ void MeshDisplay::createFrame() {
 	pointScatter.clear();
 	pointIndices.clear();
 	for (int i = 0; i < mesh->getHalfedgeIdTotal(); i++) {
-		auto& idHe = mesh->getHalfedges().find(i);
+		auto idHe = mesh->getHalfedges().find(i);
 		if (idHe == mesh->getHalfedges().cend()) {
 			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));
 			frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 0));

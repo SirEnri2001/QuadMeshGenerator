@@ -434,7 +434,7 @@ const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) co
 	if (integrityCheck) {
 		validate(this);
 	}
-	auto& iter = vertexHalfedge.find({ source->getId(), target->getId() });
+	auto iter = vertexHalfedge.find({ source->getId(), target->getId() });
 	if (iter == vertexHalfedge.end()) {
 		return nullptr;
 	}
