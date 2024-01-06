@@ -2,6 +2,7 @@
 #include "../mesh/mesh.h"
 #include <string>
 #include <future>
+#include <mutex>
 
 class MeshOperator {
 protected:
@@ -9,15 +10,6 @@ protected:
 public:
 	MeshOperator(Mesh* mesh);
 	virtual void create();
-};
-
-struct MutableComponent {
-	union Component
-	{
-		Vertex* vertex;
-		Halfedge* halfedge;
-		Face* face;
-	};
 };
 
 class MeshInteriorOperator : public MeshOperator {
@@ -31,5 +23,10 @@ class MeshUserOperator : public MeshOperator {
 public:
 	virtual void operator()() = 0;
 	MeshUserOperator(Mesh* mesh);
+	void setMutex(std::mutex& mu);
 	std::future<void> async();
+};
+
+class MeshBasicOperator : public MeshOperator {
+
 };

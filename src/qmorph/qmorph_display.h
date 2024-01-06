@@ -4,9 +4,9 @@
 class QMorphDisplay {
 	Mesh* mesh;
 protected:
+public:
 	QMorphOperator* qmorphOperator;
 	MeshDisplay* display;
-public:
 	QMorphDisplay(QMorphOperator* oper, MeshDisplay* display);
 	void markFrontEdges();
 	void markFrontEdgeClass();

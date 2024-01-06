@@ -11,16 +11,17 @@ class QMorphDisplay;
 
 class QMorphOperator : public MeshUserOperator {
 protected:
+public:
 	std::shared_ptr<FrontEdgeOperator> feOperator;
 	std::shared_ptr<SideDefineOperator> sideOperator;
 	std::shared_ptr<ComponentOperator> compOperator;
 	Smoother* smoother;
-public:
 	int doQMorphProcess();
 	int doEdgeRecovery();
 	int doSmooth(int epoch = 2);
 	int doSeam();
 	void create();
+	void test();
 	QMorphOperator(Mesh* mesh);
 	void operator()() override;
 	friend class QMorphDisplay;

@@ -23,11 +23,11 @@ struct FrontEdge {
 		this->top = top;
 	}
 
-	bool isLeftCornerSharp() {
+	bool isLeftCornerSharp() const {
 		return prevFe->rightCornerSharp;
 	}
 
-	bool isRightCornerSharp() {
+	bool isRightCornerSharp() const {
 		return rightCornerSharp;
 	}
 };

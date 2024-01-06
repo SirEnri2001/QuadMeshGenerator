@@ -33,10 +33,10 @@ int QMorphOperator::doQMorphProcess() {
 			continue;
 		}
 		feOperator->updateFeClassification();
-		return 0;
 		if (sideOperator->doCornerGenerate()) {
 			continue;
 		}
+		return 0;
 		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
@@ -168,9 +168,13 @@ void QMorphOperator::create() {
 	smoother = new Smoother(mesh);
 }
 
+void QMorphOperator::test() {
+}
+
 void QMorphOperator::operator()() {
 	create();
 	doQMorphProcess();
+	//test();
 }
 
 QMorphOperator::QMorphOperator(Mesh* mesh) : MeshUserOperator(mesh) {

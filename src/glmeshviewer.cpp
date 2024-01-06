@@ -3,6 +3,7 @@
 #include "mesh/meshoperator.h"
 #include "mesh/meshio.h"
 #include "qmorph/qmorph_display.h"
+#include "thread_support/thread_support.h"
 
 #include <future>
 
@@ -130,6 +131,9 @@ Viewer::Viewer(const std::string& name) :
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	qmorphOperator->create();
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
+	pauseMutex = std::make_unique<std::mutex>();
+	testOperator->display = mQMorphDisplay.get();
+	testOperator->qmorphOperator = qmorphOperator.get();
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
 }
@@ -286,17 +290,14 @@ void Viewer::mainLoop()
 			if (ImGui::Button("Boundaries")) {
 				mMeshDisplay->markBoundaries();
 			}
-			//if (ImGui::Button("Process Test Operation")) {
-			//	mMesh->setIntegrityCheck(true);
-			//	static TestOperator testOper(mMesh.get());
-			//	testOper.setDisplay(mMeshDisplay.get());
-			//	testOper.setId(heId);
-			//	fu = testOper.async();
-			//}
+			if (ImGui::Button("Process Test Operation")) {
+				mMesh->setIntegrityCheck(true);
+				fu = testOperator->async();
+			}
 			if (ImGui::Button("Process Q-Morph Operation")) {
 				mMesh->setIntegrityCheck(true);
-				static QMorphOperator qmorphOper(mMesh.get());
-				fu = qmorphOper.async();
+				qmorphOperator->setMutex(*pauseMutex);
+				fu = qmorphOperator->async();
 			}
 
 			if (ImGui::Button("Mark Front Edges")) {
@@ -305,6 +306,16 @@ void Viewer::mainLoop()
 
 			if (ImGui::Button("Mark Front Edge Classes")) {
 				mQMorphDisplay->markFrontEdgeClass();
+			}
+			if (!check_pause()) {
+				if (ImGui::Button("Pause")) {
+					call_pause();
+				}
+			}
+			else {
+				if (ImGui::Button("Resume")) {
+					call_resume();
+				}
 			}
 
 			if (ImGui::Button("Debug Break")) {
@@ -325,18 +336,20 @@ void Viewer::mainLoop()
 				ImGui::EndPopup();
 			}
 			ImGui::End();
-			if (fu.valid()) {
-				try
-				{
-					fu.get();
-					std::cout << "mission complete!\n";
+			if (!check_pause()) {
+				if (fu.valid()) {
+					try
+					{
+						fu.get();
+						std::cout << "mission complete!\n";
+					}
+					catch (...)
+					{
+						std::cout << "execution failed" << std::endl;
+					}
+					mMeshDisplay->create();
+					mMeshDisplay->createFrame();
 				}
-				catch (...)
-				{
-					std::cout << "execution failed" << std::endl;
-				}
-				mMeshDisplay->create();
-				mMeshDisplay->createFrame();
 			}
 		}
 		if (!io.WantCaptureMouse && ImGui::IsMouseDown(1)) {

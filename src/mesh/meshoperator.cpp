@@ -1,6 +1,6 @@
 #include "meshoperator.h"
 
-MeshOperator::MeshOperator(Mesh* mesh) :mesh(mesh)
+MeshOperator::MeshOperator(Mesh* mesh) : mesh(mesh)
 {
 
 }
@@ -9,11 +9,13 @@ void MeshOperator::create() {
 
 }
 
-MeshInteriorOperator::MeshInteriorOperator(Mesh* mesh) : MeshOperator(mesh) {
+MeshInteriorOperator::MeshInteriorOperator(Mesh* mesh) : 
+    MeshOperator(mesh) {
 
 }
 
-MeshUserOperator::MeshUserOperator(Mesh* mesh) : MeshOperator(mesh) {
+MeshUserOperator::MeshUserOperator(Mesh* mesh) : 
+    MeshOperator(mesh) {
 
 }
 
@@ -34,4 +36,8 @@ std::future<void> MeshUserOperator::async() {
         }
         });
     return this->prm.get_future();
+}
+
+void MeshUserOperator::setMutex(std::mutex& mu) {
+
 }

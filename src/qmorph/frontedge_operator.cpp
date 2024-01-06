@@ -3,6 +3,7 @@
 #include "../mesh/meshcomponents.h"
 #include "component_operator.h"
 #include "sidedefine_operator.h"
+#include "../thread_support/thread_support.h"
 
 FrontEdge* FrontEdgeOperator::getNextFe(FrontEdge* fe) {
 	return fe->nextFe;
@@ -374,7 +375,7 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 typedef struct FaceIterTreeNode
 {
 	struct FaceIterTreeNode* parent;
-	std::unique_ptr<struct FaceIterTreeNode> child[3];
+	std::vector<std::unique_ptr<struct FaceIterTreeNode>> children;
 	const Halfedge* parentConnectedHe;
 	const Face* face;
 	int childNum;
@@ -383,6 +384,7 @@ typedef struct FaceIterTreeNode
 // Nc & Nd must not connected
 // Topology version of calculateRambdaSet
 std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* Nc, const Vertex* Nd) {
+	step_over_pause();
 	std::list<std::unique_ptr<FaceIterTreeNode>> roots;
 	std::list<FaceIterTreeNode*>faceIterTrees;
 	std::list<const Face*> traversedFace;
@@ -426,7 +428,7 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 				newNode->face = attachedFace;
 				newNode->parentConnectedHe = he->getSym();
 				newNode->parent = curTree;
-				curTree->child[childIdx++] = std::move(unewNode);
+				newNode->children.push_back(std::move(unewNode));
 				curTree->childNum++;
 				if (he->getSym()->getNext()->getTarget() == Nd) {
 					targetTree = newNode;

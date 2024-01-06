@@ -23,8 +23,8 @@ void QMorphDisplay::markFrontEdgeClass() {
 	for (auto& fe : qmorphOperator->feOperator->frontEdgeGroups) {
 		const FrontEdge* fe1 = fe;
 		do {
-			glm::vec4 sourceColor = fe1->getPrevFe()->rightCornerSharp?glm::vec4(1,1,0,1): glm::vec4(0, 1, 1, 1);
-			glm::vec4 targetColor = fe1->rightCornerSharp ? glm::vec4(1, 1, 0, 1) : glm::vec4(0, 1, 1, 1);
+			glm::vec4 sourceColor = fe1->isLeftCornerSharp() ? glm::vec4(1, 1, 0, 1) : glm::vec4(0, 0.5, 0.8, 1);
+			glm::vec4 targetColor = fe1->isRightCornerSharp() ? glm::vec4(1, 1, 0, 1) : glm::vec4(0, 0.5, 0.8, 1);
 			display->markHalfedge(fe1->he, sourceColor, targetColor);
 		} while (fe1 = fe1->getNextFe(), fe1 != fe);
 	}

@@ -55,8 +55,8 @@ void SideDefineOperator::setSide(const FrontEdge* lfe, const Halfedge* rightSide
 	}
 	setSide(getRightSide(lfe), false);
 	setSide(getLeftSide(lfe->getNextFe()), false);
-	leftSideEdges[lfe->getNextFe()] = rightSideForLfe->getSym();
-	rightSideEdges[lfe] = rightSideForLfe;
+	leftSideEdges[lfe->getNextFe()] = nullptr;
+	rightSideEdges[lfe] = nullptr;
 }
 // these functions only return its finding of side he & its topology state
 SideDefineResult SideDefineOperator::verticalSideSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
@@ -302,6 +302,7 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 	setSide(lfe->getPrevFe(), NULL);
 	setSide(lfe, NULL);
 	setSide(rfe, NULL);
+	
 	if (compOperator->isQuad(rfe->getNextFe()->he->getFace())) {
 		compOperator->buildQuad(
 			lfe->he->getMutable(),

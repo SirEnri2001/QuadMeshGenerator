@@ -13,6 +13,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # Set up libraries
 
+add_library(thread_support STATIC
+    ./src/thread_support/thread_support.cpp
+    ./src/thread_support/thread_support.h
+)
+
 add_library(qmorph STATIC
   ./src/qmorph/frontedge_operator.cpp
   ./src/qmorph/frontedge_operator.h
@@ -58,6 +63,8 @@ add_library(mesh STATIC
   ./src/mesh/meshuv.cpp
   ./src/mesh/meshrecorder.cpp
   ./src/mesh/meshrecorder.h
+  ./src/mesh/meshcontroller.cpp
+  ./src/mesh/meshcontroller.h
 )
 
 target_include_directories(mesh PUBLIC
@@ -114,4 +121,10 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/tinyobj
 )
 
-target_link_libraries(GLMeshViewer PUBLIC qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32)
+target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32)
+
+add_executable(test_thread
+    ./src/tests/test_thread.cpp
+    ./src/tests/test_thread.h
+)
+target_link_libraries(test_thread PUBLIC thread_support)

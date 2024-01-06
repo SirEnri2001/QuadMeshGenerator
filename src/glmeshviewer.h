@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <mutex>
 
 #include "camera.h"
 #include "shader.h"
@@ -66,6 +67,7 @@ protected:
 	
 	std::unique_ptr<TestOperator> testOperator;
 	std::unique_ptr<QMorphOperator> qmorphOperator;
+	std::unique_ptr<std::mutex> pauseMutex;
 
 	// Screen size, update in each frame
 	int windowWidth = 1920;

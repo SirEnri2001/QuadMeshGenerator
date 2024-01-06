@@ -3,14 +3,15 @@
 #include "qmorph/qmorph_operator.h"
 #include <future>
 
-class TestOperator : public QMorphOperator {
+class TestOperator : public MeshUserOperator {
 	int id = 0;
 public:
-	MeshDisplay* display;
+	QMorphOperator* qmorphOperator;
+	QMorphDisplay* display;
 	TestOperator(Mesh* mesh);
 	void create();
 	void proceed();
-	void setDisplay(MeshDisplay* display) {
+	void setDisplay(QMorphDisplay* display) {
 		this->display = display;
 	}
 	void operator()() override;
