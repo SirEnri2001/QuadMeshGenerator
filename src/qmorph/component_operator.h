@@ -8,6 +8,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+
 class ComponentOperator : public MeshInteriorOperator {
 public:
 	glm::vec3 normalVertex(const Vertex* vertex);

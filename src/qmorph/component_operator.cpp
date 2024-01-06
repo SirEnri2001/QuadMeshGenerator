@@ -1,5 +1,6 @@
 #include "component_operator.h"
 #include "../mesh/meshcomponents.h"
+#include "../thread_support/thread_support.h"
 #include <queue>
 
 //             v1
@@ -16,6 +17,7 @@
 // Only allowed in triangular mesh
 const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 {
+	step_over_pause();
 	Halfedge* oldEdge = oldHe;
 	Vertex* newVertex = mesh->createVertex();
 	newVertex->setPosition(glm::vec4(pos,1.0));
@@ -60,6 +62,7 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 			mesh->deleteFace(mesh->getHalfedge(va, newVertex)->getFace());
 		}
 	}
+	step_over_pause();
 	return newVertex;
 }
 

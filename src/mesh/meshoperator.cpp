@@ -1,4 +1,5 @@
 #include "meshoperator.h"
+#include "../thread_support/thread_support.h"
 
 MeshOperator::MeshOperator(Mesh* mesh) : mesh(mesh)
 {
@@ -22,8 +23,10 @@ MeshUserOperator::MeshUserOperator(Mesh* mesh) :
 std::future<void> MeshUserOperator::async() {
     if (mThread) {
         mThread->join();
+        end_thread_control();
         prm = std::promise<void>();
     }
+    begin_thread_control();
     mThread = std::make_unique<std::thread>([this] {
         try
         {

@@ -340,12 +340,12 @@ void Viewer::mainLoop()
 				if (fu.valid()) {
 					try
 					{
-						fu.get();
-						std::cout << "mission complete!\n";
+						//fu.get();
+						std::cout << "[Thread Complete] \n";
 					}
-					catch (...)
+					catch (std::exception& e)
 					{
-						std::cout << "execution failed" << std::endl;
+						std::cout << "[Thread Exception] " << e.what() << std::endl;
 					}
 					mMeshDisplay->create();
 					mMeshDisplay->createFrame();
