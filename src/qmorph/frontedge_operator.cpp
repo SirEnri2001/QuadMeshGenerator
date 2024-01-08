@@ -384,7 +384,6 @@ typedef struct FaceIterTreeNode
 // Nc & Nd must not connected
 // Topology version of calculateRambdaSet
 std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* Nc, const Vertex* Nd) {
-	step_over_pause();
 	std::list<std::unique_ptr<FaceIterTreeNode>> roots;
 	std::list<FaceIterTreeNode*>faceIterTrees;
 	std::list<const Face*> traversedFace;
@@ -393,7 +392,7 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 	// Init the face-face tree
 	do
 	{
-		if (compOperator->isQuad(he->getFace())) {
+		if (he->isBoundary() || compOperator->isQuad(he->getFace())) {
 			continue;
 		}
 		roots.push_back(std::make_unique<FaceIterTreeNode>());

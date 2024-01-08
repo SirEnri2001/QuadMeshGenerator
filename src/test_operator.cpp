@@ -20,13 +20,9 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	qmorphOperator->feOperator->edgeRecovery(mesh->vertexAt(33)->getMutable(), mesh->vertexAt(26)->getMutable());
-	//qmorphOperator->compOperator->clearFace({
-	//	mesh->getHalfedge(mesh->vertexAt(11),mesh->vertexAt(35)),
-	//	mesh->getHalfedge(mesh->vertexAt(35),mesh->vertexAt(34)),
-	//	mesh->getHalfedge(mesh->vertexAt(34),mesh->vertexAt(33)),
-	//	mesh->getHalfedge(mesh->vertexAt(33),mesh->vertexAt(11))
-	//	});
+	qmorphOperator->compOperator->splitEdge(mesh->getHalfedge(mesh->vertexAt(9), mesh->vertexAt(10))->getMutable(), 
+		(mesh->vertexAt(9)->getPosition() + mesh->vertexAt(10)->getPosition())*0.5f
+		);
 }
 
 void TestOperator::operator()() {

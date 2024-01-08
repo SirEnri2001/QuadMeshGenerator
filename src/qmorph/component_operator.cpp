@@ -18,7 +18,6 @@
 // Only allowed in triangular mesh
 const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 {
-	step_over_pause();
 	Halfedge* oldEdge = oldHe;
 	Vertex* newVertex = mesh->createVertex();
 	newVertex->setPosition(glm::vec4(pos,1.0));
@@ -26,12 +25,21 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 	const Vertex* vb = oldHe->getTarget();
 	const Vertex* v1 = oldHe->getNext()->getTarget();
 	const Vertex* v2 = oldHe->getSym()->getNext()->getTarget();
+
+	const Face* tempFace1 = nullptr;
+	const Face* tempFace2 = nullptr;
 	bool isBoundary0 = oldHe->isBoundary();
 	bool isBoundary1 = oldHe->getSym()->isBoundary();
 	if (!isBoundary0) {
+		if (v1->isBoundary()) {
+			tempFace1 = mesh->createFace(mesh->getBoundary(v1)->getMutable());
+		}
 		mesh->deleteFace(oldHe->getFace());
 	}
 	if (!isBoundary1) {
+		if (v2->isBoundary()) {
+			tempFace2 = mesh->createFace(mesh->getBoundary(v2)->getMutable());
+		}
 		mesh->deleteFace(oldHe->getSym()->getFace());
 	}
 	mesh->deleteEdge(oldEdge);
@@ -63,7 +71,12 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 			mesh->deleteFace(mesh->getHalfedge(va, newVertex)->getFace()->getMutable());
 		}
 	}
-	step_over_pause();
+	if (tempFace1) {
+		mesh->deleteFace(tempFace1->getMutable());
+	}
+	if (tempFace2) {
+		mesh->deleteFace(tempFace2->getMutable());
+	}
 	return newVertex;
 }
 
