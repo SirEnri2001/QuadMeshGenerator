@@ -126,7 +126,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_214370.m");
+	mMeshIO->loadM("../test/data/kkk.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -195,10 +195,10 @@ void Viewer::mainLoop()
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			//ImGui::Checkbox("Display Frame", &displayFrame);
-			//ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			//ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
-			//ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
-			//ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
+			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
+			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
+			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
 			if (ImGui::Button("Refresh Model")) {
 				mMeshDisplay->create();
 				mMeshDisplay->createFrame();
@@ -329,11 +329,11 @@ void Viewer::mainLoop()
 				ImGui::EndPopup();
 			}
 			ImGui::End();
-			if (!check_pause()) {
+			if (!check_subthread()) {
 				if (fu.valid()) {
 					try
 					{
-						//fu.get();
+						fu.get();
 						std::cout << "[Thread Complete] \n";
 					}
 					catch (std::exception& e)

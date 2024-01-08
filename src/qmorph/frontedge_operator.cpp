@@ -4,6 +4,7 @@
 #include "component_operator.h"
 #include "sidedefine_operator.h"
 #include "../thread_support/thread_support.h"
+#include "../mesh/meshdisplay.h"
 
 FrontEdge* FrontEdgeOperator::getNextFe(FrontEdge* fe) {
 	return fe->nextFe;
@@ -309,11 +310,17 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 		//         ^  |
 		//         fe fe
 		//         |  v
-		if (fhe->getNextFe()->he == fhe->he->getSym()) {
-			setFront(fhe->he, false);
-			setFront(fhe->getNextFe()->he, false);
-			fhe = fhe->getNextFe();
-		}
+		//if (fhe->getNextFe()->he == fhe->he->getSym()) {
+		//	setFront(fhe->he, false);
+		//	setFront(fhe->getNextFe()->he, false);
+		//	fhe = fhe->getNextFe();
+		//	continue;
+		//}
+		//display->create();
+		//display->createFrame();
+		//display->markHalfedge(fhe->he);
+		//step_over_pause();
+		
 		if (!fhe->needTop)
 		{
 			if (fhe->getNextFe()->he == fhe->he->getNext()) {
@@ -351,9 +358,7 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 			if (prevNewFe) {
 				setNextFe(prevNewFe, newFe);
 			}
-			if (newFe) {
-				prevNewFe = newFe;
-			}
+			prevNewFe = newFe;
 			if (!newFeHead) {
 				newFeHead = newFe;
 			}
@@ -361,7 +366,7 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 		else {
 			assert(false);
 		}
-	} while (setFront(fhe->he, false), fhe = fhe->getNextFe(), fhe != getFrontEdgeGroup());
+	} while (fhe = fhe->getNextFe(), fhe != getFrontEdgeGroup());
 	if (prevNewFe) {
 		setNextFe(prevNewFe, newFeHead);
 		updateHeadFrontEdgeGroup(newFeHead);

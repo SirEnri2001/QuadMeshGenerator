@@ -20,9 +20,7 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	qmorphOperator->compOperator->splitEdge(mesh->getHalfedge(mesh->vertexAt(9), mesh->vertexAt(10))->getMutable(), 
-		(mesh->vertexAt(9)->getPosition() + mesh->vertexAt(10)->getPosition())*0.5f
-		);
+	qmorphOperator->feOperator->edgeRecovery(mesh->vertexAt(1)->getMutable(), mesh->vertexAt(40)->getMutable());
 }
 
 void TestOperator::operator()() {

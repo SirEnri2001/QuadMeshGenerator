@@ -193,9 +193,6 @@ void MeshDisplay::markHalfedge(
 	const Halfedge* he, 
 	glm::vec4 sourceColor, 
 	glm::vec4 targetColor) {
-	if (frameVertexBuffer.size() <= he->getId() * 6 + 4) {
-		createFrame();
-	}
 	frameVertexBuffer[he->getId() * 6 + 1] = sourceColor;
 	frameVertexBuffer[he->getId() * 6 + 4] = targetColor;
 	markCount++;

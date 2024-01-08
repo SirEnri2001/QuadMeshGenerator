@@ -11,6 +11,7 @@ QMorphDisplay::QMorphDisplay(QMorphOperator* oper, MeshDisplay* display):display
 }
 
 void QMorphDisplay::markFrontEdges() {
+	display->createFrame();
 	for (auto& fe : qmorphOperator->feOperator->frontEdgeGroups) {
 		const FrontEdge* fe1 = fe;
 		do {
@@ -20,6 +21,7 @@ void QMorphDisplay::markFrontEdges() {
 }
 
 void QMorphDisplay::markFrontEdgeClass() {
+	display->createFrame();
 	for (auto& fe : qmorphOperator->feOperator->frontEdgeGroups) {
 		const FrontEdge* fe1 = fe;
 		do {

@@ -5,6 +5,7 @@
 #include "component_operator.h"
 #include "../mesh/meshcomponents.h"
 #include "smoother.h"
+#include "../thread_support/thread_support.h"
 
 int QMorphOperator::doQMorphProcess() {
 	while (doSmooth(), feOperator->getFrontEdgeGroup())
@@ -61,8 +62,8 @@ int QMorphOperator::doEdgeRecovery() {
 				frontHe->he->getMutable(), 
 				sideOperator->getRightSide(frontHe)->getMutable(),
 				feOperator->edgeRecovery(
-					sideOperator->getLeftSide(frontHe)->getSource()->getMutable(),
-					sideOperator->getRightSide(frontHe)->getMutable()->getTarget()
+					sideOperator->getRightSide(frontHe)->getMutable()->getTarget(),
+					sideOperator->getLeftSide(frontHe)->getSource()->getMutable()
 				)->getMutable()
 			);
 			frontHe->setTop(frontHe->he->getNext()->getNext());

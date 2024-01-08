@@ -1,11 +1,18 @@
-#include "test_thread.h"
-#include <thread>
+#include <list>
 #include <iostream>
-int main() {
-	std::cout << "Test thread start" << std::endl;
-	pause_mutex.lock();
-	std::cout << "locked" << std::endl;
-	pause_mutex.unlock();
-	std::cout << "released" << std::endl;
-	return 0;
+
+int main()
+{
+    std::list<int> l = { 1, 100, 2, 3, 10, 1, 11, -1, 12 };
+
+    auto count1 = l.remove(5);
+    std::cout << count1 << " elements equal to 1 were removed\n";
+
+    auto count2 = l.remove_if([](int n) { return n > 10; });
+    std::cout << count2 << " elements greater than 10 were removed\n";
+
+    std::cout << "Finally, the list contains: ";
+    for (int n : l)
+        std::cout << n << ' ';
+    std::cout << '\n';
 }

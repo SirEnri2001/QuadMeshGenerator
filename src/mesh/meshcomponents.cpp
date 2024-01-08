@@ -87,9 +87,6 @@ Face::~Face() {
 Vertex* Mesh::createVertex() {
 	int id = vIdSum++;
 	vertices[id] = Vertex(id);
-	if (id == 51) {
-		step_over_pause();
-	}
 	return &vertices[id];
 }
 

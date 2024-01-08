@@ -310,8 +310,8 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 			rfe->he->getMutable(),
 			rfe->getNextFe()->he->getPrev()->getSym()->getMutable(),
 			feOperator->edgeRecovery(
-				lfe->he->getSource()->getMutable(), 
-				rfe->getNextFe()->he->getPrev()->getSym()->getTarget()->getMutable()
+				rfe->getNextFe()->he->getPrev()->getSym()->getTarget()->getMutable(),
+				lfe->he->getSource()->getMutable()
 			)->getMutable()
 		);
 		rfe->top = lfe->he->getPrev();
@@ -323,8 +323,8 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 			lfe->he->getMutable(),
 			rfe->he->getMutable(),
 			feOperator->edgeRecovery(
-				lfe->getPrevFe()->he->getNext()->getSym()->getSource()->getMutable(),
-				rfe->he->getTarget()->getMutable()
+				rfe->he->getTarget()->getMutable(),
+				lfe->getPrevFe()->he->getNext()->getSym()->getSource()->getMutable()
 			)->getMutable()
 		);
 		
@@ -401,22 +401,22 @@ int SideDefineOperator::doCornerGenerate() {
 				rfeNext->needTop = false;
 				setSide(lfePrev, NULL);
 				setSide(rfeNext, NULL);
-				feOperator->setFront(rfeNext->he, false);
-				feOperator->setFront(rfe->he, false);
-				feOperator->setFront(lfe->he, false);
 				compOperator->buildQuad(
 					lfe->he->getMutable(),
 					rfe->he->getMutable(),
 					rfeNext->he->getMutable(),
 					feOperator->edgeRecovery(
-						lfe->he->getSource()->getMutable(),
-						rfeNext->he->getTarget()->getMutable()
+						rfeNext->he->getTarget()->getMutable(),
+						lfe->he->getSource()->getMutable()
 					)->getMutable()
 				);
 				const Halfedge* newFeHe = rfeNext->he->getNext()->getSym();
 				FrontEdge* newFe = feOperator->setFront(newFeHe, true);
 				feOperator->setNextFe(newFe, nnRfe);
 				feOperator->setNextFe(lfePrev, newFe);
+				feOperator->setFront(rfeNext->he, false);
+				feOperator->setFront(rfe->he, false);
+				feOperator->setFront(lfe->he, false);
 				feOperator->updateHeadFrontEdgeGroup(newFe);
 
 				return 1;
