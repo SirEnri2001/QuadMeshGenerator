@@ -34,7 +34,11 @@ void step_over_pause() {
 	}
 }
 
-
+void restore_semaphore() {
+	main_acquire_sub_release.try_acquire();
+	main_acquire_sub_release.release();
+	sub_acquire_main_release.try_acquire();
+}
 
 void begin_thread_control() {
 	sub_thread_count++;

@@ -129,8 +129,9 @@ Viewer::Viewer(const std::string& name) :
 	mMeshIO->loadM("../test/data/mesh_214370.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
-	qmorphOperator->create();
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
+	qmorphOperator->setDisplay(mQMorphDisplay->display);
+	qmorphOperator->create();
 	pauseMutex = std::make_unique<std::mutex>();
 	testOperator->display = mQMorphDisplay.get();
 	testOperator->qmorphOperator = qmorphOperator.get();
@@ -167,7 +168,7 @@ void Viewer::mainLoop()
 	{
 		static const Halfedge* he = nullptr;
 		static const Vertex* v = nullptr;
-		static float f = 0.0f;
+		static const Face* f = nullptr;
 		static int counter = 0;
 		static int heId = 0;
 		static int faceId = 0;
@@ -296,7 +297,6 @@ void Viewer::mainLoop()
 			}
 			if (ImGui::Button("Process Q-Morph Operation")) {
 				mMesh->setIntegrityCheck(true);
-				qmorphOperator->setMutex(*pauseMutex);
 				fu = qmorphOperator->async();
 			}
 
@@ -360,14 +360,23 @@ void Viewer::mainLoop()
 			mCamera.PolarZoom(io.MouseWheel * 300);
 		}
 		else if (!io.WantCaptureMouse && ImGui::IsMouseDown(0)) {
+			v = nullptr;
+			he = nullptr;
+			f = nullptr;
 			v = mMeshDisplay->selectVertex(glm::vec4(mCamera.eye, 1.0), mCamera.getRay(io.MousePos.x,io.MousePos.y));
 			if (v) {
 				mMeshDisplay->createFrame();
 				mMeshDisplay->markVertex(v);
 				vertId = v->getId();
 			}
+			else if (he = mMeshDisplay->selectHalfedge(glm::vec4(mCamera.eye, 1.0), 
+				mCamera.getRay(io.MousePos.x, io.MousePos.y))) {
+				heId = he->getId();
+				mMeshDisplay->createFrame();
+				mMeshDisplay->markHalfedge(he);
+				heId = he->getId();
+			}
 		}
-
 		// Rendering
 		ImGui::Render();
 		int display_w, display_h;

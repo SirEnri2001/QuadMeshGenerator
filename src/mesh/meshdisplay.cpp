@@ -244,10 +244,9 @@ const Vertex* MeshDisplay::selectVertex(glm::vec4 eye, glm::vec4 ray) {
 	const Vertex* selectedVertex = nullptr;
 	for (auto& idV : mesh->getVertices()) {
 		const Vertex* v = &idV.second;
-		//if (dot(calculateVertexNormal(v), vec3(ray)) > 0) {
-		//	continue;
-		//}
-		//std::cout << getLinePointDistance(modelMat * v->getPosition(), ray, eye) << std::endl;
+		if (dot(calculateVertexNormal(v), vec3(ray)) > 0) {
+			continue;
+		}
 		if (getLinePointDistance(modelMat * v->getPosition(), ray, eye) > vertexSize) {
 			continue;
 		}
@@ -258,4 +257,54 @@ const Vertex* MeshDisplay::selectVertex(glm::vec4 eye, glm::vec4 ray) {
 		}
 	}
 	return selectedVertex;
+}
+
+const Halfedge* MeshDisplay::selectHalfedge(glm::vec4 eye, glm::vec4 ray) {
+	using namespace glm;
+	for (auto& idHe : mesh->getHalfedges()) {
+		const Halfedge* he = &idHe.second;
+		const Vertex* source = he->getSource();
+		const Vertex* target = he->getTarget();
+		if (source->getId() > target->getId()) {
+			continue;
+		}
+		vec3 normal = cross(vec3(modelMat * target->getPosition() - modelMat * source->getPosition()), vec3(ray));
+		normal = normalize(normal);
+		float distance = dot(normal, vec3(eye - modelMat * target->getPosition()));
+		if (abs(distance) > edgeSize) {
+			continue;
+		}
+		vec3 target_eye = vec3(modelMat * target->getPosition() - eye);
+		vec3 source_eye = vec3(modelMat * source->getPosition() - eye);
+		vec3 nor_target_eye_source = cross(target_eye, source_eye);
+		vec3 nor_target_eye_ray = dot(cross(target_eye, vec3(ray)), nor_target_eye_source) * nor_target_eye_source;
+		nor_target_eye_ray = normalize(nor_target_eye_ray);
+		vec3 nor_ray_eye_source = dot(cross(vec3(ray), source_eye), nor_target_eye_source) * nor_target_eye_source;
+		nor_ray_eye_source = normalize(nor_ray_eye_source);
+		if (dot(nor_target_eye_ray, nor_ray_eye_source) < 0) {
+			continue;
+		}
+		if (he->getFace() && dot(calculateSurfaceNormal(he->getFace()), vec3(ray)) > 0) {
+			continue;
+		}
+		if (he->getSym()->getFace() && dot(calculateSurfaceNormal(he->getSym()->getFace()), vec3(ray)) > 0) {
+			continue;
+		}
+
+		vec3 mid_eye = vec3((modelMat * target->getPosition() + modelMat * source->getPosition()) / 2.f - eye);
+		if (dot(cross(vec3(ray), mid_eye), nor_target_eye_source) > 0) {
+			return he;
+		}
+		else {
+			return he->getSym();
+		}
+	}
+	return nullptr;
+}
+
+void MeshDisplay::markPoint(glm::vec4 pos, glm::vec4 normal) {
+	pointScatter.push_back(pos);
+	pointScatter.push_back(glm::vec4(0, 1, 0, 1));
+	pointScatter.push_back(normal);
+	pointIndices.push_back(pointIndices.size());
 }

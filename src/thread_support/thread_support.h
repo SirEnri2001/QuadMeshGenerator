@@ -10,3 +10,4 @@ void call_pause(); // non block
 void call_resume(); // non block
 bool check_pause(); //non block
 void step_over_pause();//block
+void restore_semaphore();

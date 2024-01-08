@@ -166,16 +166,16 @@ public:
 	inline void deleteVertex(Vertex* v) {
 		vertices.erase(vertices.find(v->getId()));
 	}
-	Halfedge* getBoundary(Vertex* v);
+	const Halfedge* getBoundary(const Vertex* v);
 	void createEdge(Vertex* v1, Vertex* v2);
 	const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const;
-	Halfedge* getHalfedge(const Vertex* source, const Vertex* target);
+	const Halfedge* getHalfedge(const Vertex* source, const Vertex* target);
 	const std::unordered_map<ID, Vertex>& getVertices() const;
 	const std::unordered_map<ID, Halfedge>& getHalfedges() const;
 	const std::unordered_map<ID, Face>& getFaces() const;
-	Vertex* vertexAt(ID id);
-	Halfedge* halfedgeAt(ID id);
-	Face* faceAt(ID id);
+	const Vertex* vertexAt(ID id);
+	const Halfedge* halfedgeAt(ID id);
+	const Face* faceAt(ID id);
 	void setIntegrityCheck(bool val);
 	ID getHalfedgeIdTotal();
 	ID getFaceIdTotal();

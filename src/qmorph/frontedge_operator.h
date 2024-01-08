@@ -19,7 +19,7 @@ class FrontEdgeOperator : public MeshOperator {
 	const FrontEdge* getPrevFe(const FrontEdge* fe);
 	void create();
 public:
-	FrontEdgeOperator(Mesh* mesh);
+	FrontEdgeOperator(Mesh* mesh, MeshDisplay* display);
 	void create(std::shared_ptr<ComponentOperator>& compOper, std::shared_ptr<SideDefineOperator>& sideOper);
 	FrontEdge* getFront(const Halfedge* he);
 	void updateFeClassification();

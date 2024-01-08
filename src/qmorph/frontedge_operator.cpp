@@ -19,7 +19,7 @@ const FrontEdge* FrontEdgeOperator::getPrevFe(const FrontEdge* fe) {
 }
 void FrontEdgeOperator::create() {}
 
-FrontEdgeOperator::FrontEdgeOperator(Mesh* mesh) :MeshOperator(mesh) {
+FrontEdgeOperator::FrontEdgeOperator(Mesh* mesh, MeshDisplay* display) :MeshOperator(mesh, display) {
 	for (auto& idV : mesh->getVertices()) {
 		frontEdgeCount[&idV.second] = 0;
 	}
@@ -477,16 +477,16 @@ const Vertex* ComponentOperator::mergeEdge(Vertex* va, Vertex* vb) {
 	//   \    / \
 	//    \  /   \
 	//     v2
-	Halfedge* he1 = mesh->getHalfedge(va, vb);
-	Halfedge* he2 = he1->getSym();
+	const Halfedge* he1 = mesh->getHalfedge(va, vb);
+	const Halfedge* he2 = he1->getSym();
 	while (
 		he1->getNext()->getSym()->getPrev()->getSource()
 		== he1->getPrev()->getSym()->getNext()->getTarget()) {
-		deleteVertexMergeFace(he1->getNext()->getTarget());
+		deleteVertexMergeFace(he1->getNext()->getTarget()->getMutable());
 	}
-	Vertex* v1 = he1->getNext()->getTarget();
-	Vertex* v2 = he2->getNext()->getTarget();
-	std::list<Vertex*> vbConnectedVertices;
+	const Vertex* v1 = he1->getNext()->getTarget();
+	const Vertex* v2 = he2->getNext()->getTarget();
+	std::list<const Vertex*> vbConnectedVertices;
 
 	Halfedge* he = vb->getHalfedge();
 	do {
@@ -497,10 +497,8 @@ const Vertex* ComponentOperator::mergeEdge(Vertex* va, Vertex* vb) {
 		}
 	} while (he = he->getNext()->getSym(), he != vb->getHalfedge());
 	deleteVertexMergeFace(vb);
-	for (std::list<Vertex*>::iterator iter = vbConnectedVertices.begin(); iter != vbConnectedVertices.end(); ++iter) {
-		splitFace(va, *iter);
-		Halfedge* inwardHe = mesh->getHalfedge(*iter, va);
-		assert(inwardHe);
+	for (std::list<const Vertex*>::iterator iter = vbConnectedVertices.begin(); iter != vbConnectedVertices.end(); ++iter) {
+		splitFace(va, (*iter)->getMutable());
 	}
 	return va;
 }

@@ -1,22 +1,22 @@
 #include "meshoperator.h"
 #include "../thread_support/thread_support.h"
 
-MeshOperator::MeshOperator(Mesh* mesh) : mesh(mesh)
+MeshOperator::MeshOperator(Mesh* mesh, MeshDisplay* display) : mesh(mesh), display(display)
 {
-
+    
 }
 
 void MeshOperator::create() {
 
 }
 
-MeshInteriorOperator::MeshInteriorOperator(Mesh* mesh) : 
-    MeshOperator(mesh) {
+MeshInteriorOperator::MeshInteriorOperator(Mesh* mesh, MeshDisplay* display) :
+    MeshOperator(mesh, display) {
 
 }
 
-MeshUserOperator::MeshUserOperator(Mesh* mesh) : 
-    MeshOperator(mesh) {
+MeshUserOperator::MeshUserOperator(Mesh* mesh, MeshDisplay* display) :
+    MeshOperator(mesh, display) {
 
 }
 
@@ -35,12 +35,13 @@ std::future<void> MeshUserOperator::async() {
         }
         catch (...)
         {
+            restore_semaphore();
             this->prm.set_exception(std::current_exception());
         }
         });
     return this->prm.get_future();
 }
 
-void MeshUserOperator::setMutex(std::mutex& mu) {
-
+void MeshOperator::setDisplay(MeshDisplay* display) {
+    this->display = display;
 }

@@ -35,6 +35,8 @@ public:
 	glm::mat4 getView();
 	glm::vec3 getEye();
 	glm::vec4 getRay(int x, int y);
+	//glm::vec4 getWorldEye();
+	//glm::vec4 getWorldRay();
 
 
 	void PolarRotateAboutX(float deg);

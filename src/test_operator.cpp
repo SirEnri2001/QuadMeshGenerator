@@ -7,6 +7,7 @@
 #include "qmorph/component_operator.h"
 #include "qmorph/qmorph_display.h"
 #include "qmorph/smoother.h"
+#include "thread_support/thread_support.h"
 #include <iostream>
 #include <exception>
 
@@ -19,11 +20,13 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	auto lambdaSet = qmorphOperator->feOperator->edgeRecovery(
-		mesh->getVertices().at(15).getMutable(),
-		mesh->getVertices().at(25).getMutable());
-	display->display->markVertex(mesh->getVertices().at(15).getMutable());
-	display->display->markVertex(mesh->getVertices().at(25).getMutable());
+	qmorphOperator->feOperator->edgeRecovery(mesh->vertexAt(33)->getMutable(), mesh->vertexAt(26)->getMutable());
+	//qmorphOperator->compOperator->clearFace({
+	//	mesh->getHalfedge(mesh->vertexAt(11),mesh->vertexAt(35)),
+	//	mesh->getHalfedge(mesh->vertexAt(35),mesh->vertexAt(34)),
+	//	mesh->getHalfedge(mesh->vertexAt(34),mesh->vertexAt(33)),
+	//	mesh->getHalfedge(mesh->vertexAt(33),mesh->vertexAt(11))
+	//	});
 }
 
 void TestOperator::operator()() {

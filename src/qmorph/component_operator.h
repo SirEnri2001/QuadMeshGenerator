@@ -41,6 +41,7 @@ public:
 	int faceEdges(const Face* face);
 
 	const Halfedge* splitFace(Vertex* v1, Vertex* v2);
+	const Halfedge* splitFace(Vertex* v1, Vertex* v2, Face* face);
 	float acos_limited(float x);
-	ComponentOperator(Mesh* mesh);
+	ComponentOperator(Mesh* mesh, MeshDisplay* display);
 };

@@ -1,6 +1,7 @@
 #include "component_operator.h"
 #include "../mesh/meshcomponents.h"
 #include "../thread_support/thread_support.h"
+#include "../mesh/meshdisplay.h"
 #include <queue>
 
 //             v1
@@ -39,27 +40,27 @@ const Vertex* ComponentOperator::splitEdge(Halfedge* oldHe, glm::vec3 pos)
 	if (!isBoundary0) {
 		bool patched = false;
 		if (mesh->getHalfedge(newVertex, va)->isBoundary()) {
-			mesh->createFace(mesh->getHalfedge(newVertex, va));
+			mesh->createFace(mesh->getHalfedge(newVertex, va)->getMutable());
 			patched = true;
 		}
 		mesh->createEdge(newVertex, v1->getMutable());
-		mesh->createFace(mesh->getHalfedge(newVertex, v1));
-		mesh->createFace(mesh->getHalfedge(v1, newVertex));
+		mesh->createFace(mesh->getHalfedge(newVertex, v1)->getMutable());
+		mesh->createFace(mesh->getHalfedge(v1, newVertex)->getMutable());
 		if (patched) {
-			mesh->deleteFace(mesh->getHalfedge(newVertex, va)->getFace());
+			mesh->deleteFace(mesh->getHalfedge(newVertex, va)->getFace()->getMutable());
 		}
 	}
 	if (!isBoundary1) {
 		bool patched = false;
 		if (mesh->getHalfedge(va, newVertex)->isBoundary()) {
-			mesh->createFace(mesh->getHalfedge(va, newVertex));
+			mesh->createFace(mesh->getHalfedge(va, newVertex)->getMutable());
 			patched = true;
 		}
 		mesh->createEdge(newVertex, v2->getMutable());
-		mesh->createFace(mesh->getHalfedge(newVertex, v2));
-		mesh->createFace(mesh->getHalfedge(v2, newVertex));
+		mesh->createFace(mesh->getHalfedge(newVertex, v2)->getMutable());
+		mesh->createFace(mesh->getHalfedge(v2, newVertex)->getMutable());
 		if (patched) {
-			mesh->deleteFace(mesh->getHalfedge(va, newVertex)->getFace());
+			mesh->deleteFace(mesh->getHalfedge(va, newVertex)->getFace()->getMutable());
 		}
 	}
 	step_over_pause();
@@ -76,19 +77,22 @@ Halfedge* ComponentOperator::swapEdge(Halfedge* oldEdge)
 	Vertex* vb = he1->getTarget();
 	Vertex* v1 = he1->getNext()->getTarget();
 	Vertex* v2 = he2->getNext()->getTarget();
-	mesh->deleteFace(he1->getFace());
-	mesh->deleteFace(he2->getFace());
-	mesh->deleteEdge(oldEdge);
-
-	mesh->createEdge(v1, v2);
-	mesh->createFace(mesh->getHalfedge(v1, v2));
-	mesh->createFace(mesh->getHalfedge(v2, v1));
+	deleteEdgeMergeFace(oldEdge);
+	splitFace(v1, v2, hePrev->getFace());
 	return hePrev->getPrev();
 }
 
 const Halfedge* ComponentOperator::splitFace(Vertex* v1, Vertex* v2) {
 	// find the face that contains v1 and v2
-	Face* face = nullptr;
+	const Face* face = nullptr;
+	const Face* tempFace1 = nullptr;
+	const Face* tempFace2 = nullptr;
+	if (v1->isBoundary()) {
+		tempFace1 = mesh->createFace(mesh->getBoundary(v1)->getMutable());
+	}
+	if (v2->isBoundary()) {
+		tempFace2 = mesh->createFace(mesh->getBoundary(v2)->getMutable());
+	}
 	Halfedge* he = v1->getHalfedge();
 
 	do {
@@ -99,10 +103,40 @@ const Halfedge* ComponentOperator::splitFace(Vertex* v1, Vertex* v2) {
 			}
 		} while (he1 = he1->getNext(), he1 != he);
 	} while (he = he->getNext()->getSym(), he != v1->getHalfedge());
+	mesh->deleteFace(face->getMutable());
+	mesh->createEdge(v1, v2);
+	mesh->createFace(mesh->getHalfedge(v1, v2)->getMutable());
+	mesh->createFace(mesh->getHalfedge(v2, v1)->getMutable());
+	if (tempFace1) {
+		mesh->deleteFace(tempFace1->getMutable());
+	}
+	if (tempFace2) {
+		mesh->deleteFace(tempFace2->getMutable());
+	}
+	return mesh->getHalfedge(v1, v2);
+}
+
+const Halfedge* ComponentOperator::splitFace(Vertex* v1, Vertex* v2, Face* face) {
+	// find the face that contains v1 and v2
+	const Face* tempFace1 = nullptr;
+	const Face* tempFace2 = nullptr;
+	if (v1->isBoundary()) {
+		tempFace1 = mesh->createFace(mesh->getBoundary(v1)->getMutable());
+	}
+	if (v2->isBoundary()) {
+		tempFace2 = mesh->createFace(mesh->getBoundary(v2)->getMutable());
+	}
+	Halfedge* he = v1->getHalfedge();
 	mesh->deleteFace(face);
 	mesh->createEdge(v1, v2);
-	mesh->createFace(mesh->getHalfedge(v1, v2));
-	mesh->createFace(mesh->getHalfedge(v2, v1));
+	mesh->createFace(mesh->getHalfedge(v1, v2)->getMutable());
+	mesh->createFace(mesh->getHalfedge(v2, v1)->getMutable());
+	if (tempFace1) {
+		mesh->deleteFace(tempFace1->getMutable());
+	}
+	if (tempFace2) {
+		mesh->deleteFace(tempFace2->getMutable());
+	}
 	return mesh->getHalfedge(v1, v2);
 }
 
@@ -129,21 +163,27 @@ void ComponentOperator::deleteEdgeMergeFace(Halfedge* tar)
 	Vertex* va = tar->getTarget();
 	Vertex* vb = tar->getSource();
 	Halfedge* hea = tar;
-	Halfedge* he1 = tar->getNext();
-	Halfedge* he2 = tar->getPrev();
+	const Halfedge* he1 = tar->getNext();
+	const Halfedge* he2 = tar->getPrev();
+	bool islandHole = tar->getFace() == tar->getSym()->getFace();
 	mesh->deleteFace(tar->getFace());
-	mesh->deleteFace(tar->getSym()->getFace());
+	if (!islandHole) {
+		mesh->deleteFace(tar->getSym()->getFace());
+	}
 	mesh->deleteEdge(tar);
-	mesh->createFace(he1);
-	if (he2->isBoundary()) {
-		// island hole
-		mesh->createFace(he2);
+	he1 = mesh->getBoundary(va);
+	he2 = mesh->getBoundary(vb);
+	if (he1) {
+		mesh->createFace(he1->getMutable());
+	}
+	if (islandHole && he2) {
+		mesh->createFace(he2->getMutable());
 	}
 	return;
 }
 
 void ComponentOperator::clearFace(std::vector<Halfedge*> heVector) {
-	std::vector<Vertex*> vVector;
+	std::vector<Vertex*> vVector = { };
 	for (auto& he : heVector) {
 		vVector.push_back(he->getSource());
 	}
@@ -155,8 +195,6 @@ void ComponentOperator::clearFace(std::vector<Halfedge*> heVector) {
 		//        \  |
 		//         \ |
 		// v0--he1-->v1
-		// 
-		//  he1==heVector[i]
 		std::list<Vertex*> q;
 		Halfedge* he1 = heVector[i];
 		Halfedge* he2 = heVector[(i + 1) % heVector.size()];
@@ -164,16 +202,15 @@ void ComponentOperator::clearFace(std::vector<Halfedge*> heVector) {
 		Vertex* v1 = he1->getTarget();
 		Vertex* v2 = he2->getTarget();
 		Halfedge* curHe = he1->getNext();
-		std::unordered_map<Vertex*, bool> markDelete;
 		while (curHe != he2)
 		{
 			auto vViter = find(vVector.begin(), vVector.end(), curHe->getTarget());
 			if (vViter != vVector.end()) {
-				curHe =  curHe->getSym()->getNext();
-				deleteEdgeMergeFace(mesh->getHalfedge(v1, *vViter));
+				curHe = curHe->getSym()->getNext();
+				deleteEdgeMergeFace(mesh->getHalfedge(v1, *vViter)->getMutable());
 				continue;
 			}
-			if (std::find(q.begin(), q.end(), curHe->getTarget())!=q.end()) {
+			if (std::find(q.begin(), q.end(), curHe->getTarget()) == q.end()) {
 				q.push_back(curHe->getTarget());
 			}
 			curHe = curHe->getSym()->getNext();
@@ -185,13 +222,13 @@ void ComponentOperator::clearFace(std::vector<Halfedge*> heVector) {
 				Halfedge* he = q.front()->getHalfedge();
 				do {
 					if (std::find(vVector.begin(), vVector.end(), he->getSource()) == vVector.end()
-						&& std::find(q.begin(), q.end(), he->getSource()) != q.end()) {
+						&& std::find(q.begin(), q.end(), he->getSource()) == q.end()) {
 						q.push_back(he->getSource());
 					}
 				} while (he = he->getNext()->getSym(), he != q.front()->getHalfedge());
 			}
 			deleteVertexMergeFace(q.front());
-			q.pop_back();
+			q.pop_front();
 		}
 	}
 }
@@ -322,10 +359,11 @@ glm::vec4 ComponentOperator::bisect(const Halfedge* he1, const Halfedge* he1_nex
 	if (dot(cross(cp2, cp1), localNormal) < 0) {
 		cp3 = -cp3;
 	}
-	return vec4(normalize(cp3), 1.0);
+	return vec4(normalize(cp3), 0.0);
 }
 
 glm::vec3 ComponentOperator::normalVertex(const Vertex* vertex) {
+	
 	using namespace glm;
 	vec3 vsum(0.0, 0.0, 0.0);
 	const Halfedge* he = vertex->getHalfedge();
@@ -333,8 +371,8 @@ glm::vec3 ComponentOperator::normalVertex(const Vertex* vertex) {
 		vec3 a, b, c;
 		a = he->getTarget()->getPosition();
 		b = he->getNext()->getTarget()->getPosition();
-		c = he->getPrev()->getSource()->getPosition();
-		vsum += cross(c - b, a - b);
+		c = he->getSource()->getPosition();
+		vsum += cross(b - a, c - a);
 	} while (he = he->getNext()->getSym(), he != vertex->getHalfedge());
 	return normalize(vsum);
 }
@@ -360,7 +398,7 @@ float ComponentOperator::acos_limited(float x) {
 	return acos(x);
 }
 
-ComponentOperator::ComponentOperator(Mesh* mesh) : MeshInteriorOperator(mesh) {
+ComponentOperator::ComponentOperator(Mesh* mesh, MeshDisplay* display) : MeshInteriorOperator(mesh, display) {
 
 }
 

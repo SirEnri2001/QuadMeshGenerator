@@ -25,7 +25,7 @@ class SideDefineOperator : public MeshOperator {
 	std::unordered_map<const FrontEdge*, const Halfedge*> rightSideEdges;
 	const double constEpsilon = 10.0;
 public:
-	SideDefineOperator(Mesh* mesh);
+	SideDefineOperator(Mesh* mesh, MeshDisplay* display);
 	void create(std::shared_ptr<ComponentOperator>& compOper, std::shared_ptr<FrontEdgeOperator>& feOper);
 	bool isSide(const Vertex* v);
 	bool isSide(const Halfedge* he);

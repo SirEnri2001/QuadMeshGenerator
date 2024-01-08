@@ -4,8 +4,10 @@
 #include "component_operator.h"
 #include "frontedge_operator.h"
 #include "util.h"
+#include "../thread_support/thread_support.h"
+#include "../mesh/meshdisplay.h"
 
-SideDefineOperator::SideDefineOperator(Mesh* mesh) :MeshOperator(mesh) {
+SideDefineOperator::SideDefineOperator(Mesh* mesh, MeshDisplay* display) :MeshOperator(mesh, display) {
 	for (auto& v : mesh->getVertices()) {
 		sideCount[&v.second] = 0;
 	}
@@ -302,7 +304,9 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 	setSide(lfe->getPrevFe(), NULL);
 	setSide(lfe, NULL);
 	setSide(rfe, NULL);
-	
+	display->markHalfedge(lfe->he);
+	display->markHalfedge(rfe->he);
+	step_over_pause();
 	if (compOperator->isQuad(rfe->getNextFe()->he->getFace())) {
 		compOperator->buildQuad(
 			lfe->he->getMutable(),
@@ -326,6 +330,7 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 				rfe->he->getTarget()->getMutable()
 			)->getMutable()
 		);
+		
 		lfe->top = rfe->he->getNext();
 		setSide(rfe, lfe->top);
 	}
@@ -333,15 +338,26 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 		if (frontEdgeSideDefine(lfe->getPrevFe(), lfe)) { //fail to define side edge
 			return 1; //reclassify corner must be called again
 		}
-		compOperator->buildQuad(
+		display->create();
+		display->createFrame();
+		display->markHalfedge(getLeftSide(lfe));
+		display->markHalfedge(lfe->he);
+		display->markHalfedge(rfe->he);
+		display->markHalfedge(feOperator->edgeRecovery(
+			rfe->he->getTarget()->getMutable(),
+			getLeftSide(lfe)->getSource()->getMutable()
+		));
+		step_over_pause();
+		compOperator->buildQuad (
 			getLeftSide(lfe)->getMutable(),
 			lfe->he->getMutable(),
 			rfe->he->getMutable(),
 			feOperator->edgeRecovery(
-				getLeftSide(lfe)->getSource()->getMutable(),
-				rfe->he->getTarget()->getMutable()
+				rfe->he->getTarget()->getMutable(),
+				getLeftSide(lfe)->getSource()->getMutable()
 			)->getMutable()
 		);
+		step_over_pause();
 		setSide(lfe->getPrevFe(), lfe->he->getPrev()->getSym());
 		setSide(rfe, rfe->he->getNext());
 	}

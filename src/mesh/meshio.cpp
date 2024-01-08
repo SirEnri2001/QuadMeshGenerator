@@ -61,9 +61,9 @@ bool MeshIO::loadObj(const std::string& filename) {
 			Face* face = mesh->createFace(nullptr)->getMutable();
 			Halfedge* he = nullptr, * hePrev = nullptr;
 			for (int i = 0; i < numVerticesPerFace; i++) {
-				Vertex* v1 = mesh->vertexAt(shapes[s].mesh.indices[indexSum + i].vertex_index);
-				Vertex* v2 = mesh->vertexAt(shapes[s].mesh.indices[indexSum + (i + 1) % numVerticesPerFace].vertex_index);
-				he = mesh->createHalfedge(v1, v2);
+				const Vertex* v1 = mesh->vertexAt(shapes[s].mesh.indices[indexSum + i].vertex_index);
+				const Vertex* v2 = mesh->vertexAt(shapes[s].mesh.indices[indexSum + (i + 1) % numVerticesPerFace].vertex_index);
+				he = mesh->createHalfedge(v1->getMutable(), v2->getMutable());
 				he->setFace(face);
 				if (hePrev) {
 					hePrev->setNext(he);
@@ -80,17 +80,17 @@ bool MeshIO::loadObj(const std::string& filename) {
 	Halfedge* bHe = nullptr;
 	// init sym halfedges
 	for (auto& idHe : mesh->getHalfedges()) {
-		Halfedge* he = mesh->halfedgeAt(idHe.first);
+		Halfedge* he = idHe.second.getMutable();
 		if (mesh->getHalfedge(he->getTarget(), he->getSource()) == nullptr) {
 			he->setSym(mesh->createHalfedge(he->getTarget(), he->getSource()));
 			bHe = he->getSym();
 			continue;
 		}
-		he->setSym(mesh->getHalfedge(he->getTarget(), he->getSource()));
+		he->setSym(mesh->getHalfedge(he->getTarget(), he->getSource())->getMutable());
 	}
 
 	for (auto& idHe : mesh->getHalfedges()) {
-		Halfedge* he = (&idHe.second)->getMutable();
+		Halfedge* he = idHe.second.getMutable();
 		if (!he->isBoundary()) {
 			continue;
 		}
@@ -206,10 +206,10 @@ bool MeshIO::loadM(const std::string& filename) {
 			he->setSym(mesh->createHalfedge(he->getTarget(), he->getSource()));
 			continue;
 		}
-		he->setSym(mesh->getHalfedge(he->getTarget(), he->getSource()));
+		he->setSym(mesh->getHalfedge(he->getTarget(), he->getSource())->getMutable());
 	}
 	for (auto& idHe : mesh->getHalfedges()) {
-		Halfedge* he = mesh->halfedgeAt(idHe.first);
+		Halfedge* he = idHe.second.getMutable();
 		if (!he->isBoundary()) {
 			continue;
 		}

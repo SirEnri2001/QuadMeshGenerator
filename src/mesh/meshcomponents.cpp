@@ -1,5 +1,6 @@
 #include "meshcomponents.h"
 #include <memory>
+#include "../thread_support/thread_support.h"
 
 Component::Component(ID id) : id(id) {
 }
@@ -200,11 +201,11 @@ void Mesh::deleteEdge(Halfedge* he) {
 	halfedges.erase(halfedges.find(he->getId()));
 }
 
-Halfedge* Mesh::getBoundary(Vertex* v) {
+const Halfedge* Mesh::getBoundary(const Vertex* v) {
 	if (v->getHalfedge() == nullptr) {
 		return nullptr;
 	}
-	Halfedge* he = v->getHalfedge();
+	const Halfedge* he = v->getHalfedge();
 	do {
 		if (he->isBoundary()) {
 			return he;
@@ -220,26 +221,26 @@ Halfedge* Mesh::getBoundary(Vertex* v) {
 //              |v
 //   -v2inbhe->[v2]-v2outbhe->
 void Mesh::createEdge(Vertex* v1, Vertex* v2) {
-	Halfedge* v1inbhe = getBoundary(v1);
-	Halfedge* v1outbhe = v1inbhe ? v1inbhe->getNext() : nullptr;
-	Halfedge* v2inbhe = getBoundary(v2);
-	Halfedge* v2outbhe = v2inbhe ? v2inbhe->getNext() : nullptr;
-	Halfedge* he12 = createHalfedge(v1, v2);
-	Halfedge* he21 = createHalfedge(v2, v1);
-	he12->setSym(he21);
+	const Halfedge* v1inbhe = getBoundary(v1);
+	const Halfedge* v1outbhe = v1inbhe ? v1inbhe->getNext() : nullptr;
+	const Halfedge* v2inbhe = getBoundary(v2);
+	const Halfedge* v2outbhe = v2inbhe ? v2inbhe->getNext() : nullptr;
+	const Halfedge* he12 = createHalfedge(v1, v2);
+	const Halfedge* he21 = createHalfedge(v2, v1);
+	he12->getMutable()->setSym(he21->getMutable());
 	if (v1inbhe) {
-		v1inbhe->setNext(he12);
-		he21->setNext(v1outbhe);
+		v1inbhe->getMutable()->setNext(he12->getMutable());
+		he21->getMutable()->setNext(v1outbhe->getMutable());
 	}
 	else {
-		he21->setNext(he12);
+		he21->getMutable()->setNext(he12->getMutable());
 	}
 	if (v2inbhe) {
-		he12->setNext(v2outbhe);
-		v2inbhe->setNext(he21);
+		he12->getMutable()->setNext(v2outbhe->getMutable());
+		v2inbhe->getMutable()->setNext(he21->getMutable());
 	}
 	else {
-		he12->setNext(he21);
+		he12->getMutable()->setNext(he21->getMutable());
 	}
 }
 
@@ -311,7 +312,14 @@ glm::vec2 Vertex::getUV() const {
 
 bool Vertex::isBoundary() const {
 	validate(this);
-	return boundary;
+	//return boundary;
+	const Halfedge* he = halfedge;
+	do {
+		if (he->isBoundary()) {
+			return true;
+		}
+	} while (he = he->getNext()->getSym(), he != halfedge);
+	return false;
 }
 
 Vertex* Vertex::getMutable() const {
@@ -441,7 +449,7 @@ const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) co
 	return iter->second;
 }
 
-Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) {
+const Halfedge* Mesh::getHalfedge(const Vertex* source, const Vertex* target) {
 	if (integrityCheck) {
 		validate(this);
 	}
@@ -473,21 +481,21 @@ const std::unordered_map<ID, Face>& Mesh::getFaces() const {
 	return faces;
 }
 
-Vertex* Mesh::vertexAt(ID id) {
+const Vertex* Mesh::vertexAt(ID id) {
 	if (integrityCheck) {
 		validate(this);
 	}
 	return &vertices[id];
 }
 
-Halfedge* Mesh::halfedgeAt(ID id) {
+const Halfedge* Mesh::halfedgeAt(ID id) {
 	if (integrityCheck) {
 		validate(this);
 	}
 	return &halfedges[id];
 }
 
-Face* Mesh::faceAt(ID id) {
+const Face* Mesh::faceAt(ID id) {
 	if (integrityCheck) {
 		validate(this);
 	}

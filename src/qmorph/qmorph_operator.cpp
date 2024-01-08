@@ -159,9 +159,9 @@ int QMorphOperator::doSeam() {
 }
 
 void QMorphOperator::create() {
-	feOperator = std::make_shared<FrontEdgeOperator>(mesh);
-	sideOperator = std::make_shared<SideDefineOperator>(mesh);
-	compOperator = std::make_shared<ComponentOperator>(mesh);
+	feOperator = std::make_shared<FrontEdgeOperator>(mesh, display);
+	sideOperator = std::make_shared<SideDefineOperator>(mesh, display);
+	compOperator = std::make_shared<ComponentOperator>(mesh, display);
 	feOperator->create(compOperator, sideOperator);
 	sideOperator->create(compOperator, feOperator);
 	compOperator->create();
