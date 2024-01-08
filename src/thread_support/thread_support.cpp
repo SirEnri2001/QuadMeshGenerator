@@ -11,8 +11,10 @@ int sub_thread_count = 0;
 
 
 void call_resume() {
-	main_acquire_sub_release.acquire();
-	sub_acquire_main_release.release();
+	if (sub_thread_count > 0) {
+		main_acquire_sub_release.acquire();
+		sub_acquire_main_release.release();
+	}
 }
 
 bool check_pause() {
@@ -51,4 +53,8 @@ void end_thread_control() {
 
 void call_pause() {
 
+}
+
+bool check_subthread() {
+	return sub_thread_count > 0;
 }

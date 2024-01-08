@@ -193,12 +193,18 @@ void MeshDisplay::markHalfedge(
 	const Halfedge* he, 
 	glm::vec4 sourceColor, 
 	glm::vec4 targetColor) {
+	if (frameVertexBuffer.size() <= he->getId() * 6 + 4) {
+		createFrame();
+	}
 	frameVertexBuffer[he->getId() * 6 + 1] = sourceColor;
 	frameVertexBuffer[he->getId() * 6 + 4] = targetColor;
 	markCount++;
 }
 
 void MeshDisplay::markFace(const Face* face, glm::vec4 color) {
+	if (vertexBufferOffset.find(face->getId())==vertexBufferOffset.cend()) {
+		create();
+	}
 	int startId = vertexBufferOffset[face->getId()];
 	int endId = face->getId() < mesh->getFaceIdTotal() - 1 ?
 		vertexBufferOffset[face->getId() + 1] : 

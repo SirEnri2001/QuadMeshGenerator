@@ -307,15 +307,8 @@ void Viewer::mainLoop()
 			if (ImGui::Button("Mark Front Edge Classes")) {
 				mQMorphDisplay->markFrontEdgeClass();
 			}
-			if (!check_pause()) {
-				if (ImGui::Button("Pause")) {
-					call_pause();
-				}
-			}
-			else {
-				if (ImGui::Button("Resume")) {
-					call_resume();
-				}
+			if (check_subthread() && ImGui::Button("Resume")) {
+				call_resume();
 			}
 
 			if (ImGui::Button("Debug Break")) {

@@ -32,10 +32,12 @@ std::future<void> MeshUserOperator::async() {
         {
             (*this)();
             this->prm.set_value();
+            end_thread_control();
         }
         catch (...)
         {
             restore_semaphore();
+            end_thread_control();
             this->prm.set_exception(std::current_exception());
         }
         });

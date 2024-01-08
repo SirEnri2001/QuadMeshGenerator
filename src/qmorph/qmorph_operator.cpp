@@ -36,7 +36,6 @@ int QMorphOperator::doQMorphProcess() {
 		if (sideOperator->doCornerGenerate()) {
 			continue;
 		}
-		return 0;
 		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
