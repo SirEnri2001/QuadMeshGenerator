@@ -81,10 +81,10 @@ private:
 	bool showAnotherWindow = false;
 
 	bool displayFrame = true;
-	float lineWidth = 0.001f;
+	float lineWidth = 1.f;
 	float modelScale = 500.f;
-	float halfedgeOffset = 0.002;
-	float halfedgeLengthOffset = 0.009;
+	float halfedgeOffset = 2;
+	float halfedgeLengthOffset = 9;
 
 	void callDebugBreak() {
 		__debugbreak();

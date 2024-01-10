@@ -128,7 +128,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/integration test/mesh_214370.m");
+	mMeshIO->loadM("../test/data/mesh_63542.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -139,6 +139,7 @@ Viewer::Viewer(const std::string& name) :
 	testOperator->qmorphOperator = qmorphOperator.get();
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
+	modelScale = mMeshDisplay->getNormalizedScale()*500;
 }
 
 Viewer::~Viewer()
@@ -197,9 +198,9 @@ void Viewer::mainLoop()
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			//ImGui::Checkbox("Display Frame", &displayFrame);
-			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.0001f, 0.01f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.0001f, 0.01f);
-			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.0001f, 0.01f);
+			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.1f, 10.f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.1f, 10.f);
+			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.1f, 10.f);
 			ImGui::SliderFloat("Scale Model", &modelScale, 0.1f, 1000.0f);
 			if (ImGui::Button("Refresh Model")) {
 				mMeshDisplay->create();
@@ -441,9 +442,9 @@ void Viewer::drawScene()
 		mHalfedgeShader->setMat3("uModelInvTr", glm::inverse(model));
 		mHalfedgeShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
 		mHalfedgeShader->setInt("markCount", 5);
-		mHalfedgeShader->setFloat("thickness", lineWidth);
-		mHalfedgeShader->setFloat("halfedgeOffset", halfedgeOffset);
-		mHalfedgeShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset);
+		mHalfedgeShader->setFloat("thickness", lineWidth/1000.f);
+		mHalfedgeShader->setFloat("halfedgeOffset", halfedgeOffset/1000.f);
+		mHalfedgeShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset/1000.f);
 		glBindVertexArray(meshFrame->VAO);
 		// Allocate space and upload the data from CPU to GPU
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshFrame->IBO);
@@ -524,13 +525,16 @@ void Viewer::drawGridGround(const glm::mat4& projViewModel)
 }
 
 void Viewer::integrationTest() {
+	std::cout << "[ INTEGRATION TEST STARTING ... ]" << std::endl;
 	std::string path = "../test/data/integration test";
 	for (const auto& entry : fs::directory_iterator(path)) {
 		std::cout << "[Loading Test Case] " << entry.path() << std::endl;
-		mMesh->deleteMesh();
-		mMeshIO->loadM(entry.path().string());
-		(*qmorphOperator)();
+		Mesh mesh;
+		MeshIO meshio(&mesh);
+		meshio.loadM(entry.path().string());
+		QMorphOperator qmorphOper(&mesh);
+		qmorphOper();
 		std::cout << "[Test Completed] " << entry.path() << std::endl;
 	}
-
+	std::cout << "[ INTEGRATION TEST COMPLETED. ALL CASES PASSED ]" << std::endl;
 }
