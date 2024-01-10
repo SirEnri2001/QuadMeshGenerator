@@ -3,6 +3,7 @@
 #include "../mesh/meshoperator.h"
 #include <memory>
 #include <unordered_map>
+#include <list>
 struct FrontEdge;
 class ComponentOperator;
 class SideDefineOperator;

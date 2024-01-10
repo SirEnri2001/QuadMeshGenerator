@@ -4,12 +4,9 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <memory>
 #include <thread>
-#include <mutex>
 
 #include "camera.h"
 #include "shader.h"
@@ -23,16 +20,13 @@ class Viewer
 public:
 	Viewer(const std::string& name);
 	virtual ~Viewer();
-
 	// The main loop of the viewer
 	virtual void mainLoop();
-
 	// Create GUI here
 	virtual void createGUIWindow();
-
 	// Draw all of the scene here
 	virtual void drawScene();
-
+	void integrationTest();
 protected:
 	virtual void createGridGround();
 	virtual void drawGridGround(const glm::mat4& projViewModel);

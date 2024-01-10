@@ -6,11 +6,9 @@ project(QuadMeshGenerator)
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Set up libraries
 
 add_library(thread_support STATIC
@@ -128,3 +126,32 @@ add_executable(test_thread
     ./src/tests/test_thread.h
 )
 target_link_libraries(test_thread PUBLIC thread_support)
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
+    set(QMORPH_OBJECT_DIR ${CMAKE_BINARY_DIR}/CMakeFiles/qmorph.dir)
+    message("-- Object files will be output to: ${QMORPH_OBJECT_DIR}")
+    add_custom_target(gcov
+        COMMAND mkdir coverage
+        COMMAND ${CMAKE_MAKE_PROGRAM} test
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    add_custom_command(TARGET gcov
+        COMMAND echo "=================== GCOV ===================="
+        COMMAND gcov -b ${CMAKE_SOURCE_DIR}/src/qmorph/*.cpp -o ${QMORPH_OBJECT_DIR}/src/qmorph
+        COMMAND echo "-- Coverage files have been output to ${CMAKE_BINARY_DIR}/coverage"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/coverage
+    )
+    add_dependencies(gcov GLMeshViewer)
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
+    add_custom_target(scrub
+        COMMAND ${CMAKE_MAKE_PROGRAM} clean
+        COMMAND rm -f ${QMORPH_OBJECT_DIR}/*.gcno
+        COMMAND rm -f ${QMORPH_OBJECT_DIR}/*.gcda
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    enable_testing()
+    add_test(output_test ${CMAKE_CURRENT_BINARY_DIR}/GLMeshViewer)
+    set_tests_properties(output_test PROPERTIES PASS_REGULAR_EXPRESSION "0;5;10")
+endif ()

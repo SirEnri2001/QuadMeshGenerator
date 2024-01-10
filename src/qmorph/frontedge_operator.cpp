@@ -5,6 +5,7 @@
 #include "sidedefine_operator.h"
 #include "../thread_support/thread_support.h"
 #include "../mesh/meshdisplay.h"
+#include <algorithm>
 
 FrontEdge* FrontEdgeOperator::getNextFe(FrontEdge* fe) {
 	return fe->nextFe;
@@ -176,7 +177,7 @@ void FrontEdgeOperator::removeFrontEdgeGroup(FrontEdge* fe) {
 }
 
 bool FrontEdgeOperator::isFrontEdgeGroupIndex(FrontEdge* he) {
-	return find(frontEdgeGroups.begin(), frontEdgeGroups.end(), he) != frontEdgeGroups.end();
+	return std::find(frontEdgeGroups.begin(), frontEdgeGroups.end(), he) != frontEdgeGroups.end();
 }
 
 FrontEdge* FrontEdgeOperator::popFrontEdgeGroup() {
@@ -248,7 +249,13 @@ int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
 		fe_iter = getNextFe(fe_iter);
 		count_fe2++;
 		if (fe_iter == fe2) {
-			assert(splitFe);
+			//assert(splitFe);
+			if (!splitFe) {
+				//display->createFrame();
+				//display->markHalfedge(cutPos);
+				//step_over_pause();
+				throw "Error in seperate feloop";
+			}
 			break;
 		}
 	}

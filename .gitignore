@@ -9,7 +9,8 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
-[Bb]uild/
+[Bb]uild/*
+[Bb]uildgcc/*
 [dD]ebug/
 test/data/
 3rdparty/boost_1_82_0/

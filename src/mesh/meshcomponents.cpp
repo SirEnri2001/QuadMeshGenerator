@@ -517,3 +517,13 @@ ID Mesh::getFaceIdTotal() {
 ID Mesh::getVertexIdTotal() {
 	return vIdSum;
 }
+
+void Mesh::deleteMesh() {
+	vIdSum = 0;
+	heIdSum = 0;
+	fIdSum = 0;
+	vertexHalfedge.clear();
+	faces.clear();
+	halfedges.clear();
+	vertices.clear();
+}

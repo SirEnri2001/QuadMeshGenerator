@@ -1,5 +1,5 @@
 #include "meshnormal.h"
 
-void MeshNormal::calculate() {
-
-}
+//void MeshNormal::calculate() {
+//
+//}

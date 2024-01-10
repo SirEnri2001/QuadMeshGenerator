@@ -4,6 +4,7 @@
 #include "sidedefine_operator.h"
 #include "component_operator.h"
 #include "../mesh/meshcomponents.h"
+#include "../mesh/meshdisplay.h"
 #include "smoother.h"
 #include "../thread_support/thread_support.h"
 

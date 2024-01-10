@@ -3,6 +3,7 @@
 #include "../thread_support/thread_support.h"
 #include "../mesh/meshdisplay.h"
 #include <queue>
+#include <algorithm>
 
 //             v1
 //            /  \
@@ -359,6 +360,10 @@ glm::vec4 ComponentOperator::bisect(const Halfedge* he1, const Halfedge* he1_nex
 	//<--v1--.--v2-->
 	vec3 cp1 = vec3(he1->getSource()->getPosition()) - joint;
 	vec3 cp2 = vec3(he1_next->getTarget()->getPosition()) - joint;
+	vec3 normal = normalVertex(he1->getTarget());
+	normal = normalize(normal);
+	vec3 tangent = cross((cp1 - cp2), normal);
+	return vec4(normalize(tangent), 0.0f);
 	cp1 = normalize(cp1);
 	cp2 = normalize(cp2);
 	vec3 cp3 = cp1 + cp2;

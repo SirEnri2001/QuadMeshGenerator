@@ -4,9 +4,11 @@
 #include "mesh/meshio.h"
 #include "qmorph/qmorph_display.h"
 #include "thread_support/thread_support.h"
-
 #include <future>
-
+#include <filesystem>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+namespace fs = std::filesystem;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -126,7 +128,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/kkk.m");
+	mMeshIO->loadM("../test/data/integration test/mesh_214370.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -291,6 +293,9 @@ void Viewer::mainLoop()
 			if (ImGui::Button("Boundaries")) {
 				mMeshDisplay->markBoundaries();
 			}
+			if (ImGui::Button("Process Integration Test")) {
+				integrationTest();
+			}
 			if (ImGui::Button("Process Test Operation")) {
 				mMesh->setIntegrityCheck(true);
 				fu = testOperator->async();
@@ -331,17 +336,21 @@ void Viewer::mainLoop()
 			ImGui::End();
 			if (!check_subthread()) {
 				if (fu.valid()) {
-					try
-					{
+					try {
 						fu.get();
 						std::cout << "[Thread Complete] \n";
 					}
-					catch (std::exception& e)
-					{
+					catch (const char* c) {
+						std::cout << "[Thread Exception] " << std::string(c);
+					}
+					catch (const std::exception& e) {
 						std::cout << "[Thread Exception] " << e.what() << std::endl;
 					}
-					mMeshDisplay->create();
-					mMeshDisplay->createFrame();
+					catch (...) {
+						std::cout << "[Thread Exception] " << std::endl;
+					}
+					//mMeshDisplay->create();
+					//mMeshDisplay->createFrame();
 				}
 			}
 		}
@@ -512,4 +521,16 @@ void Viewer::drawGridGround(const glm::mat4& projViewModel)
 	mGridShader->setMat4("uProjViewModel", projViewModel);
 	glBindVertexArray(mGridGround->VAO);
 	glDrawArrays(GL_LINES, 0, mGridGround->elementCount);
+}
+
+void Viewer::integrationTest() {
+	std::string path = "../test/data/integration test";
+	for (const auto& entry : fs::directory_iterator(path)) {
+		std::cout << "[Loading Test Case] " << entry.path() << std::endl;
+		mMesh->deleteMesh();
+		mMeshIO->loadM(entry.path().string());
+		(*qmorphOperator)();
+		std::cout << "[Test Completed] " << entry.path() << std::endl;
+	}
+
 }

@@ -16,25 +16,25 @@
 // declaration
 namespace strutil {
 
-using namespace std;
+//using namespace std;
 
 inline std::string trimLeft(const std::string& str)
 {
-    string t = str;
+    std::string t = str;
     t.erase(0, t.find_first_not_of(" \t\n\r"));
     return t;
 };
 
 inline std::string trimRight(const std::string& str)
 {
-    string t = str;
+    std::string t = str;
     t.erase(t.find_last_not_of(" \t\n\r") + 1);
     return t;
 };
 
 inline std::string trim(const std::string& str)
 {
-	string t = str;
+    std::string t = str;
     t.erase(0, t.find_first_not_of(" \t\n\r"));
     t.erase(t.find_last_not_of(" \t\n\r") + 1);
     return t;
@@ -42,7 +42,7 @@ inline std::string trim(const std::string& str)
 
 inline std::string trim(const std::string& str, const std::string & delimitor)
 {
-    string t = str;
+    std::string t = str;
     t.erase(0, t.find_first_not_of(delimitor));
     t.erase(t.find_last_not_of(delimitor) + 1);
     return t;
@@ -50,15 +50,15 @@ inline std::string trim(const std::string& str, const std::string & delimitor)
  
 inline	std::string toLower(const std::string& str)
 {
-    string t = str;
-    transform(t.begin(), t.end(), t.begin(), tolower);
+    std::string t = str;
+    std::transform(t.begin(), t.end(), t.begin(), tolower);
     return t;
 };
 
 inline  std::string toUpper(const std::string& str)
 {
-    string t = str;
-    transform(t.begin(), t.end(), t.begin(), toupper);
+    std::string t = str;
+    std::transform(t.begin(), t.end(), t.begin(), toupper);
     return t;
 };
 
@@ -80,8 +80,8 @@ inline bool equalsIgnoreCase(const std::string& str1, const std::string& str2)
 
 inline    std::string toString(const bool& value)
 {
-    ostringstream oss;
-    oss << boolalpha << value;
+    std::ostringstream oss;
+    oss << std::boolalpha << value;
     return oss.str();
 };
 
@@ -89,7 +89,7 @@ template<bool> bool parseString(const std::string& str)
 {
     bool value;
     std::istringstream iss(str);
-    iss >> boolalpha >> value;
+    iss >> std::boolalpha >> value;
     return value;
 };
 
@@ -104,7 +104,7 @@ template<class T> T parseString(const std::string& str) {
 template<class T> T parseHexString(const std::string& str) {
     T value;
     std::istringstream iss(str);
-    iss >> hex >> value;
+    iss >> std::hex >> value;
     return value;
 };
 
@@ -116,9 +116,9 @@ template<class T> std::string toString(const T& value) {
 
 template<class T> std::string toHexString(const T& value, int width) {
     std::ostringstream oss;
-    oss << hex;
+    oss << std::hex;
     if (width > 0) {
-        oss << setw(width) << setfill('0');
+        oss << std::setw(width) << std::setfill('0');
     }
     oss << value;
     return oss.str();
@@ -150,14 +150,14 @@ namespace strutil {
 		{
 			// find the start charater of the next token.
 			size_t i = m_String.find_first_not_of(delimiters, m_Offset);
-			if (i == string::npos) {
+			if (i == std::string::npos) {
 				m_Offset = m_String.length();
 				return false;
 			}
 
 			// find the end of the token.
 			size_t j = m_String.find_first_of(delimiters, i);
-			if (j == string::npos) {
+			if (j == std::string::npos) {
 				m_Token = m_String.substr(i);
 				m_Offset = m_String.length();
 				return true;
@@ -191,15 +191,15 @@ namespace strutil {
 
 inline std::vector<std::string> split(const std::string& str, const std::string& delimiters)
 {
-        vector<string> ss;
+    std::vector<std::string> ss;
 
-        Tokenizer tokenizer(str, delimiters);
-        while (tokenizer.nextToken()) 
-		{
-            ss.push_back(tokenizer.getToken());
-        }
+    Tokenizer tokenizer(str, delimiters);
+    while (tokenizer.nextToken()) 
+	{
+        ss.push_back(tokenizer.getToken());
+    }
 
-        return ss;
+    return ss;
 };
 
 };

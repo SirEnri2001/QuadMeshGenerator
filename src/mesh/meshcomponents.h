@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <glm.hpp>
+#include <memory>
 #include "meshassert.h"
 
 class Vertex;
@@ -180,6 +181,7 @@ public:
 	ID getHalfedgeIdTotal();
 	ID getFaceIdTotal();
 	ID getVertexIdTotal();
+	void deleteMesh();
 	//std::unique_ptr<MeshNormal> attribNormal;
 	//std::unique_ptr<MeshUV> attribUV;
 	friend class MeshInteriorOperator;

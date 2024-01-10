@@ -20,7 +20,11 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	qmorphOperator->feOperator->edgeRecovery(mesh->vertexAt(1)->getMutable(), mesh->vertexAt(40)->getMutable());
+	glm::vec4 res = qmorphOperator->compOperator->bisect(
+		mesh->halfedgeAt(341), mesh->halfedgeAt(356)
+	);
+	std::cout << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << std::endl;
+	display->display->markPoint(res + mesh->halfedgeAt(341)->getTarget()->getPosition());
 }
 
 void TestOperator::operator()() {
