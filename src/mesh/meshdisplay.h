@@ -37,4 +37,5 @@ public:
 	void markHalfedgeCycle(const Halfedge* he);
 	const Vertex* selectVertex(glm::vec4 eye, glm::vec4 ray);
 	const Halfedge* selectHalfedge(glm::vec4 eye, glm::vec4 ray);
+	float getNormalizedScale();
 };

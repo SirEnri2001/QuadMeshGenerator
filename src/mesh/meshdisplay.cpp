@@ -311,3 +311,19 @@ void MeshDisplay::markPoint(glm::vec4 pos, glm::vec4 normal) {
 	pointScatter.push_back(normal);
 	pointIndices.push_back(pointIndices.size());
 }
+
+float MeshDisplay::getNormalizedScale() {
+	float maxScale = FLT_MIN;
+	for (auto& v : mesh->getVertices()) {
+		if (maxScale < abs(v.second.getPosition()[0])) {
+			maxScale = abs(v.second.getPosition()[0]);
+		}
+		if (maxScale < abs(v.second.getPosition()[1])) {
+			maxScale = abs(v.second.getPosition()[1]);
+		}
+		if (maxScale < abs(v.second.getPosition()[2])) {
+			maxScale = abs(v.second.getPosition()[2]);
+		}
+	}
+	return maxScale;
+}
