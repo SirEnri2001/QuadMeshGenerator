@@ -12,6 +12,7 @@
 class ComponentOperator : public MeshInteriorOperator {
 public:
 	glm::vec3 normalVertex(const Vertex* vertex);
+	glm::vec3 normalFace(const Face* face);
 	glm::vec4 bisect(const Halfedge* he1, const Halfedge* he1_next);
 
 	float angle(glm::vec3 cp1, const Vertex* pivot, glm::vec3 cp2);

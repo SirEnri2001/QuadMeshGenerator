@@ -406,11 +406,11 @@ int ComponentOperator::faceEdges(const Face* face) {
 
 float ComponentOperator::acos_limited(float x) {
 	if (x > 1.0) {
-		std::cerr << "WARNING: acos_limited: x > 1.0" << std::endl;
+		//std::cerr << "WARNING: acos_limited: x > 1.0" << std::endl;
 		return 0.0;
 	}
 	if (x < -1.0) {
-		std::cerr << "WARNING: acos_limited: x < -1.0" << std::endl;
+		//std::cerr << "WARNING: acos_limited: x < -1.0" << std::endl;
 		return M_PI;
 	}
 	return acos(x);
@@ -420,3 +420,9 @@ ComponentOperator::ComponentOperator(Mesh* mesh, MeshDisplay* display) : MeshInt
 
 }
 
+glm::vec3 ComponentOperator::normalFace(const Face* face) {
+	using namespace glm;
+	const Halfedge* he = face->getHalfedge();
+	return cross(vec3(he->getNext()->getTarget()->getPosition() - he->getTarget()->getPosition()), 
+		vec3(he->getSource()->getPosition() - he->getTarget()->getPosition()));
+}
