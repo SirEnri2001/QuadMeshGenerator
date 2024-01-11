@@ -38,7 +38,7 @@ int QMorphOperator::doQMorphProcess() {
 		if (sideOperator->doCornerGenerate()) {
 			continue;
 		}
-		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
+				if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
 
@@ -81,6 +81,16 @@ int QMorphOperator::doSmooth(int epoch) {
 				continue;
 			}
 			smoother->triangleInteriorSmooth(vertex, true);
+		}
+
+		for (auto& idF : mesh->getFaces()) {
+			const Face* face = &idF.second;
+			const Halfedge* he = face->getHalfedge();
+			do {
+				if (!he->getTarget()->isBoundary() && glm::dot(compOperator->normalVertex(he->getTarget()), compOperator->normalFace(face))<0.0) {
+					smoother->triangleInteriorSmooth(he->getTarget(), false);
+				}
+			} while (he = he->getNext(), he != face->getHalfedge());
 		}
 		i++;
 	}

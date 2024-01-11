@@ -148,7 +148,13 @@ bool FrontEdgeOperator::isFront(const Halfedge* he) {
 	return heToFe.find(he) != heToFe.cend();
 }
 bool FrontEdgeOperator::isFront(const Vertex* v) {
-	return frontEdgeCount[v] > 0;
+	const Halfedge* he = v->getHalfedge();
+	do {
+		if (isFront(he) || isFront(he->getSym())) {
+			return true;
+		}
+	} while (he = he->getNext()->getSym(), he != v->getHalfedge());
+	return false;
 }
 int FrontEdgeOperator::frontEdgeGroupSize(FrontEdge* fe) {
 	int count = 0;
@@ -225,10 +231,10 @@ int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
 	//         |(cutPos)
 	//         |v
 	//---fe2->(v1)--fe3-->
-	if (fe3->he->getTarget() == fe4->he->getSource() || fe1->he->getTarget() == fe2->he->getSource()) {
-		compOperator->swapEdge(cutPos->getMutable());
-		return 0;
-	}
+	//if (fe3->he->getTarget() == fe4->he->getSource() || fe1->he->getTarget() == fe2->he->getSource()) {
+	//	compOperator->swapEdge(cutPos->getMutable());
+	//	return 0;
+	//}
 
 	FrontEdge* fe_iter = fe3;
 	int count_fe1 = 2, count_fe2 = 2;

@@ -126,18 +126,18 @@ Smoother::Smoother(Mesh* mesh) : mesh(mesh) {
 //	VertexHandle v1 = mesh->halfedgeSource(half_edge);
 //	VertexHandle v2 = mesh->halfedgeTarget(half_edge);
 //
-//	//Çó³öÈý½ÇÐÎµÄµÚÈý¸öµã
+//	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎµÄµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //	VertexHandle v3 = mesh->halfedgeTarget(mesh->halfedgeNext(half_edge));
 //	res += (v1->getPoint() - v3->getPoint()) * (v2->getPoint() - v3->getPoint())
 //		/ ((v1->getPoint() - v3->getPoint()) ^ (v2->getPoint() - v3->getPoint())).norm();
 //
-//	//Èç¹ûÊÇ±ß½çµã£¬ÔòÈ¨ÖØÖ»ÓÐÒ»±ßµÄÈý½ÇÐÎ
+//	//ï¿½ï¿½ï¿½ï¿½Ç±ß½ï¿½ã£¬ï¿½ï¿½È¨ï¿½ï¿½Ö»ï¿½ï¿½Ò»ï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //	if (mesh->isBoundary(edge))
 //	{
 //		return res;
 //	}
 //
-//	//Ö¸ÏòÁíÍâµÄÈý½ÇÐÎ
+//	//Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //	half_edge = mesh->halfedgeSym(half_edge);
 //	VertexHandle v4 = half_edge->he_next()->vertex();
 //	res += (v1->getPoint() - v4->getPoint()) * (v2->getPoint() - v4->getPoint())

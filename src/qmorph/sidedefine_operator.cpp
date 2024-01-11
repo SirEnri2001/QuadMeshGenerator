@@ -186,7 +186,7 @@ SideDefineResult SideDefineOperator::verticalSideSplitSeek(FrontEdge* lfe, Front
 	if (lfe->getPrevFe()->he->getSource() == minAngleHe->getSource()
 		|| rfe->getNextFe()->he->getTarget() == minAngleHe->getSource()) {
 		// size 3 front edge group
-		return SideDefineResult::FrontEdgeContactDegenerate;
+		return SideDefineResult::Succeeded;
 	}
 	if (feOperator->isFront(minAngleHe->getSource())) {
 		return SideDefineResult::FrontEdgeContact;
@@ -294,7 +294,7 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 	switch (verticalSideSplitSeek(lfe, rfe, resultUpSide))
 	{
 	case SideDefineResult::FrontEdgeContact:
-	case SideDefineResult::FrontEdgeContactDegenerate:
+	//case SideDefineResult::FrontEdgeContactDegenerate:
 		feOperator->seperateFrontLoop(resultUpSide);
 		return 1;
 	case SideDefineResult::Succeeded:
