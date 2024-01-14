@@ -5,10 +5,8 @@
 #include "qmorph/qmorph_display.h"
 #include "thread_support/thread_support.h"
 #include <future>
-#include <filesystem>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-namespace fs = std::filesystem;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -128,7 +126,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_63542.m");
+	mMeshIO->loadM("../test/data/mesh_44313.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -525,16 +523,5 @@ void Viewer::drawGridGround(const glm::mat4& projViewModel)
 }
 
 void Viewer::integrationTest() {
-	std::cout << "[ INTEGRATION TEST STARTING ... ]" << std::endl;
-	std::string path = "../test/data/integration test";
-	for (const auto& entry : fs::directory_iterator(path)) {
-		std::cout << "[Loading Test Case] " << entry.path() << std::endl;
-		Mesh mesh;
-		MeshIO meshio(&mesh);
-		meshio.loadM(entry.path().string());
-		QMorphOperator qmorphOper(&mesh);
-		qmorphOper();
-		std::cout << "[Test Completed] " << entry.path() << std::endl;
-	}
-	std::cout << "[ INTEGRATION TEST COMPLETED. ALL CASES PASSED ]" << std::endl;
+	
 }

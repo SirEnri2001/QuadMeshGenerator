@@ -16,4 +16,5 @@ public:
 	}
 	void operator()() override;
 	void setId(int i);
+	void integrationTest(std::string path);
 };
