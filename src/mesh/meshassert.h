@@ -8,7 +8,10 @@
 #define validate(x) if(!x) {error("Validate failed");}
 
 class MeshAssert {
-	std::string traceback;
+	long unsigned int pauseMark = 0l;
 public:
-	void _error(std::string& msg);
+	void callResume();
+	void onPause(int mark = -1);
+	void setPauseMark(int mark, bool val);
+	bool isPauseMarked(int mark);
 };

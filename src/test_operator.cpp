@@ -23,15 +23,11 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	glm::vec4 res = qmorphOperator->compOperator->bisect(
-		mesh->halfedgeAt(341), mesh->halfedgeAt(356)
-	);
-	std::cout << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << std::endl;
-	display->display->markPoint(res + mesh->halfedgeAt(341)->getTarget()->getPosition());
+	integrationTest(integrationTestPath);
 }
 
 void TestOperator::operator()() {
-	integrationTest(std::string("../test/data/integration test"));
+	proceed();
 }
 
 void TestOperator::setId(int i) {
@@ -46,6 +42,8 @@ void TestOperator::integrationTest(std::string path) {
 		MeshIO meshio(&mesh);
 		meshio.loadM(entry.path().string());
 		QMorphOperator qmorphOper(&mesh);
+		qmorphOper.setAsserts(asserts);
+		qmorphOper.setDisplay(display->display);
 		qmorphOper();
 		std::cout << "[Test Completed] " << entry.path() << std::endl;
 	}

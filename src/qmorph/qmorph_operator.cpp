@@ -9,8 +9,10 @@
 #include "../thread_support/thread_support.h"
 
 int QMorphOperator::doQMorphProcess() {
+	int i = 0;
 	while (doSmooth(), feOperator->getFrontEdgeGroup())
 	{
+		i++;
 		if (feOperator->frontEdgeGroupSize(feOperator->getFrontEdgeGroup()) == 4) {
 			FrontEdge* fe = feOperator->getFrontEdgeGroup();
 			sideOperator->setSide(fe, NULL);
@@ -35,10 +37,13 @@ int QMorphOperator::doQMorphProcess() {
 			continue;
 		}
 		feOperator->updateFeClassification();
+		if (i == 180) {
+			asserts->setPauseMark(1, true);
+		}
 		if (sideOperator->doCornerGenerate()) {
 			continue;
 		}
-				if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
+		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
 
@@ -47,6 +52,7 @@ int QMorphOperator::doQMorphProcess() {
 		if (feOperator->getFrontEdgeGroup()) {
 			feOperator->switchFrontEdgeGroup();
 		}
+		i++;
 	}
 	return 0;
 }
@@ -173,6 +179,9 @@ void QMorphOperator::create() {
 	feOperator = std::make_shared<FrontEdgeOperator>(mesh, display);
 	sideOperator = std::make_shared<SideDefineOperator>(mesh, display);
 	compOperator = std::make_shared<ComponentOperator>(mesh, display);
+	feOperator->setAsserts(asserts);
+	sideOperator->setAsserts(asserts);
+	compOperator->setAsserts(asserts);
 	feOperator->create(compOperator, sideOperator);
 	sideOperator->create(compOperator, feOperator);
 	compOperator->create();

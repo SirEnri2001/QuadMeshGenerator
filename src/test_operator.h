@@ -2,10 +2,12 @@
 #include "mesh/meshoperator.h"
 #include "qmorph/qmorph_operator.h"
 #include <future>
+#include <string>
 
 class TestOperator : public MeshUserOperator {
 	int id = 0;
 public:
+	std::string integrationTestPath;
 	QMorphOperator* qmorphOperator;
 	QMorphDisplay* display;
 	TestOperator(Mesh* mesh);

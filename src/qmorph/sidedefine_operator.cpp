@@ -243,13 +243,6 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 		return 0;
 	}
 	const Halfedge* resultUpSide;
-	//if (lfe->he->getId() == 128) {//128
-	//	display->create();
-	//	display->createFrame();
-	//	display->markHalfedge(lfe->he);
-	//	display->markHalfedge(lfe->getNextFe()->he);
-	//	step_over_pause();
-	//}
 	switch (verticalSideSeek(lfe, rfe, resultUpSide))
 	{
 	case SideDefineResult::FrontEdgeContact:

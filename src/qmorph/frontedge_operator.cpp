@@ -257,9 +257,6 @@ int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
 		if (fe_iter == fe2) {
 			//assert(splitFe);
 			if (!splitFe) {
-				//display->createFrame();
-				//display->markHalfedge(cutPos);
-				//step_over_pause();
 				throw "Error in seperate feloop";
 			}
 			break;
@@ -329,10 +326,6 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 		//	fhe = fhe->getNextFe();
 		//	continue;
 		//}
-		//display->create();
-		//display->createFrame();
-		//display->markHalfedge(fhe->he);
-		//step_over_pause();
 		
 		if (!fhe->needTop)
 		{
@@ -426,6 +419,13 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 	FaceIterTreeNode* targetTree = NULL;
 	// BFS traverse f-f tree until find the target vertex Nd
 	while (targetTree == NULL) {
+		if (faceIterTrees.size() == 0) {
+			display->create();
+			display->createFrame();
+			display->markVertex(Nc);
+			display->markVertex(Nd);
+			asserts->onPause();
+		}
 		FaceIterTreeNode* curTree = faceIterTrees.front();
 		faceIterTrees.pop_front();
 		int childIdx = 0;
@@ -468,6 +468,13 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 const Halfedge* FrontEdgeOperator::edgeRecovery(Vertex* Nc, Vertex* Nd) {
 	assert(Nd != Nc);
 	while (mesh->getHalfedge(Nc, Nd) == NULL) {
+		//if (asserts->isPauseMarked(1)) {
+		//	display->create();
+		//	display->createFrame();
+		//	display->markVertex(Nc);
+		//	display->markVertex(Nd);
+		//	asserts->onPause(1);
+		//}
 		auto lambdaSet = calculateRambdaSet(Nc, Nd);
 		assert(lambdaSet);
 		while (lambdaSet->size() > 0) {

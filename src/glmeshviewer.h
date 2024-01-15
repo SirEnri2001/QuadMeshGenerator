@@ -51,6 +51,7 @@ protected:
 	std::unique_ptr<QMorphDisplay> mQMorphDisplay;
 	std::unique_ptr<MeshOperator> mMeshOperator;
 	std::unique_ptr<MeshIO> mMeshIO;
+	std::unique_ptr<MeshAssert> mMeshAssert;
 
 	std::unique_ptr<Drawable> meshShading;
 	std::unique_ptr<Drawable> meshFrame;

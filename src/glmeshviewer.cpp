@@ -2,6 +2,7 @@
 #include "mesh/meshdisplay.h"
 #include "mesh/meshoperator.h"
 #include "mesh/meshio.h"
+#include "mesh/meshassert.h"
 #include "qmorph/qmorph_display.h"
 #include "thread_support/thread_support.h"
 #include <future>
@@ -15,12 +16,13 @@ static void glfw_error_callback(int error, const char* description)
 
 // Copy from ImGUI/examples/example_glfw_opengl3
 Viewer::Viewer(const std::string& name) :
-	windowWidth(1920), windowHeight(1080),
+	windowWidth(2736), windowHeight(1800),
 	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)),
 	mMesh(std::make_unique<Mesh>()),
 	mMeshOperator(std::make_unique<MeshOperator>(mMesh.get())), 
 	mMeshDisplay(std::make_unique<MeshDisplay>(mMesh.get())),
-	mMeshIO(std::make_unique<MeshIO>(mMesh.get()))
+	mMeshIO(std::make_unique<MeshIO>(mMesh.get())),
+	mMeshAssert(std::make_unique<MeshAssert>())
 	//changed camerea position value to (0, 500, 800) from (0, 100, 500)
 {
 	glfwSetErrorCallback(glfw_error_callback);
@@ -100,8 +102,8 @@ Viewer::Viewer(const std::string& name) :
 	// - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
 	// - Read 'docs/FONTS.md' for more instructions and details.
 	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-	io.Fonts->AddFontDefault();
-	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
+	//io.Fonts->AddFontDefault();
+	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 36.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
@@ -126,14 +128,16 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_44313.m");
+	mMeshIO->loadM("../test/data/mesh_24978.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
 	qmorphOperator->setDisplay(mQMorphDisplay->display);
+	qmorphOperator->setAsserts(mMeshAssert.get());
 	qmorphOperator->create();
 	pauseMutex = std::make_unique<std::mutex>();
 	testOperator->display = mQMorphDisplay.get();
+	testOperator->setAsserts(mMeshAssert.get());
 	testOperator->qmorphOperator = qmorphOperator.get();
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
@@ -523,5 +527,6 @@ void Viewer::drawGridGround(const glm::mat4& projViewModel)
 }
 
 void Viewer::integrationTest() {
-	
+	testOperator->integrationTestPath = std::string("../test/data/integration test");
+	testOperator->async();
 }

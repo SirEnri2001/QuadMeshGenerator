@@ -47,3 +47,7 @@ std::future<void> MeshUserOperator::async() {
 void MeshOperator::setDisplay(MeshDisplay* display) {
     this->display = display;
 }
+
+void MeshOperator::setAsserts(MeshAssert* ass) {
+    asserts = ass;
+}
