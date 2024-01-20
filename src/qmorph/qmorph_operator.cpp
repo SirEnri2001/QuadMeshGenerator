@@ -7,7 +7,7 @@
 #include "../mesh/meshdisplay.h"
 #include "smoother.h"
 #include "../thread_support/thread_support.h"
-
+#include <initializer_list>
 int QMorphOperator::doQMorphProcess() {
 	int i = 0;
 	while (doSmooth(), feOperator->getFrontEdgeGroup())
@@ -36,18 +36,19 @@ int QMorphOperator::doQMorphProcess() {
 		{
 			continue;
 		}
-		feOperator->updateFeClassification();
-		if (i == 180) {
-			asserts->setPauseMark(1, true);
+		if (doSplitFrontEdges() != 0) {
+			continue;
 		}
+		feOperator->updateFeClassification();
 		if (sideOperator->doCornerGenerate()) {
 			continue;
 		}
 		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
-
+		feOperator->isPushingFront = true;
 		doEdgeRecovery();
+		feOperator->isPushingFront = false;
 		feOperator->proceedNextFeLoop();
 		if (feOperator->getFrontEdgeGroup()) {
 			feOperator->switchFrontEdgeGroup();
@@ -80,7 +81,7 @@ int QMorphOperator::doEdgeRecovery() {
 }
 int QMorphOperator::doSmooth(int epoch) {
 	int i = 0;
-	while (i < epoch) {
+	while (i < 1) {
 		for (auto& idV : mesh->getVertices()) {
 			const Vertex* vertex = &idV.second;
 			if (vertex->isBoundary()) {
@@ -182,6 +183,9 @@ void QMorphOperator::create() {
 	feOperator->setAsserts(asserts);
 	sideOperator->setAsserts(asserts);
 	compOperator->setAsserts(asserts);
+	feOperator->setDisplay(display);
+	sideOperator->setDisplay(display);
+	compOperator->setDisplay(display);
 	feOperator->create(compOperator, sideOperator);
 	sideOperator->create(compOperator, feOperator);
 	compOperator->create();
@@ -199,4 +203,24 @@ void QMorphOperator::operator()() {
 
 QMorphOperator::QMorphOperator(Mesh* mesh) : MeshUserOperator(mesh) {
 
+}
+
+int QMorphOperator::doSplitFrontEdges() {
+	FrontEdge* fe = feOperator->getFrontEdgeGroup();
+	do {
+		const Halfedge* he = fe->he->getNext();
+		while (he != fe->getNextFe()->he) {
+			if (he->getPrev()!=fe->getNextFe()->getNextFe()->he 
+				&& he->getNext()!=fe->getPrevFe()->he
+				&& feOperator->isFront(he->getTarget())) {
+				while (feOperator->isFront(he)) {
+					he = he->getSym()->getPrev();
+				}
+				feOperator->seperateFrontLoop(fe, feOperator->getFront(he));
+				return 1;
+			}
+			he = he->getSym()->getNext();
+		}
+	} while (fe = fe->getNextFe(), fe != feOperator->getFrontEdgeGroup());
+	return 0;
 }

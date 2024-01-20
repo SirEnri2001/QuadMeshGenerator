@@ -519,6 +519,7 @@ ID Mesh::getVertexIdTotal() {
 }
 
 void Mesh::deleteMesh() {
+	lock_graphics_mutex();
 	vIdSum = 0;
 	heIdSum = 0;
 	fIdSum = 0;
@@ -526,4 +527,5 @@ void Mesh::deleteMesh() {
 	faces.clear();
 	halfedges.clear();
 	vertices.clear();
+	release_graphics_mutex();
 }

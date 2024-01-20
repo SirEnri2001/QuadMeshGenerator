@@ -12,3 +12,6 @@ bool check_pause(); //non block
 void step_over_pause();//block
 void restore_semaphore();
 bool check_subthread();
+
+void lock_graphics_mutex();
+void release_graphics_mutex();

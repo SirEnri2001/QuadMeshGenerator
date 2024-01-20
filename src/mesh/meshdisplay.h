@@ -38,4 +38,6 @@ public:
 	const Vertex* selectVertex(glm::vec4 eye, glm::vec4 ray);
 	const Halfedge* selectHalfedge(glm::vec4 eye, glm::vec4 ray);
 	float getNormalizedScale();
+	glm::vec3 getAverageRefPos();
+	void setMesh(Mesh* mesh);
 };

@@ -2,6 +2,7 @@
 #include "meshcomponents.h"
 #include "../thread_support/thread_support.h"
 #include <sstream>
+#include <iostream>
 
 void MeshAssert::callResume() {
 	call_resume();
@@ -9,6 +10,7 @@ void MeshAssert::callResume() {
 
 void MeshAssert::onPause(int mark) {
 	if (mark == -1 || 1 << mark & pauseMark) {
+		std::cout << "### ON PAUSE ###" << std::endl;
 		step_over_pause();
 	}
 }

@@ -179,7 +179,7 @@ void ComponentOperator::deleteEdgeMergeFace(Halfedge* tar)
 	Halfedge* hea = tar;
 	const Halfedge* he1 = tar->getNext();
 	const Halfedge* he2 = tar->getPrev();
-	bool islandHole = tar->getFace() == tar->getSym()->getFace();
+	bool islandHole = tar->getFace() && tar->getFace() == tar->getSym()->getFace();
 	mesh->deleteFace(tar->getFace());
 	if (!islandHole) {
 		mesh->deleteFace(tar->getSym()->getFace());
@@ -425,4 +425,8 @@ glm::vec3 ComponentOperator::normalFace(const Face* face) {
 	const Halfedge* he = face->getHalfedge();
 	return cross(vec3(he->getNext()->getTarget()->getPosition() - he->getTarget()->getPosition()), 
 		vec3(he->getSource()->getPosition() - he->getTarget()->getPosition()));
+}
+
+void ComponentOperator::buildQuad(Halfedge* left, Halfedge* bottom, Halfedge* right, Halfedge* top) {
+	clearFace({ left,bottom,right,top });
 }

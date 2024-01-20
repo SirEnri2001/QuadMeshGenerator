@@ -20,6 +20,7 @@ class FrontEdgeOperator : public MeshOperator {
 	const FrontEdge* getPrevFe(const FrontEdge* fe);
 	void create();
 public:
+	bool isPushingFront = false;
 	FrontEdgeOperator(Mesh* mesh, MeshDisplay* display);
 	void create(std::shared_ptr<ComponentOperator>& compOper, std::shared_ptr<SideDefineOperator>& sideOper);
 	FrontEdge* getFront(const Halfedge* he);
@@ -41,9 +42,11 @@ public:
 	bool switchFrontEdgeGroup();
 	void updateHeadFrontEdgeGroup(FrontEdge* he);
 	int seperateFrontLoop(const Halfedge* cutPos);
+	int seperateFrontLoop(FrontEdge* fe2, FrontEdge* fe4);
 	bool proceedNextFeLoop(bool reclasssify = true);
 	const Halfedge* edgeRecovery(Vertex*, Vertex*); //return a CTHEdgeHandle* source former param and target latter
 	std::list<const Halfedge*>* calculateRambdaSet(const Vertex*, const Vertex*);
 	const Vertex* mergeEdge(Vertex* va, Vertex* vb);
+	void trianglualteFrontLoopInterior(FrontEdge* fe);
 	friend class QMorphDisplay;
 };

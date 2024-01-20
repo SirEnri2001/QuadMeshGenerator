@@ -3,7 +3,7 @@
 #include <shared_mutex>
 
 std::binary_semaphore main_acquire_sub_release{ 1 }, sub_acquire_main_release{ 0 };
-
+std::mutex graphics_mutex;
 // { 1; 0 } means subthread will or already pause on breakpoint
 // { 0; 1 } means a transient state that mainthread just called resume and just before subthread catch the signal
 
@@ -57,4 +57,12 @@ void call_pause() {
 
 bool check_subthread() {
 	return sub_thread_count > 0;
+}
+
+void lock_graphics_mutex() {
+	graphics_mutex.lock();
+}
+
+void release_graphics_mutex() {
+	graphics_mutex.unlock();
 }

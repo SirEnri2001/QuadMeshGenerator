@@ -43,6 +43,8 @@ void TestOperator::integrationTest(std::string path) {
 		meshio.loadM(entry.path().string());
 		QMorphOperator qmorphOper(&mesh);
 		qmorphOper.setAsserts(asserts);
+		display->display->setMesh(&mesh);
+		display->qmorphOperator = &qmorphOper;
 		qmorphOper.setDisplay(display->display);
 		qmorphOper();
 		std::cout << "[Test Completed] " << entry.path() << std::endl;

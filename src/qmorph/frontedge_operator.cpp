@@ -62,7 +62,6 @@ FrontEdge* FrontEdgeOperator::setFront(const Halfedge* he, bool val) {
 	}
 	else if (val && iter == heToFe.end()) {
 		FrontEdge& fe = heToFe[he] = FrontEdge();
-
 		frontEdgeCount[he->getSource()]++;
 		frontEdgeCount[he->getTarget()]++;
 		fe.he = he;
@@ -148,13 +147,14 @@ bool FrontEdgeOperator::isFront(const Halfedge* he) {
 	return heToFe.find(he) != heToFe.cend();
 }
 bool FrontEdgeOperator::isFront(const Vertex* v) {
-	const Halfedge* he = v->getHalfedge();
+	/*const Halfedge* he = v->getHalfedge();
 	do {
 		if (isFront(he) || isFront(he->getSym())) {
 			return true;
 		}
 	} while (he = he->getNext()->getSym(), he != v->getHalfedge());
-	return false;
+	return false;*/
+	return frontEdgeCount[v] != 0;
 }
 int FrontEdgeOperator::frontEdgeGroupSize(FrontEdge* fe) {
 	int count = 0;
@@ -209,97 +209,101 @@ void FrontEdgeOperator::updateHeadFrontEdgeGroup(FrontEdge* he) {
 	pushHeadFrontEdgeGroup(he);
 }
 int FrontEdgeOperator::seperateFrontLoop(const Halfedge* cutPos) {
-	const Vertex* vertex1 = cutPos->getTarget();
-	const Vertex* vertex2 = cutPos->getSource();
-	FrontEdge* fe1, * fe2, * fe3, * fe4;
-	const Halfedge* he1, * he2, * he3, * he4;
-	he3 = cutPos->getNext();
-	while (!isFront(he3)) {
-		he3 = he3->getSym()->getNext();
-	}
-	fe3 = getFront(he3);
-	fe2 = getPrevFe(fe3);
+	return -1;
+}
 
-	he1 = cutPos->getSym()->getNext();
-	while (!isFront(he1)) {
-		he1 = he1->getSym()->getNext();
+int FrontEdgeOperator::seperateFrontLoop(FrontEdge* fe2, FrontEdge* fe4) {
+	if (!fe2 || !fe4) {
+		display->create();
+		display->createFrame();
+		asserts->onPause();
+		throw "Invalid argument";
 	}
-	fe1 = getFront(he1);
-	fe4 = getPrevFe(fe1);
+	const Vertex* vertex2 = fe4->he->getTarget();
+	const Vertex* vertex1 = fe2->he->getTarget();
+	FrontEdge* fe1 = fe4->getNextFe();
+	FrontEdge* fe3 = fe2->getNextFe();
+
+	removeFrontEdgeGroup(fe1);
+	removeFrontEdgeGroup(fe2);
+
+	bool splitFe = false;
+	FrontEdge* feIter = fe1;
+	int feCount = 1;
+	int feCount1 = 1;
+	do {
+		feCount++;
+		if (feIter == fe2) {
+			splitFe = true;
+			break;
+		}
+		if (feIter == fe4) {
+			splitFe = false;
+			break;
+		}
+	} while (feIter = feIter->getNextFe());
+	feIter = fe3;
+	do {
+		feCount1++;
+		if (feIter == fe4) {
+			if (!splitFe) {
+				asserts->onPause();
+				assert(false);
+			}
+			break;
+		}
+		if (feIter == fe2) {
+			if (splitFe) {
+				asserts->onPause();
+				assert(false);
+			}
+			break;
+		}
+	} while (feIter = feIter->getNextFe());
+	if ((feCount + feCount1) % 2 != 0) {
+		switchFrontEdgeGroup();
+		return -1;
+	}
+	if (feCount%2==0 || !splitFe) {
+		edgeRecovery(vertex1->getMutable(), vertex2->getMutable());
+		FrontEdge* v1v2 = setFront(mesh->getHalfedge(vertex1, vertex2), true);
+		FrontEdge* v2v1 = setFront(mesh->getHalfedge(vertex2, vertex1), true);
+		setNextFe(fe2, v1v2);
+		setNextFe(v1v2, fe1);
+		setNextFe(fe4, v2v1);
+		setNextFe(v2v1, fe3);
+	}
 	// <--fe1-(v2)<-fe4---
 	//         ^|
 	//         |(cutPos)
 	//         |v
 	//---fe2->(v1)--fe3-->
-	//if (fe3->he->getTarget() == fe4->he->getSource() || fe1->he->getTarget() == fe2->he->getSource()) {
-	//	compOperator->swapEdge(cutPos->getMutable());
-	//	return 0;
-	//}
 
-	FrontEdge* fe_iter = fe3;
-	int count_fe1 = 2, count_fe2 = 2;
-	bool splitFe = false;
-	while (fe_iter != fe2) {
-		fe_iter = getNextFe(fe_iter);
-		count_fe1++;
-		if (fe_iter == fe4) {
-			splitFe = true;
-			break;
-		}
-	}
-	if (count_fe1 < 4) {
-		return -1;
-	}
-	fe_iter = fe1;
-	while (fe_iter != fe4) {
-		fe_iter = getNextFe(fe_iter);
-		count_fe2++;
-		if (fe_iter == fe2) {
-			//assert(splitFe);
-			if (!splitFe) {
-				throw "Error in seperate feloop";
-			}
-			break;
-		}
-	}
-	if (count_fe2 < 4) {
-		return -1;
-	}
-	removeFrontEdgeGroup(fe1);
-	removeFrontEdgeGroup(fe2);
-	sideOperator->setSide(fe4, NULL);
-	sideOperator->setSide(fe2, NULL);
-	// ensure the connectivity (bidirection linked list)
-	if (std::min(count_fe1, count_fe2) % 2 == 1) {
-		const Vertex* mid = compOperator->splitEdge(cutPos->getMutable(), (vertex1->getPosition() + vertex2->getPosition()) / 2.0f);
-		FrontEdge* fe5 = setFront(mesh->getHalfedge(vertex2, mid), true);
-		FrontEdge* fe6 = setFront(mesh->getHalfedge(vertex1, mid), true);
-		FrontEdge* fe7 = setFront(mesh->getHalfedge(mid, vertex2), true);
-		FrontEdge* fe8 = setFront(mesh->getHalfedge(mid, vertex1), true);
-		setNextFe(fe4, fe5);
-		setNextFe(fe5, fe8);
-		setNextFe(fe8, fe3);
-		setNextFe(fe2, fe6);
-		setNextFe(fe6, fe7);
-		setNextFe(fe7, fe1);
-	}
-	else if (true || count_fe1 % 2 == 0 && count_fe2 % 2 == 0) {
-		FrontEdge* fe5 = setFront(mesh->getHalfedge(vertex2, vertex1), true);
-		FrontEdge* fe6 = setFront(mesh->getHalfedge(vertex1, vertex2), true);
-		setNextFe(fe4, fe5);
-		setNextFe(fe5, fe3);
-		setNextFe(fe2, fe6);
-		setNextFe(fe6, fe1);
-	}
-	else {
-		return -1; //TODO: suspend process of current frontedge group
-	}
-	// Then update getFrontEdgeGroup() & frontEdgesGroup
-	if (splitFe) {
+	if (!splitFe) {
 		pushTailFrontEdgeGroup(fe1);
+		return 0;
 	}
-	pushTailFrontEdgeGroup(fe3);
+	if (feCount % 2 == 0) {
+		pushTailFrontEdgeGroup(fe1);
+		pushTailFrontEdgeGroup(fe3);
+		return 0;
+	}
+	const Vertex* vMid = compOperator->splitEdge(mesh->getHalfedge(vertex1, vertex2)->getMutable(),
+		glm::vec3(vertex1->getPosition() + vertex2->getPosition()) * 0.5f);
+	FrontEdge* v1vM = setFront(mesh->getHalfedge(vertex1, vMid), true);
+	FrontEdge* vMv2 = setFront(mesh->getHalfedge(vMid, vertex2), true);
+	FrontEdge* v2vM = setFront(mesh->getHalfedge(vertex2, vMid), true);
+	FrontEdge* vMv1 = setFront(mesh->getHalfedge(vMid, vertex1), true);
+	setNextFe(fe2, v1vM);
+	setNextFe(v1vM, vMv2);
+	setNextFe(vMv2, fe1);
+	setNextFe(fe4, v2vM);
+	setNextFe(v2vM, vMv1);
+	setNextFe(vMv1, fe3);
+	pushTailFrontEdgeGroup(fe2);
+	pushTailFrontEdgeGroup(fe4);
 	return 0;
+
 }
 
 bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
@@ -315,65 +319,21 @@ bool FrontEdgeOperator::proceedNextFeLoop(bool reclasssify)
 	int i = 0;
 	do
 	{
-		//
-		//  --fe-->     --fe-->
-		//         ^  |
-		//         fe fe
-		//         |  v
-		//if (fhe->getNextFe()->he == fhe->he->getSym()) {
-		//	setFront(fhe->he, false);
-		//	setFront(fhe->getNextFe()->he, false);
-		//	fhe = fhe->getNextFe();
-		//	continue;
-		//}
-		
-		if (!fhe->needTop)
-		{
-			if (fhe->getNextFe()->he == fhe->he->getNext()) {
-				continue;
-			}
-			if (!fhe->he->getNext()->getSym()->isBoundary()
-				&& !compOperator->isQuad(fhe->he->getNext()->getSym()->getFace())) {
-				const Halfedge* lfehe = NULL, * rfehe = NULL;
-				const Halfedge* viIter = fhe->he;
-
-				do {
-					if (!compOperator->isQuad(viIter->getFace()) && compOperator->isQuad(viIter->getSym()->getFace())) {
-						lfehe = viIter;
-					}
-					if (compOperator->isQuad(viIter->getFace()) && !compOperator->isQuad(viIter->getSym()->getFace())) {
-						rfehe = viIter->getSym();
-					}
-				} while (viIter = viIter->getNext()->getSym(), viIter != fhe->he);
-				assert(lfehe && rfehe);
-				FrontEdge* lfe = setFront(lfehe, true);
-				FrontEdge* rfe = setFront(rfehe, true);
-				setNextFe(prevNewFe, lfe);
-				setNextFe(lfe, rfe);
-				prevNewFe = rfe;
-			}
+		newFhe = fhe->he->getPrev()->getPrev()->getSym();
+		if (compOperator->isQuad(newFhe->getFace())) {
 			continue;
 		}
-		newFhe = fhe->getTop()->getSym();
-		if (compOperator->isQuad(newFhe->getFace()) || compOperator->isQuad(newFhe->getSym()->getFace()))
-		{
-			if (compOperator->isQuad(newFhe->getFace()) && compOperator->isQuad(newFhe->getSym()->getFace())) {
-				continue;
-			}
-			newFe = setFront(newFhe, true);
-			if (prevNewFe) {
-				setNextFe(prevNewFe, newFe);
-			}
-			prevNewFe = newFe;
-			if (!newFeHead) {
-				newFeHead = newFe;
-			}
+		newFe = setFront(newFhe, true);
+		if (newFeHead == nullptr) {
+			newFeHead = newFe;
 		}
-		else {
-			assert(false);
+		if (prevNewFe != nullptr) {
+			setNextFe(prevNewFe, newFe);
 		}
+		prevNewFe = newFe;
 	} while (fhe = fhe->getNextFe(), fhe != getFrontEdgeGroup());
 	if (prevNewFe) {
+		assert(prevNewFe->he->getTarget() == newFeHead->he->getSource());
 		setNextFe(prevNewFe, newFeHead);
 		updateHeadFrontEdgeGroup(newFeHead);
 	}
@@ -398,7 +358,6 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 	std::list<std::unique_ptr<FaceIterTreeNode>> roots;
 	std::list<FaceIterTreeNode*>faceIterTrees;
 	std::list<const Face*> traversedFace;
-
 	const Halfedge* he = Nc->getHalfedge();
 	// Init the face-face tree
 	do
@@ -425,6 +384,7 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 			display->markVertex(Nc);
 			display->markVertex(Nd);
 			asserts->onPause();
+			throw "calculate lambda set error";
 		}
 		FaceIterTreeNode* curTree = faceIterTrees.front();
 		faceIterTrees.pop_front();
@@ -435,8 +395,7 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 			if (attachedFace && !compOperator->isQuad(attachedFace)
 				&& find(traversedFace.begin(), traversedFace.end(), attachedFace) == traversedFace.end()
 				&& !isFront(he)
-				&& !sideOperator->isSide(he)
-				&& !sideOperator->isSide(he->getSym())
+				&& (!isPushingFront || !sideOperator->isSide(he) && !sideOperator->isSide(he->getSym()))
 				)
 			{
 				traversedFace.push_back(attachedFace);
@@ -466,15 +425,8 @@ std::list<const Halfedge*>* FrontEdgeOperator::calculateRambdaSet(const Vertex* 
 }
 
 const Halfedge* FrontEdgeOperator::edgeRecovery(Vertex* Nc, Vertex* Nd) {
-	assert(Nd != Nc);
+	assert(Nd != Nc); //411 714
 	while (mesh->getHalfedge(Nc, Nd) == NULL) {
-		//if (asserts->isPauseMarked(1)) {
-		//	display->create();
-		//	display->createFrame();
-		//	display->markVertex(Nc);
-		//	display->markVertex(Nd);
-		//	asserts->onPause(1);
-		//}
 		auto lambdaSet = calculateRambdaSet(Nc, Nd);
 		assert(lambdaSet);
 		while (lambdaSet->size() > 0) {
@@ -525,4 +477,14 @@ const Vertex* ComponentOperator::mergeEdge(Vertex* va, Vertex* vb) {
 		splitFace(va, (*iter)->getMutable());
 	}
 	return va;
+}
+
+void FrontEdgeOperator::trianglualteFrontLoopInterior(FrontEdge* fe) {
+	std::vector<Halfedge*> heList;
+	FrontEdge* fe1 = fe;
+	do {
+		heList.push_back(fe1->he->getMutable());
+	} while (fe1 = fe1->getNextFe(), fe1 != fe);
+	compOperator->clearFace(heList);
+
 }

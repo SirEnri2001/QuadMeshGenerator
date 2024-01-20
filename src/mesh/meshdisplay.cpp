@@ -1,5 +1,5 @@
 #include "meshdisplay.h"
-
+#include "../thread_support/thread_support.h"
 
 
 glm::vec3 MeshDisplay::calculateSurfaceNormal(const Face* face) {
@@ -43,6 +43,7 @@ MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
 }
 void MeshDisplay::create() {
 	using namespace glm;
+	lock_graphics_mutex();
 	indices.clear();
 	vertexBuffer.clear();
 	vertexBufferOffset.clear();
@@ -159,9 +160,11 @@ void MeshDisplay::create() {
 		//	i = i % vertsUntriangulated.size();
 		//}
 	}
+	release_graphics_mutex();
 }
 
 void MeshDisplay::createFrame() {
+	lock_graphics_mutex();
 	frameIndices.clear();
 	frameVertexBuffer.clear();
 	pointScatter.clear();
@@ -187,6 +190,7 @@ void MeshDisplay::createFrame() {
 		frameIndices.push_back(2*i);
 		frameIndices.push_back(2*i+1);
 	}
+	release_graphics_mutex();
 }
 
 void MeshDisplay::markHalfedge(
@@ -202,13 +206,17 @@ void MeshDisplay::markFace(const Face* face, glm::vec4 color) {
 	if (vertexBufferOffset.find(face->getId())==vertexBufferOffset.cend()) {
 		create();
 	}
-	int startId = vertexBufferOffset[face->getId()];
-	int endId = face->getId() < mesh->getFaceIdTotal() - 1 ?
-		vertexBufferOffset[face->getId() + 1] : 
-		vertexBuffer.size()/3;
-	for (int i = startId; i < endId; i++) {
-		vertexBuffer[i * 3 + 2] = color;
-	}
+	//int startId = vertexBufferOffset[face->getId()];
+	//int endId = face->getId() < mesh->getFaceIdTotal() - 1 ?
+	//	vertexBufferOffset[face->getId() + 1] : 
+	//	vertexBuffer.size()/3;
+	//for (int i = startId; i < endId; i++) {
+	//	vertexBuffer[i * 3 + 2] = color;
+	//}
+	const Halfedge* he = face->getHalfedge();
+	do {
+		markHalfedge(he);
+	} while (he = he->getNext(), he != face->getHalfedge());
 }
 
 void MeshDisplay::markBoundaries() {
@@ -326,4 +334,18 @@ float MeshDisplay::getNormalizedScale() {
 		}
 	}
 	return maxScale;
+}
+
+void MeshDisplay::setMesh(Mesh* mesh) {
+	this->mesh = mesh;
+	create();
+	createFrame();
+}
+
+glm::vec3 MeshDisplay::getAverageRefPos() {
+	glm::vec3 sumPos = glm::vec3(0,0,0);
+	for (auto& v : mesh->getVertices()) {
+		sumPos += glm::vec3(v.second.getPosition());
+	}
+	return sumPos /= mesh->getVertices().size();
 }

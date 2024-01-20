@@ -41,5 +41,5 @@ public:
 	int generateCorner(FrontEdge* lfe, FrontEdge* rfe);
 	int doSideDefine();
 	int doCornerGenerate();
-
+	const FrontEdge* getFrontEdge(const Halfedge* he);
 };

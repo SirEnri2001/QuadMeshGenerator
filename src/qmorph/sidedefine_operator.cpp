@@ -62,51 +62,30 @@ void SideDefineOperator::setSide(const FrontEdge* lfe, const Halfedge* rightSide
 }
 // these functions only return its finding of side he & its topology state
 SideDefineResult SideDefineOperator::verticalSideSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
-	const Halfedge* minAngleHe = lfe->he;
-	const Vertex* pivotVertex = lfe->he->getTarget();
-	glm::vec4 pivot = pivotVertex->getPosition();
-	glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
-	//int index;
-	//bisector = mesh->nearestCrossField(pivotVertex, bisector, index);
-	double minAngle = 360.0;
-	bool traversed = false;
-	const Halfedge* pivotIter = lfe->he;
+	const Halfedge* resHe = nullptr;
+	const Halfedge* pivotIter = lfe->he->getNext()->getSym();
 	do {
-		if (pivotIter->getSym()->isBoundary()) {
+		if (lfe->getPrevFe()->he->getSource() == pivotIter->getSource()
+			|| rfe->getNextFe()->he->getTarget() == pivotIter->getSource()) {
 			continue;
 		}
-		traversed = true;
-		double angle = compOperator->angle(bisector + pivot, pivotIter->getSym());
-		if (angle < minAngle) {
-			minAngle = angle;
-			minAngleHe = pivotIter;
+		if (feOperator->isFront(pivotIter->getSource())) {
+			continue;
 		}
+		if (compOperator->numQuad(pivotIter->getSource()) > 0) {
+			continue;
+		}
+		if (isSide(pivotIter->getSource())) {
+			continue;
+		}
+		resHe = pivotIter;
+
 	} while (pivotIter = pivotIter->getNext()->getSym(), pivotIter != rfe->he->getSym());
-	if (!traversed) {
+	if (!resHe) {
 		return SideDefineResult::NoSuitable;
 	}
-	resultUpSide = minAngleHe->getSym();
-	if (lfe->getPrevFe()->he->getSource() == minAngleHe->getSource()
-		|| rfe->getNextFe()->he->getTarget() == minAngleHe->getSource()) {
-		// size 3 front edge group
-		return SideDefineResult::FrontEdgeContactDegenerate;
-	}
-	if (feOperator->isFront(minAngleHe->getSource())) {
-		return SideDefineResult::FrontEdgeContact;
-	}
-	if (compOperator->numQuad(minAngleHe->getSource()) > 0) {
-		return SideDefineResult::QuadContactByVertex;
-	}
-	if (isSide(minAngleHe->getSource())) {
-		return SideDefineResult::SideEdgeContact;
-	}
-	if (minAngle < constEpsilon) {
-		//mesh->alignToCrossField(mesh->halfedgeEdge(minAngleHe), pivotVertex);
-		return SideDefineResult::Succeeded;
-	}
-	else {
-		return SideDefineResult::NoSuitable;
-	}
+	resultUpSide = resHe;
+	return SideDefineResult::Succeeded;
 }
 SideDefineResult SideDefineOperator::horizontalSideSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
 	const Halfedge* minAngleHe = lfe->he;
@@ -119,9 +98,9 @@ SideDefineResult SideDefineOperator::horizontalSideSeek(FrontEdge* lfe, FrontEdg
 	// traverse all quadrilateral surround the vertex
 	//(mAV)<--.
 	//   |   / \
-		//   |  /   \
-		//   | /     \
-		//   v--minAH>(pV)
+	//   |  /   \
+	//   | /     \
+	//   v--minAH>(pV)
 	const Vertex* minAngleVertex = lfe->he->getSource();
 	do
 	{
@@ -165,33 +144,50 @@ SideDefineResult SideDefineOperator::horizontalSideSeek(FrontEdge* lfe, FrontEdg
 	}
 }
 SideDefineResult SideDefineOperator::verticalSideSplitSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
-	const Halfedge* minAngleHe = lfe->he;
-	const Vertex* pivotVertex = lfe->he->getTarget();
-	glm::vec4 pivot = pivotVertex->getPosition();
-	glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
-	const Halfedge* pivotIter = lfe->he;
-	double minAngle = 360.0;
-
+	const Halfedge* resHe = nullptr;
+	const Halfedge* pivotIter = lfe->he->getNext()->getSym();
 	do {
-		if (pivotIter->getSym()->isBoundary()) {
+		
+		if (isSide(pivotIter)) {
 			continue;
 		}
-		double angle = compOperator->angle(bisector + pivot, pivotIter->getSym());
-		if (angle < minAngle) {
-			minAngle = angle;
-			minAngleHe = pivotIter;
-		}
+		resHe = pivotIter;
+
 	} while (pivotIter = pivotIter->getNext()->getSym(), pivotIter != rfe->he->getSym());
-	resultUpSide = minAngleHe->getSym();
-	if (lfe->getPrevFe()->he->getSource() == minAngleHe->getSource()
-		|| rfe->getNextFe()->he->getTarget() == minAngleHe->getSource()) {
-		// size 3 front edge group
-		return SideDefineResult::Succeeded;
+	if (!resHe) {
+		return SideDefineResult::NoSuitable;
 	}
-	if (feOperator->isFront(minAngleHe->getSource())) {
-		return SideDefineResult::FrontEdgeContact;
-	}
+	resultUpSide = resHe;
 	return SideDefineResult::Succeeded;
+
+
+	//const Halfedge* minAngleHe = lfe->he;
+	//const Vertex* pivotVertex = lfe->he->getTarget();
+	//glm::vec4 pivot = pivotVertex->getPosition();
+	//glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
+	//const Halfedge* pivotIter = lfe->he;
+	//double minAngle = 360.0;
+
+	//do {
+	//	if (pivotIter->getSym()->isBoundary()) {
+	//		continue;
+	//	}
+	//	double angle = compOperator->angle(bisector + pivot, pivotIter->getSym());
+	//	if (angle < minAngle) {
+	//		minAngle = angle;
+	//		minAngleHe = pivotIter;
+	//	}
+	//} while (pivotIter = pivotIter->getNext()->getSym(), pivotIter != rfe->he->getSym());
+	//resultUpSide = minAngleHe->getSym();
+	//if (lfe->getPrevFe()->he->getSource() == minAngleHe->getSource()
+	//	|| rfe->getNextFe()->he->getTarget() == minAngleHe->getSource()) {
+	//	// size 3 front edge group
+	//	return SideDefineResult::Succeeded;
+	//}
+	//if (feOperator->isFront(minAngleHe->getSource())) {
+	//	return SideDefineResult::FrontEdgeContact;
+	//}
+	//return SideDefineResult::Succeeded;
 }
 SideDefineResult SideDefineOperator::horizontalSideSplitSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
 	using namespace glm;
@@ -213,9 +209,9 @@ SideDefineResult SideDefineOperator::horizontalSideSplitSeek(FrontEdge* lfe, Fro
 	} while (pivotIter = pivotIter->getNext()->getSym(), pivotIter != rfe->he->getSym());
 	//(mAV)<----.
 	//   |    /   \
-		//   |   /     he1
-		//   | /          \
-		//   v--minAH(he2)-->(pV)
+	//   |   /     he1
+	//   | /          \
+	//   v--minAH(he2)-->(pV)
 	resultUpSide = he2;
 	const Halfedge* he1 = he2->getNext();
 	// 2 halfedges in a patch: --he2-->.--he1-->
@@ -242,63 +238,130 @@ int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 		setSide(lfe, rfe->he->getPrev()->getSym());
 		return 0;
 	}
-	const Halfedge* resultUpSide;
-	switch (verticalSideSeek(lfe, rfe, resultUpSide))
-	{
-	case SideDefineResult::FrontEdgeContact:
-		feOperator->seperateFrontLoop(resultUpSide);
-		return 1;
-	case SideDefineResult::Succeeded:
-		setSide(lfe, resultUpSide);
+	if (lfe->isRightCornerSharp()) {
+		const Halfedge* top = feOperator->edgeRecovery(rfe->he->getTarget()->getMutable(), getLeftSide(lfe)->getSource()->getMutable());
+		compOperator->buildQuad(getLeftSide(lfe)->getMutable(), lfe->he->getMutable(), rfe->he->getMutable(), top->getMutable());
 		return 0;
-	default:
-		break;
+	}
+	const Halfedge* he = nullptr;
+	verticalSideSeek(lfe, rfe, he);
+	if (!he) {
+		he = lfe->he->getNext();
+		compOperator->splitEdge(he->getMutable(), glm::vec3(he->getSource()->getPosition() + he->getTarget()->getPosition()) * 0.5f);
 	}
 
-	switch (horizontalSideSeek(lfe, rfe, resultUpSide)) {
-	case SideDefineResult::FrontEdgeContact:
-		compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
-		feOperator->seperateFrontLoop(resultUpSide->getNext());
-		return 1;
-	case SideDefineResult::Succeeded:
-		compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
-		setSide(lfe, resultUpSide->getNext());
-		return 0;
-	default:
-		break;
-	}
-	if (horizontalSideSplitSeek(lfe, rfe, resultUpSide) == SideDefineResult::Succeeded) {
-		const Halfedge* he2 = resultUpSide;
-		const Halfedge* he1 = he2->getNext();
-		const Vertex* pivotVertex = lfe->he->getTarget();
-		// solve the 2x2 linear system
-		glm::vec4 v1 = he2->getSource()->getPosition() - he2->getTarget()->getPosition();
-		glm::vec4 v2 = he1->getTarget()->getPosition() - he2->getTarget()->getPosition();
-		glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
-		float* km = solveKMEquation(glm::vec3(v1), glm::vec3(v2), glm::vec3(bisector));
-		glm::vec4 p = bisector * (km[0] + FLT_EPSILON * 10.0F) + pivotVertex->getPosition();
-		const Vertex* spliter = compOperator->splitEdge(he2->getPrev()->getMutable(), p);
-		const Halfedge* newHe = mesh->getHalfedge(pivotVertex, spliter);
-		assert(newHe);
-		setSide(lfe, newHe);
-		return 0;
-	}
 
-	switch (verticalSideSplitSeek(lfe, rfe, resultUpSide))
-	{
-	case SideDefineResult::FrontEdgeContact:
-	//case SideDefineResult::FrontEdgeContactDegenerate:
-		feOperator->seperateFrontLoop(resultUpSide);
-		return 1;
-	case SideDefineResult::Succeeded:
-		setSide(lfe, NULL);
-		const Vertex* v = compOperator->splitEdge(resultUpSide->getMutable(),
-			(resultUpSide->getSource()->getPosition() + resultUpSide->getTarget()->getPosition()) / 2.f);
-		resultUpSide = mesh->getHalfedge(lfe->he->getTarget(), v);
-		setSide(lfe, resultUpSide);
-		return 0;
-	}
-	assert(false);
+
+	//const Halfedge* resultUpSide;
+	//const Halfedge* he = nullptr;
+	//const Halfedge* heIter = nullptr;
+	//FrontEdge* trfe = nullptr;
+	//switch (verticalSideSeek(lfe, rfe, resultUpSide))
+	//{
+	//case SideDefineResult::FrontEdgeContact:
+	//	he = resultUpSide;
+	//	heIter = he;
+	//	trfe = nullptr;
+	//	do {
+	//		if (feOperator->isFront(heIter)) {
+	//			trfe = feOperator->getFront(heIter);
+	//			break;
+	//		}
+	//	} while (heIter = heIter->getSym()->getPrev(), heIter != he);
+	//	if (trfe == nullptr) {
+	//		display->create();
+	//		display->createFrame();
+	//		display->markHalfedge(lfe->he);
+	//		display->markHalfedge(rfe->he);
+	//		display->markHalfedge(resultUpSide);
+	//		asserts->onPause();
+	//	}
+	//	feOperator->seperateFrontLoop(lfe, trfe);
+	//	return 1;
+	//case SideDefineResult::Succeeded:
+	//	setSide(lfe, resultUpSide);
+	//	return 0;
+	//default:
+	//	break;
+	//}
+	//switch (horizontalSideSeek(lfe, rfe, resultUpSide)) {
+	//case SideDefineResult::FrontEdgeContact:
+	//	compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
+	//	he = resultUpSide->getNext();
+	//	heIter = he; 
+	//	trfe = nullptr;
+	//	do {
+	//		if (feOperator->isFront(heIter)) {
+	//			trfe = feOperator->getFront(heIter);
+	//			break;
+	//		}
+	//	} while (heIter = heIter->getSym()->getPrev(), heIter != he);
+	//	if (trfe == nullptr) {
+	//		display->create();
+	//		display->createFrame();
+	//		display->markHalfedge(lfe->he);
+	//		display->markHalfedge(rfe->he);
+	//		display->markHalfedge(resultUpSide);
+	//		asserts->onPause();
+	//	}
+	//	feOperator->seperateFrontLoop(lfe, trfe);
+	//	return 1;
+	//case SideDefineResult::Succeeded:
+	//	compOperator->swapEdge(resultUpSide->getPrev()->getMutable());
+	//	setSide(lfe, resultUpSide->getNext());
+	//	return 0;
+	//default:
+	//	break;
+	//}
+	//if (horizontalSideSplitSeek(lfe, rfe, resultUpSide) == SideDefineResult::Succeeded) {
+	//	const Halfedge* he2 = resultUpSide;
+	//	const Halfedge* he1 = he2->getNext();
+	//	const Vertex* pivotVertex = lfe->he->getTarget();
+	//	// solve the 2x2 linear system
+	//	glm::vec4 v1 = he2->getSource()->getPosition() - he2->getTarget()->getPosition();
+	//	glm::vec4 v2 = he1->getTarget()->getPosition() - he2->getTarget()->getPosition();
+	//	glm::vec4 bisector = compOperator->bisect(lfe->he, rfe->he);
+	//	float* km = solveKMEquation(glm::vec3(v1), glm::vec3(v2), glm::vec3(bisector));
+	//	glm::vec4 p = bisector * (km[0] + FLT_EPSILON * 10.0F) + pivotVertex->getPosition();
+	//	const Vertex* spliter = compOperator->splitEdge(he2->getPrev()->getMutable(), p);
+	//	const Halfedge* newHe = mesh->getHalfedge(pivotVertex, spliter);
+	//	assert(newHe);
+	//	setSide(lfe, newHe);
+	//	return 0;
+	//}
+
+	//switch (verticalSideSplitSeek(lfe, rfe, resultUpSide))
+	//{
+	//case SideDefineResult::FrontEdgeContact:
+	////case SideDefineResult::FrontEdgeContactDegenerate:
+	//	he = resultUpSide;
+	//	heIter = he;
+	//	trfe = nullptr;
+	//	do {
+	//		if (feOperator->isFront(heIter)) {
+	//			trfe = feOperator->getFront(heIter);
+	//			break;
+	//		}
+	//	} while (heIter = heIter->getSym()->getPrev(), heIter != he);
+	//	if (trfe == nullptr) {
+	//		display->create();
+	//		display->createFrame();
+	//		display->markHalfedge(lfe->he);
+	//		display->markHalfedge(rfe->he);
+	//		display->markHalfedge(resultUpSide);
+	//		asserts->onPause();
+	//	}
+	//	feOperator->seperateFrontLoop(lfe, trfe);
+	//	return 1;
+	//case SideDefineResult::Succeeded:
+	//	setSide(lfe, NULL);
+	//	const Vertex* v = compOperator->splitEdge(resultUpSide->getMutable(),
+	//		(resultUpSide->getSource()->getPosition() + resultUpSide->getTarget()->getPosition()) / 2.f);
+	//	resultUpSide = mesh->getHalfedge(lfe->he->getTarget(), v);
+	//	setSide(lfe, resultUpSide);
+	//	return 0;
+	//}
+	//assert(false);
 }
 int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 	setSide(lfe->getPrevFe(), NULL);
@@ -421,12 +484,16 @@ int SideDefineOperator::doCornerGenerate() {
 
 				return 1;
 			}
-			else { // form a ``|_.. shape
-				generateCorner(lfe, rfe);
-				return 1;
-			}
+			//else { // form a ``|_.. shape
+			//	generateCorner(lfe, rfe);
+			//	return 1;
+			//}
 		}
 
 	} while (iter = iter->getNextFe(), iter != feOperator->getFrontEdgeGroup());
 	return 0;
+}
+
+const FrontEdge* SideDefineOperator::getFrontEdge(const Halfedge* he) {
+	return nullptr;
 }

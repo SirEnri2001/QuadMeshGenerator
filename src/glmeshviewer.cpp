@@ -104,15 +104,7 @@ Viewer::Viewer(const std::string& name) :
 	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
 	//io.Fonts->AddFontDefault();
 	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 36.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
-
-	/* Our initializaton */
-	//setCallbacks();
 
 	mHalfedgeShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
 		"../glsl/halfedge3d.geom.glsl");
@@ -128,7 +120,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_24978.m");
+	mMeshIO->loadM("../test/data/mesh_53439.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -139,6 +131,7 @@ Viewer::Viewer(const std::string& name) :
 	testOperator->display = mQMorphDisplay.get();
 	testOperator->setAsserts(mMeshAssert.get());
 	testOperator->qmorphOperator = qmorphOperator.get();
+	testOperator->qmorphOperator->setDisplay(mQMorphDisplay->display);
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
 	modelScale = mMeshDisplay->getNormalizedScale()*500;
@@ -207,6 +200,7 @@ void Viewer::mainLoop()
 			if (ImGui::Button("Refresh Model")) {
 				mMeshDisplay->create();
 				mMeshDisplay->createFrame();
+				modelScale = mMeshDisplay->getNormalizedScale();
 			}
 			ImGui::DragInt("Face ID", &faceId, 1, 0, mMesh->getFaceIdTotal() - 1);
 			ImGui::SameLine();
@@ -410,6 +404,7 @@ void Viewer::createGUIWindow()
 
 void Viewer::drawScene()
 {
+	lock_graphics_mutex();
 	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(modelScale));
 	glm::mat4 projView = mCamera.getProjView();
 	drawGridGround(projView);
@@ -483,6 +478,7 @@ void Viewer::drawScene()
 	}
 
 	mMeshDisplay->modelMat = model;
+	release_graphics_mutex();
 }
 
 void Viewer::createGridGround()

@@ -36,9 +36,7 @@ public:
 	int numTriangles(const Vertex* vert);
 	bool isQuad(const Face* face);
 	const Vertex* mergeEdge(Vertex* va, Vertex* vb_to_be_deleted);
-	void buildQuad(Halfedge* left, Halfedge* bottom, Halfedge* right, Halfedge* top) {
-		clearFace({ left,bottom,right,top });
-	}
+	void buildQuad(Halfedge* left, Halfedge* bottom, Halfedge* right, Halfedge* top);
 	int faceEdges(const Face* face);
 
 	const Halfedge* splitFace(Vertex* v1, Vertex* v2);

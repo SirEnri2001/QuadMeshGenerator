@@ -20,6 +20,7 @@ public:
 	int doEdgeRecovery();
 	int doSmooth(int epoch = 2);
 	int doSeam();
+	int doSplitFrontEdges();
 	void create();
 	void test();
 	QMorphOperator(Mesh* mesh);
