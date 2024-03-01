@@ -65,6 +65,11 @@ add_library(mesh STATIC
   ./src/mesh/meshcontroller.h
 )
 
+add_library(laplacian STATIC
+./src/laplacian/laplacian.h
+./src/laplacian/laplacian.cpp
+)
+
 target_include_directories(mesh PUBLIC
     ./3rdparty/eigen-3.2.8
     ./3rdparty/glm
@@ -119,7 +124,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/tinyobj
 )
 
-target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32)
+target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian)
 
 add_executable(test_thread
     ./src/tests/test_thread.cpp

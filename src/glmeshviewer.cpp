@@ -102,8 +102,8 @@ Viewer::Viewer(const std::string& name) :
 	// - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
 	// - Read 'docs/FONTS.md' for more instructions and details.
 	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-	//io.Fonts->AddFontDefault();
-	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 36.0f);
+	io.Fonts->AddFontDefault();
+	//io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 36.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
@@ -128,7 +128,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_24978.m");
+	mMeshIO->loadM("../test/data/mesh_44313.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
