@@ -12,6 +12,8 @@
 #include <iostream>
 #include <exception>
 #include <filesystem>
+#include "laplacian/laplacian.h"
+
 namespace fs = std::filesystem;
 
 TestOperator::TestOperator(Mesh* mesh) : MeshUserOperator(mesh) {
@@ -23,7 +25,8 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	integrationTest(integrationTestPath);
+	// integrationTest(integrationTestPath);
+	laplacianTest(mesh);
 }
 
 void TestOperator::operator()() {
