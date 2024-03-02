@@ -35,7 +35,7 @@ add_library(qmorph STATIC
 )
 
 target_include_directories(qmorph PUBLIC
-    ./3rdparty/eigen-3.2.8
+    ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
 
@@ -66,7 +66,7 @@ add_library(mesh STATIC
 )
 
 target_include_directories(mesh PUBLIC
-    ./3rdparty/eigen-3.2.8
+    ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
     ./3rdparty/tinyobj
     ./3rdparty/boost_1_82_0
@@ -129,6 +129,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/imgui-1.90
     ./3rdparty/glm
     ./3rdparty/tinyobj
+    ./3rdparty/eigen-3.4.0
 )
 
 target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian)
