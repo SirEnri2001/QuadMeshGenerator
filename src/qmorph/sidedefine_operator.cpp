@@ -144,8 +144,10 @@ SideDefineResult SideDefineOperator::horizontalSideSeek(FrontEdge* lfe, FrontEdg
 	}
 }
 SideDefineResult SideDefineOperator::verticalSideSplitSeek(FrontEdge* lfe, FrontEdge* rfe, const Halfedge*& resultUpSide) {
+	assert(lfe->he->getNext() != rfe->he);
 	const Halfedge* resHe = nullptr;
 	const Halfedge* pivotIter = lfe->he->getNext()->getSym();
+	const Vertex* pivot = lfe->he->getTarget();
 	do {
 		
 		if (isSide(pivotIter)) {
@@ -157,7 +159,9 @@ SideDefineResult SideDefineOperator::verticalSideSplitSeek(FrontEdge* lfe, Front
 	if (!resHe) {
 		return SideDefineResult::NoSuitable;
 	}
-	resultUpSide = resHe;
+	const Vertex* split = compOperator->splitEdge(resHe->getMutable(),
+		glm::vec3(resHe->getTarget()->getPosition() + resHe->getSource()->getPosition()) * 0.5f);
+	resultUpSide = mesh->getHalfedge(split, pivot);
 	return SideDefineResult::Succeeded;
 
 
@@ -231,23 +235,37 @@ SideDefineResult SideDefineOperator::horizontalSideSplitSeek(FrontEdge* lfe, Fro
 
 int SideDefineOperator::frontEdgeSideDefine(FrontEdge* lfe, FrontEdge* rfe) {
 	if (compOperator->isQuad(lfe->he->getFace())) {
-		setSide(lfe, lfe->he->getNext());
 		return 0;
 	}
 	if (compOperator->isQuad(rfe->he->getFace())) {
-		setSide(lfe, rfe->he->getPrev()->getSym());
 		return 0;
 	}
 	if (lfe->isRightCornerSharp()) {
+		if (getLeftSide(lfe) && getRightSide(rfe) && getLeftSide(lfe)->getSource() != getRightSide(rfe)->getTarget()) {
+			const Vertex* v = getLeftSide(lfe)->getSource();
+			compOperator->mergeEdge(getLeftSide(lfe)->getSource()->getMutable(), getRightSide(rfe)->getTarget()->getMutable());
+			compOperator->buildQuad(
+				mesh->getHalfedge(v, lfe->he->getSource())->getMutable(),
+				lfe->he->getMutable(),
+				rfe->he->getMutable(),
+				mesh->getHalfedge(rfe->he->getTarget(), v)->getMutable());
+			return 0;
+		}
 		const Halfedge* top = feOperator->edgeRecovery(rfe->he->getTarget()->getMutable(), getLeftSide(lfe)->getSource()->getMutable());
+		setSide(rfe, top);
 		compOperator->buildQuad(getLeftSide(lfe)->getMutable(), lfe->he->getMutable(), rfe->he->getMutable(), top->getMutable());
 		return 0;
 	}
 	const Halfedge* he = nullptr;
 	verticalSideSeek(lfe, rfe, he);
 	if (!he) {
-		he = lfe->he->getNext();
-		compOperator->splitEdge(he->getMutable(), glm::vec3(he->getSource()->getPosition() + he->getTarget()->getPosition()) * 0.5f);
+		verticalSideSplitSeek(lfe, rfe, he);
+	}
+	setSide(lfe, he->getSym());
+	if (getLeftSide(lfe)) {
+		const Halfedge* top = feOperator->edgeRecovery(getRightSide(lfe)->getTarget()->getMutable(),
+			getLeftSide(lfe)->getSource()->getMutable());
+		compOperator->buildQuad(getLeftSide(lfe)->getMutable(), lfe->he->getMutable(), getRightSide(lfe)->getMutable(), top->getMutable());
 	}
 
 
@@ -415,21 +433,23 @@ int SideDefineOperator::generateCorner(FrontEdge* lfe, FrontEdge* rfe) {
 	return 0;
 }
 int SideDefineOperator::doSideDefine() {
+	FrontEdge* fe = feOperator->getFrontEdgeGroup();
 	FrontEdge* lfe, * rfe;
-	int i = 0;
-	// traverse all front edge
-	lfe = feOperator->getFrontEdgeGroup();
+	lfe = fe;
+	do {
+		if (!lfe->isRightCornerSharp()) {
+			fe = lfe;
+			break;
+		}
+	} while (lfe = lfe->getNextFe(), lfe != fe);
+
 	do {
 		rfe = lfe->getNextFe();
-		if (!lfe->needTop && !rfe->needTop) {
-			continue;
-		}
-		int retVal = frontEdgeSideDefine(lfe, rfe);
-		if (retVal != 0) {
-			return -1;
-		}
-
+		frontEdgeSideDefine(lfe, rfe);
 	} while (lfe = lfe->getNextFe(), lfe != feOperator->getFrontEdgeGroup());
+	if (!compOperator->isQuad(lfe->he->getFace())) {
+		frontEdgeSideDefine(lfe, lfe->getNextFe());
+	}
 	return 0;
 }
 int SideDefineOperator::doCornerGenerate() {

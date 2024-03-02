@@ -2,10 +2,11 @@
 #include "mesh.h"
 #include <string>
 #include <exception>
+#include "../thread_support/thread_support.h"
 
 
 #define error(x) __debugbreak();throw x;
-#define validate(x) if(!x) {error("Validate failed");}
+#define validate(x) if(!x) {step_over_pause();error("Validate failed");}
 
 class MeshAssert {
 	long unsigned int pauseMark = 0l;

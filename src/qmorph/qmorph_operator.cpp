@@ -36,9 +36,17 @@ int QMorphOperator::doQMorphProcess() {
 		{
 			continue;
 		}
+		FrontEdge* fe = feOperator->getFrontEdgeGroup();
+		do {
+			if (fe->he->getNext() == fe->getNextFe()->he) {
+				compOperator->splitEdge(
+					fe->he->getPrev()->getMutable(), 
+					glm::vec3(fe->he->getSource()->getPosition() + fe->getNextFe()->he->getTarget()->getPosition())*0.5f);
+			}
+		} while (fe = fe->getNextFe(), fe != feOperator->getFrontEdgeGroup());
 		if (doSplitFrontEdges() != 0) {
 			continue;
-		}
+ 		}
 		feOperator->updateFeClassification();
 		if (sideOperator->doCornerGenerate()) {
 			continue;
@@ -46,9 +54,9 @@ int QMorphOperator::doQMorphProcess() {
 		if (sideOperator->doSideDefine() == -1) { //fail to sideDefine because frontEdges are splited
 			continue;
 		}
-		feOperator->isPushingFront = true;
-		doEdgeRecovery();
-		feOperator->isPushingFront = false;
+		//feOperator->isPushingFront = true;
+		//doEdgeRecovery();
+		//feOperator->isPushingFront = false;
 		feOperator->proceedNextFeLoop();
 		if (feOperator->getFrontEdgeGroup()) {
 			feOperator->switchFrontEdgeGroup();
@@ -213,7 +221,12 @@ int QMorphOperator::doSplitFrontEdges() {
 			if (he->getPrev()!=fe->getNextFe()->getNextFe()->he 
 				&& he->getNext()!=fe->getPrevFe()->he
 				&& feOperator->isFront(he->getTarget())) {
-				while (feOperator->isFront(he)) {
+				if (he->getTarget()->getId() == 122) {
+					display->createFrame();
+					display->markVertex(he->getTarget());
+					asserts->onPause();
+				}
+				while (!feOperator->isFront(he)) {
 					he = he->getSym()->getPrev();
 				}
 				feOperator->seperateFrontLoop(fe, feOperator->getFront(he));

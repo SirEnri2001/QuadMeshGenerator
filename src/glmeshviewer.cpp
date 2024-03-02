@@ -103,7 +103,7 @@ Viewer::Viewer(const std::string& name) :
 	// - Read 'docs/FONTS.md' for more instructions and details.
 	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
 	//io.Fonts->AddFontDefault();
-	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 36.0f);
+	io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\Hack-Regular.ttf", 18.0f);
 	//IM_ASSERT(font != NULL);
 
 	mHalfedgeShader = std::make_unique<Shader>("../glsl/point3d.vert.glsl", "../glsl/point3d.frag.glsl",
@@ -120,7 +120,7 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_53439.m");
+	mMeshIO->loadM("../test/data/mesh_270185.m");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
