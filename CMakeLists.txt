@@ -35,7 +35,7 @@ add_library(qmorph STATIC
 )
 
 target_include_directories(qmorph PUBLIC
-    ./3rdparty/eigen-3.2.8
+    ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
 
@@ -65,17 +65,24 @@ add_library(mesh STATIC
   ./src/mesh/meshcontroller.h
 )
 
+target_include_directories(mesh PUBLIC
+    ./3rdparty/eigen-3.4.0
+    ./3rdparty/glm
+    ./3rdparty/tinyobj
+    ./3rdparty/boost_1_82_0
+)
+
+# Laplacian
 add_library(laplacian STATIC
 ./src/laplacian/laplacian.h
 ./src/laplacian/laplacian.cpp
 )
 
-target_include_directories(mesh PUBLIC
-    ./3rdparty/eigen-3.2.8
+target_include_directories(laplacian PUBLIC
+    ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
-    ./3rdparty/tinyobj
-    ./3rdparty/boost_1_82_0
 )
+
 
 # Set up executables/viewers
 # Find OpenGL
@@ -122,6 +129,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/imgui-1.90
     ./3rdparty/glm
     ./3rdparty/tinyobj
+    ./3rdparty/eigen-3.4.0
 )
 
 target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian)
