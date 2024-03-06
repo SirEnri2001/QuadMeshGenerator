@@ -128,7 +128,8 @@ Viewer::Viewer(const std::string& name) :
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
-	mMeshIO->loadM("../test/data/mesh_44313.m");
+	//mMeshIO->loadM("../test/data/mesh_44313.m");
+	mMeshIO->loadObj("../test/obj/cow.obj");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -239,6 +240,8 @@ void Viewer::mainLoop()
 				}
 			}
 			ImGui::DragInt("Halfedge ID", &heId, 1, 0, mMesh->getHalfedgeIdTotal() - 1);
+			//ImGui::InputInt("Halfedge ID", &heId, 1, 1, mMesh->getHalfedgeIdTotal() - 1);
+
 			if (ImGui::Button("Display Halfedge"))
 				if (mMesh->getHalfedges().find(heId) == mMesh->getHalfedges().cend()) {
 					ImGui::OpenPopup("Error Marking Component");
