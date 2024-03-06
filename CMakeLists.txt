@@ -72,6 +72,15 @@ target_include_directories(mesh PUBLIC
     ./3rdparty/boost_1_82_0
 )
 
+add_library(eigensolver STATIC
+    ./src/eigensolver/eigensolver.h
+    ./src/eigensolver/eigensolver.cpp
+)
+
+target_include_directories(eigensolver PUBLIC
+    ./3rdparty/eigen-3.4.0
+)
+
 # Laplacian
 add_library(laplacian STATIC
 ./src/laplacian/laplacian.h
