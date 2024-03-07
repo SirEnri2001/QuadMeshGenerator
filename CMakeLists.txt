@@ -72,15 +72,6 @@ target_include_directories(mesh PUBLIC
     ./3rdparty/boost_1_82_0
 )
 
-add_library(eigensolver STATIC
-    ./src/eigensolver/eigensolver.h
-    ./src/eigensolver/eigensolver.cpp
-)
-
-target_include_directories(eigensolver PUBLIC
-    ./3rdparty/eigen-3.4.0
-)
-
 # Laplacian
 add_library(laplacian STATIC
 ./src/laplacian/laplacian.h
@@ -90,6 +81,18 @@ add_library(laplacian STATIC
 target_include_directories(laplacian PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
+)
+
+add_library(api STATIC
+    ./src/api/api.h
+    ./src/api/eigen.h
+    ./src/api/api.cpp
+)
+
+target_include_directories(api PUBLIC
+    ./3rdparty/json
+    ./3rdparty/cpp-httplib
+    ./3rdparty/eigen-3.4.0
 )
 
 
@@ -147,7 +150,11 @@ add_executable(test_thread
     ./src/tests/test_thread.cpp
     ./src/tests/test_thread.h
 )
-target_link_libraries(test_thread PUBLIC thread_support)
+target_link_libraries(test_thread PUBLIC thread_support api)
+
+target_include_directories(test_thread PUBLIC
+    ./3rdparty/eigen-3.4.0
+)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
