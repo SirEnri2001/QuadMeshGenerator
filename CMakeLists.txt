@@ -83,6 +83,11 @@ target_include_directories(laplacian PUBLIC
     ./3rdparty/glm
 )
 
+add_library(morse_smale_complex STATIC
+  ./src/msc/msc.h
+  ./src/msc/msc.cpp
+)
+
 add_library(api STATIC
     ./src/api/api.h
     ./src/api/eigen.h
