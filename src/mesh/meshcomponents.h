@@ -44,6 +44,7 @@ protected:
 	Halfedge* halfedge = nullptr;
 	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
+	glm::vec4 color = glm::vec4(1, 0, 0.86, 1);
 	glm::vec2 uv = glm::vec2(0,0);
 	bool boundary = true;
 public:
@@ -61,6 +62,8 @@ public:
 	void setPosition(glm::vec4 pos);
 	glm::vec4 getPosition() const;
 	glm::vec3 getNormal() const;
+	glm::vec4 getColor() const;
+	void setColor(glm::vec4 col);
 	void setNormal(glm::vec3 n);
 	void setUV(glm::vec2 uv);
 	glm::vec2 getUV() const;

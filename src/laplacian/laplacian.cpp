@@ -12,14 +12,17 @@ float desbrunWeight(const Halfedge* halfEdge);
 Eigen::MatrixXd laplacian(const Mesh& mesh);
 
 void svdTest(const Eigen::MatrixXd& laplacianMatrix) {
-	Eigen::setNbThreads(20);
+	Eigen::setNbThreads(16);
 	int n = Eigen::nbThreads();
+
 	std::cout << "Threads used: " << n << std::endl;
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	auto& ret = Eigen::JacobiSVD<Eigen::MatrixXd>::JacobiSVD().compute(laplacianMatrix);
+
+	auto& ret = Eigen::BDCSVD<Eigen::MatrixXd>::BDCSVD().compute(laplacianMatrix);
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	
-	std::cout << std::chrono::duration_cast<std::chrono::minutes>(end - begin).count() << " minutes " << std::endl;
+	std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - begin) << std::endl;
+
 	return;
 }
 
