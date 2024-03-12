@@ -42,7 +42,7 @@ def svd():
     dimension = round(math.sqrt(data_size/8))
     np_data = np.ndarray([dimension, dimension], dtype=np.double, buffer=data)
     np_res = np.linalg.eigh(np_data)
-    return np_res.eigenvalues.astype(np.double).tobytes()+np_res.eigenvectors.astype(np.double).tobytes()
+    return np_res.eigenvalues.astype(np.double).tobytes()+np_res.eigenvectors.T.astype(np.double).tobytes()
     # json_data = request.json
     # resp = {}
     # for key, value in json_data.items():

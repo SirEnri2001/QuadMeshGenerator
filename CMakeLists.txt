@@ -88,6 +88,13 @@ add_library(morse_smale_complex STATIC
   ./src/msc/msc.cpp
 )
 
+target_include_directories(morse_smale_complex PUBLIC
+  ./3rdparty/eigen-3.4.0
+  ./3rdparty/glm
+)
+
+target_link_libraries(morse_smale_complex PUBLIC laplacian )
+
 add_library(api STATIC
     ./src/api/api.h
     ./src/api/eigen.h
@@ -149,7 +156,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/eigen-3.4.0
 )
 
-target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian)
+target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian morse_smale_complex api)
 
 add_executable(test_thread
     ./src/tests/test_thread.cpp

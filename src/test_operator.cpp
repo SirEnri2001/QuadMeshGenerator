@@ -12,7 +12,7 @@
 #include <iostream>
 #include <exception>
 #include <filesystem>
-#include "laplacian/laplacian.h"
+#include "msc/msc.h"
 
 namespace fs = std::filesystem;
 
@@ -25,8 +25,8 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	// integrationTest(integrationTestPath);
-	laplacianTest(mesh);
+	MorseFunction mf(mesh);
+	mf();
 }
 
 void TestOperator::operator()() {

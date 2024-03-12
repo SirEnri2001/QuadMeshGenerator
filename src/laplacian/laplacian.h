@@ -3,3 +3,4 @@
 #include "../mesh/mesh.h"
 
 void laplacianTest(const Mesh* mesh);
+Eigen::MatrixXd laplacian(const Mesh& mesh);

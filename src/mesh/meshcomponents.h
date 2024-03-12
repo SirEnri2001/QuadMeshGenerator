@@ -44,7 +44,7 @@ protected:
 	Halfedge* halfedge = nullptr;
 	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
-	glm::vec4 color = glm::vec4(1, 0, 0.86, 1);
+	glm::vec4 color = glm::vec4(1, 0, 1, 1);
 	glm::vec2 uv = glm::vec2(0,0);
 	bool boundary = true;
 public:
