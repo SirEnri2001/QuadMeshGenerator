@@ -295,6 +295,18 @@ glm::vec3 Vertex::getNormal() const {
 	return normal;
 }
 
+glm::vec4 Vertex::getColor() const
+{
+	validate(this);
+	return color;
+}
+
+void Vertex::setColor(glm::vec4 col)
+{
+	validate(this);
+	color = col;
+}
+
 void Vertex::setNormal(glm::vec3 n) {
 	validate(this);
 	normal = n;

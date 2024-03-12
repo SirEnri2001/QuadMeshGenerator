@@ -71,13 +71,13 @@ void MeshDisplay::create() {
 			indices.push_back(ind++);
 			vertexBuffer.push_back(vertsUntriangulated[0]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
+			vertexBuffer.push_back(vertsUntriangulated[0]->getColor());
 			vertexBuffer.push_back(vertsUntriangulated[1]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
+			vertexBuffer.push_back(vertsUntriangulated[1]->getColor());
 			vertexBuffer.push_back(vertsUntriangulated[2]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
+			vertexBuffer.push_back(vertsUntriangulated[2]->getColor());
 			continue;
 		}
 
@@ -110,7 +110,7 @@ void MeshDisplay::create() {
 			do {
 				vertexBuffer.push_back(he->getTarget()->getPosition());
 				vertexBuffer.push_back(normal4);
-				vertexBuffer.push_back(vec4(0.7, 0.7, 0.6, 1.0));
+				vertexBuffer.push_back(he->getTarget()->getColor());
 				if (he == face->getHalfedge()->getNext() || he == face->getHalfedge()->getPrev()) {
 					continue;
 				}
