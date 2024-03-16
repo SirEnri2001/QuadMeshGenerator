@@ -111,6 +111,13 @@ void Camera::PolarRecomputeAttributes()
 	right = glm::normalize(glm::cross(glm::normalize(ref - eye), up));
 }
 
+void Camera::ChangeViewportSize(int w, int h)
+{
+	width = w;
+	height = h;
+	aspect = (float)w / (float)h;
+}
+
 glm::vec4 Camera::getRay(int x, int y) {
 	using namespace glm;
 

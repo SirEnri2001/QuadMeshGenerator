@@ -72,7 +72,7 @@ target_include_directories(mesh PUBLIC
     ./3rdparty/boost_1_82_0
 )
 
-# Laplacian
+# Laplacian --------------------------------------------------
 add_library(laplacian STATIC
 ./src/laplacian/laplacian.h
 ./src/laplacian/laplacian.cpp
@@ -82,6 +82,9 @@ target_include_directories(laplacian PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
+
+# --------------------------------------------------
+
 
 add_library(morse_smale_complex STATIC
   ./src/msc/msc.h

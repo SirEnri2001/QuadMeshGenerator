@@ -46,4 +46,6 @@ public:
 	void PolarPanY(float amt);
 
 	void PolarRecomputeAttributes();
+
+	void ChangeViewportSize(int w, int h);
 };
