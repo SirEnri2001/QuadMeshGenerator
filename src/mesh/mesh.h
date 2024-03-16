@@ -9,3 +9,5 @@ class MeshIO;
 class MeshOperator;
 class MeshInteriorOperator;
 class MeshAssert;
+
+typedef unsigned int ID;

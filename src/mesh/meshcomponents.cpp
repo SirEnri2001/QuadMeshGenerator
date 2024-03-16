@@ -1,14 +1,16 @@
 #include "meshcomponents.h"
+#include "meshattribute.h"
 #include <memory>
 #include "../thread_support/thread_support.h"
 
-Component::Component(ID id) : id(id) {
+Component::Component(ID id, Mesh* mesh) : id(id), mesh(mesh) {
 }
 
 Component::Component(const Component& comp) {
 	id = comp.id;
 	valid = comp.valid;
 	displayed = comp.displayed;
+	mesh = comp.mesh;
 }
 
 Component::~Component()
@@ -16,11 +18,11 @@ Component::~Component()
 
 }
 
-Vertex::Vertex(ID id) : Component(id) {
+Vertex::Vertex(ID id, Mesh* mesh) : Component(id, mesh) {
 
 }
 
-Vertex::Vertex() : Component(-1) {
+Vertex::Vertex(Mesh* mesh) : Component(-1, mesh) {
 
 }
 
@@ -28,12 +30,14 @@ Vertex::Vertex(const Vertex& v) : Component(v) {
 	halfedge = v.halfedge;
 }
 
+Vertex::Vertex() : Component(-1, nullptr) {}
+
 Vertex::~Vertex()
 {
 
 }
 
-Halfedge::Halfedge(ID id) : Component(id) {
+Halfedge::Halfedge(ID id, Mesh* mesh) : Component(id, mesh) {
 
 }
 Halfedge::Halfedge(const Halfedge& he) :Component(he) {
@@ -45,9 +49,11 @@ Halfedge::Halfedge(const Halfedge& he) :Component(he) {
 	face = he.face;
 }
 
-Halfedge::Halfedge() : Component(-1) {
+Halfedge::Halfedge(Mesh* mesh) : Component(-1, mesh) {
 
 }
+
+Halfedge::Halfedge() : Component(-1, nullptr) {}
 Halfedge::~Halfedge()
 {
 
@@ -66,12 +72,12 @@ Halfedge::~Halfedge()
 //}
 
 
-Face::Face(ID id) : Component(id)
+Face::Face(ID id, Mesh* mesh) : Component(id, mesh)
 {
 
 }
 
-Face::Face() : Component(-1)
+Face::Face(Mesh* mesh) : Component(-1, mesh)
 {
 
 }
@@ -80,64 +86,45 @@ Face::Face(const Face& face) : Component(face) {
 	halfedge = face.halfedge;
 }
 
+Face::Face() : Component(-1, nullptr) {}
+
 Face::~Face() {
 
 }
 
 Vertex* Mesh::createVertex() {
 	int id = vIdSum++;
-	vertices[id] = Vertex(id);
+	vertices[id] = Vertex(id, this);
+	for (auto& vertexAttrib : vertexAttributes) {
+		vertexAttrib->insertAttribute(id);
+	}
 	return &vertices[id];
 }
 
 Halfedge* Mesh::createHalfedge(Vertex* source, Vertex* target) {
 	int id = heIdSum++;
-	halfedges[id] = Halfedge(id);
+	halfedges[id] = Halfedge(id, this);
 	Halfedge* he = &halfedges[id];
 	he->setTarget(target);
 	he->setSource(source);
 	vertexHalfedge[{source->getId(), target->getId()}] = he;
 	target->setHalfedge(he);
+	for (auto& halfedgeAttrib : halfedgeAttributes) {
+		halfedgeAttrib->insertAttribute(id);
+	}
 	return &halfedges[id];
 }
 
-Mesh::Mesh() {
+Mesh::Mesh() : positionAttrib(addVertexAttribute<glm::vec4>()){
 	meshAssert = std::make_unique<MeshAssert>();
 }
-
-
-//template<class ComponentT>
-//class MeshIterator {
-//	Mesh* mesh;
-//	std::unordered_map<ID, ComponentT>* components;
-//	std::unordered_map<ID, ComponentT>::const_iterator iter;
-//	ID index = 0;
-//public:
-//	MeshIterator(Mesh* mesh, ComponentType type) :mesh(mesh) {
-//		switch (type)
-//		{
-//		case VERTEX:
-//			components = mesh->getVertices();
-//			break;
-//		case HALFEDGE:
-//			components = mesh->getHalfedges();
-//			break;
-//		case FACE:
-//			components = mesh->getVertices();
-//			break;
-//		default:
-//			break;
-//		}
-//		iter = components->cbegin();
-//	}
-//};
 
 const Face* Mesh::createFace(Halfedge* he) {
 	if (integrityCheck) {
 		validate(he);
 	}
 	int id = fIdSum++;
-	faces[id] = Face(id);
+	faces[id] = Face(id, this);
 	Face* face = &faces[id];
 	if (he==nullptr) {
 		return face;
@@ -149,7 +136,18 @@ const Face* Mesh::createFace(Halfedge* he) {
 
 	} while (he1 = he1->getNext(), he1 != he);
 	face->setHalfedge(he);
+	for (auto& faceAttrib : faceAttributes) {
+		faceAttrib->insertAttribute(id);
+	}
 	return face;
+}
+
+void Mesh::deleteVertex(Vertex* v) {
+	ID id = v->getId();
+	for (auto& vAttrib : vertexAttributes) {
+		vAttrib->removeAttribute(id);
+	}
+	vertices.erase(vertices.find(v->getId()));
 }
 
 void Mesh::deleteFace(Face* face) {
@@ -160,6 +158,10 @@ void Mesh::deleteFace(Face* face) {
 		he->setFace(nullptr);
 
 	} while (he = he->getNext(), he != face->getHalfedge());
+	ID id = face->getId();
+	for (auto& faceAttrib : faceAttributes) {
+		faceAttrib->removeAttribute(id);
+	}
 	faces.erase(faces.find(face->getId()));
 }
 
@@ -197,6 +199,11 @@ void Mesh::deleteEdge(Halfedge* he) {
 	Vertex* v2 = he->getTarget();
 	vertexHalfedge[{v1->getId(), v2->getId()}] = nullptr;
 	vertexHalfedge[{v2->getId(), v1->getId()}] = nullptr;
+	ID id1 = he->getId(), id2 = he->getSym()->getId();
+	for (auto& heAttrib : halfedgeAttributes) {
+		heAttrib->removeAttribute(id1);
+		heAttrib->removeAttribute(id2);
+	}
 	halfedges.erase(halfedges.find(he->getSym()->getId()));
 	halfedges.erase(halfedges.find(he->getId()));
 }
@@ -538,4 +545,58 @@ void Mesh::deleteMesh() {
 	faces.clear();
 	halfedges.clear();
 	vertices.clear();
+}
+
+template<typename T>
+std::unique_ptr<MeshAttribute<T>> Mesh::addVertexAttribute() {
+	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+		this, BaseMeshAttribute::VertexAttribute
+	);
+	for (auto& idVertex : this->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		attrib->insertAttribute(v->getId(), T());
+	}
+	vertexAttributes.push_back(attrib.get());
+	return std::move(attrib);
+}
+
+template<typename T>
+std::unique_ptr<MeshAttribute<T>> Mesh::addHalfedgeAttribute() {
+	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+		this, BaseMeshAttribute::HalfedgeAttribute
+	);
+	for (auto& idHalfedge : this->getHalfedges()) {
+		const Vertex* he = &idHalfedge.second;
+		attrib->insertAttribute(he->getId(), T());
+	}
+	halfedgeAttributes.push_back(attrib.get());
+	return std::move(attrib);
+}
+
+template<typename T>
+std::unique_ptr<MeshAttribute<T>> Mesh::addFaceAttribute() {
+	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+		this, BaseMeshAttribute::FaceAttribute
+	);
+	for (auto& idFace : this->getFaces()) {
+		const Vertex* f = &idFace.second;
+		attrib->insertAttribute(f->getId(), T());
+	}
+	faceAttributes.push_back(attrib.get());
+	return std::move(attrib);
+}
+
+template<typename T>
+void Mesh::removeVertexAttribute(MeshAttribute<T>* attrib) {
+	vertexAttributes.erase(attrib);
+}
+
+template<typename T>
+void Mesh::removeHalfedgeAttribute(MeshAttribute<T>* attrib) {
+	halfedgeAttributes.erase(attrib);
+}
+
+template<typename T>
+void Mesh::removeFaceAttribute(MeshAttribute<T>* attrib) {
+	faceAttributes.erase(attrib);
 }
