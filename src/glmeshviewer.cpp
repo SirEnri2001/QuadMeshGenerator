@@ -16,7 +16,7 @@ static void glfw_error_callback(int error, const char* description)
 
 // Copy from ImGUI/examples/example_glfw_opengl3
 Viewer::Viewer(const std::string& name) :
-	windowWidth(2736), windowHeight(1800),
+	windowWidth(1920), windowHeight(1080),
 	mCamera(windowWidth, windowHeight, glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)),
 	mMesh(std::make_unique<Mesh>()),
 	mMeshOperator(std::make_unique<MeshOperator>(mMesh.get())), 
@@ -129,7 +129,7 @@ Viewer::Viewer(const std::string& name) :
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
 	//mMeshIO->loadM("../test/data/mesh_44313.m");
-	mMeshIO->loadObj("../test/obj/cow.obj");
+    mMeshIO->loadObj("../test/obj/sphere.obj");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
 	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
@@ -394,6 +394,7 @@ void Viewer::mainLoop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glEnable(GL_DEPTH_TEST);
+		mCamera.ChangeViewportSize(display_w, display_h);
 		drawScene();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
