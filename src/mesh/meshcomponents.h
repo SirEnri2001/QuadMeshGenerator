@@ -6,6 +6,7 @@
 #include <glm.hpp>
 #include <memory>
 #include "meshassert.h"
+#include "meshattribute.h"
 
 class Vertex;
 class Halfedge;
@@ -15,21 +16,20 @@ class MeshOperator;
 class MeshDisplay;
 class MeshIO;
 class MeshRecorder;
-class MeshAttribute;
 class MeshNormal;
 class MeshAssert;
 
 typedef std::pair<Halfedge*, Halfedge*> Edge;
-typedef unsigned int ID;
 
 class Component {
 protected:
+	Mesh* mesh;
 	ID id;
 	bool valid = true;
 	bool displayed = false;
 	bool deleted = false;
 public:
-	Component(ID id);
+	Component(ID id, Mesh* mesh);
 	Component(const Component& comp);
 	~Component();
 	void setId(ID id);
@@ -42,19 +42,15 @@ public:
 class Vertex : public Component {
 protected:
 	Halfedge* halfedge = nullptr;
-	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
 	glm::vec4 color = glm::vec4(1, 0, 1, 1);
 	glm::vec2 uv = glm::vec2(0,0);
 	bool boundary = true;
 public:
-
-	Vertex(ID id);
-
-	Vertex();
-
+	Vertex(ID id, Mesh* mesh);
+	Vertex(Mesh* mesh);
 	Vertex(const Vertex& v);
-
+	Vertex();
 	~Vertex();
 	Halfedge* getHalfedge();
 	const Halfedge* getHalfedge() const;
@@ -82,7 +78,8 @@ protected:
 	Halfedge* sym = nullptr;
 	Face* face = nullptr;
 public:
-	Halfedge(ID id);
+	Halfedge(ID id, Mesh* mesh);
+	Halfedge(Mesh* mesh);
 	Halfedge(const Halfedge& he);
 	Halfedge();
 	~Halfedge();
@@ -125,10 +122,10 @@ class Face : public Component {
 protected:
 	Halfedge* halfedge = nullptr;
 public:
-
-	Face(ID id);
-	Face();
+	Face(ID id, Mesh* mesh);
+	Face(Mesh* mesh);
 	Face(const Face& face);
+	Face();
 	~Face();
 	const Halfedge* getHalfedge() const;
 	Halfedge* getHalfedge();
@@ -160,6 +157,11 @@ class Mesh {
 	ID fIdSum = 0;
 	std::unique_ptr<MeshAssert> meshAssert;
 	bool integrityCheck = false;
+
+	std::vector<BaseMeshAttribute*> vertexAttributes;
+	std::vector<BaseMeshAttribute*> halfedgeAttributes;
+	std::vector<BaseMeshAttribute*> faceAttributes;
+	std::unique_ptr<MeshAttribute<glm::vec4>> positionAttrib;
 public:
 	Mesh();
 	Vertex* createVertex();
@@ -167,9 +169,7 @@ public:
 	const Face* createFace(Halfedge* he);
 	void deleteFace(Face* face);
 	void deleteEdge(Halfedge* he);
-	inline void deleteVertex(Vertex* v) {
-		vertices.erase(vertices.find(v->getId()));
-	}
+	void deleteVertex(Vertex* v);
 	const Halfedge* getBoundary(const Vertex* v);
 	void createEdge(Vertex* v1, Vertex* v2);
 	const Halfedge* getHalfedge(const Vertex* source, const Vertex* target) const;
@@ -185,8 +185,20 @@ public:
 	ID getFaceIdTotal();
 	ID getVertexIdTotal();
 	void deleteMesh();
-	//std::unique_ptr<MeshNormal> attribNormal;
-	//std::unique_ptr<MeshUV> attribUV;
+	glm::vec4 getVertexPosition(const Vertex* v) const;
+	void setVertexPosition(Vertex* v, glm::vec4 pos);
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> addVertexAttribute();
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> addHalfedgeAttribute();
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> addFaceAttribute();
+	template<typename T>
+	void removeVertexAttribute(MeshAttribute<T>* attrib);
+	template<typename T>
+	void removeHalfedgeAttribute(MeshAttribute<T>* attrib);
+	template<typename T>
+	void removeFaceAttribute(MeshAttribute<T>* attrib);
 	friend class MeshInteriorOperator;
 	friend class MeshIO;
 	friend class MeshDisplay;
