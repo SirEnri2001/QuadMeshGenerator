@@ -45,6 +45,19 @@ public:
 	T& operator()(ID id) {
 		return attribMap.at(id);
 	}
+
+	T&& operator[](const Component* comp) const {
+		return attribMap.at(comp.getId());
+	}
+	T&& operator()(const Component* comp) const {
+		return attribMap.at(comp.getId());
+	}
+	T& operator[](Component* comp) {
+		return attribMap.at(comp.getId());
+	}
+	T& operator()(Component* comp) {
+		return attribMap.at(comp.getId());
+	}
 };
 
 #endif

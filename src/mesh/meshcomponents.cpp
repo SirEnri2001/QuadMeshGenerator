@@ -115,7 +115,7 @@ Halfedge* Mesh::createHalfedge(Vertex* source, Vertex* target) {
 	return &halfedges[id];
 }
 
-Mesh::Mesh() : positionAttrib(addVertexAttribute<glm::vec4>()){
+Mesh::Mesh() : positionAttrib(createVertexAttribute<glm::vec4>()){
 	meshAssert = std::make_unique<MeshAssert>();
 }
 
@@ -556,7 +556,7 @@ void Mesh::deleteMesh() {
 }
 
 template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::addVertexAttribute() {
+std::unique_ptr<MeshAttribute<T>> Mesh::createVertexAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::VertexAttribute
 	);
@@ -569,7 +569,7 @@ std::unique_ptr<MeshAttribute<T>> Mesh::addVertexAttribute() {
 }
 
 template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::addHalfedgeAttribute() {
+std::unique_ptr<MeshAttribute<T>> Mesh::createHalfedgeAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::HalfedgeAttribute
 	);
@@ -582,7 +582,7 @@ std::unique_ptr<MeshAttribute<T>> Mesh::addHalfedgeAttribute() {
 }
 
 template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::addFaceAttribute() {
+std::unique_ptr<MeshAttribute<T>> Mesh::createFaceAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::FaceAttribute
 	);

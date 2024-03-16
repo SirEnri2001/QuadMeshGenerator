@@ -188,11 +188,11 @@ public:
 	glm::vec4 getVertexPosition(const Vertex* v) const;
 	void setVertexPosition(Vertex* v, glm::vec4 pos);
 	template<typename T>
-	std::unique_ptr<MeshAttribute<T>> addVertexAttribute();
+	std::unique_ptr<MeshAttribute<T>> createVertexAttribute();
 	template<typename T>
-	std::unique_ptr<MeshAttribute<T>> addHalfedgeAttribute();
+	std::unique_ptr<MeshAttribute<T>> createHalfedgeAttribute();
 	template<typename T>
-	std::unique_ptr<MeshAttribute<T>> addFaceAttribute();
+	std::unique_ptr<MeshAttribute<T>> createFaceAttribute();
 	template<typename T>
 	void removeVertexAttribute(MeshAttribute<T>* attrib);
 	template<typename T>
