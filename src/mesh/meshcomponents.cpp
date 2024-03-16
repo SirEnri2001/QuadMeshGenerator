@@ -290,11 +290,11 @@ void Vertex::setHalfedge(Halfedge* halfedge) {
 }
 void Vertex::setPosition(glm::vec4 pos) {
 	validate(this);
-	position = pos;
+	mesh->setVertexPosition(this, pos);
 }
 glm::vec4 Vertex::getPosition() const {
 	validate(this);
-	return position;
+	return mesh->getVertexPosition(this);
 }
 
 glm::vec3 Vertex::getNormal() const {
@@ -535,6 +535,14 @@ ID Mesh::getFaceIdTotal() {
 
 ID Mesh::getVertexIdTotal() {
 	return vIdSum;
+}
+
+glm::vec4 Mesh::getVertexPosition(const Vertex* v) const {
+	return (*positionAttrib)[v->getId()];
+}
+
+void Mesh::setVertexPosition(Vertex* v, glm::vec4 pos) {
+	(*positionAttrib)[v->getId()] = pos;
 }
 
 void Mesh::deleteMesh() {

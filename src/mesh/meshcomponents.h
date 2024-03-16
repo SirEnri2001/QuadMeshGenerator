@@ -42,7 +42,6 @@ public:
 class Vertex : public Component {
 protected:
 	Halfedge* halfedge = nullptr;
-	glm::vec4 position = glm::vec4(0,0,0,1);
 	glm::vec3 normal = glm::vec3(0,0,0);
 	glm::vec4 color = glm::vec4(1, 0, 1, 1);
 	glm::vec2 uv = glm::vec2(0,0);
@@ -186,6 +185,8 @@ public:
 	ID getFaceIdTotal();
 	ID getVertexIdTotal();
 	void deleteMesh();
+	glm::vec4 getVertexPosition(const Vertex* v) const;
+	void setVertexPosition(Vertex* v, glm::vec4 pos);
 	template<typename T>
 	std::unique_ptr<MeshAttribute<T>> addVertexAttribute();
 	template<typename T>
