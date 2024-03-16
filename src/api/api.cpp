@@ -17,7 +17,6 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> eigh(const Eigen::MatrixXd& matrix) 
 		{ "data", std::string((char*)matrix.data(), binary_size), "", "application/octet-stream" }
 	};
 	if (auto res = cli.Post("/eigh", req_body)) {
-		std::cout << &res->body << std::endl;
 		if (res->status == StatusCode::OK_200) {
 			Eigen::VectorXd eigenvalues = Eigen::VectorXd::Map((double*)res->body.c_str(), dimension);
 			Eigen::MatrixXd eigenvectors = Eigen::MatrixXd::Map((double*)res->body.c_str() + dimension, dimension, dimension);
@@ -26,7 +25,8 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> eigh(const Eigen::MatrixXd& matrix) 
 	}
 	else {
 		auto err = res.error();
-		std::cout << "HTTP error: " << httplib::to_string(err) << std::endl;
+		std::cout << "HTTP error: " << httplib::to_string(err) << " Please check whether server is available"<<std::endl;
+		assert(false);
 	}
 	return std::pair<Eigen::VectorXd, Eigen::MatrixXd>();
 }

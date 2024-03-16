@@ -11,8 +11,7 @@ MorseFunction::MorseFunction(Mesh* mesh) : MeshUserOperator(mesh) {
 void MorseFunction::extractWaveFunction() {
 	Eigen::MatrixXd LMatrix = laplacian(*mesh);
 	auto eigenresult = eigh(LMatrix);
-	Eigen::VectorXd eigenvector = eigenresult.second.col(mesh->getVertices().size()-100);
-	std::cout << eigenvector << std::endl;
+	Eigen::VectorXd eigenvector = eigenresult.second.col(mesh->getVertices().size()-10);
 	for (auto& idVertex : mesh->getVertices()) {
 		const Vertex* vertex = &idVertex.second;
 		if (eigenvector[idVertex.first] < 0) {
@@ -22,6 +21,10 @@ void MorseFunction::extractWaveFunction() {
 			vertex->getMutable()->setColor(glm::vec4(0, 1, 0, 1));
 		}
 	}
+}
+
+void MorseFunction::markMorseFunctionPoints() {
+
 }
 
 void MorseFunction::operator()() {

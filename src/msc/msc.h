@@ -7,6 +7,7 @@ public:
 	void paintMorseFunction();
 
 	void extractWaveFunction();
+	void markMorseFunctionPoints();
 	void paintWaveFunction();
 
 	void operator()();
