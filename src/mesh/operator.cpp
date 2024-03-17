@@ -1,6 +1,6 @@
-#include "meshoperator.h"
+#include "operator.h"
 #include "../thread_support/thread_support.h"
-
+using namespace quadro;
 MeshOperator::MeshOperator(Mesh* mesh, MeshDisplay* display) : mesh(mesh), display(display)
 {
     

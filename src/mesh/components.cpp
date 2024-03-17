@@ -1,15 +1,13 @@
-#include "meshcomponents.h"
-#include "meshattribute.h"
 #include <memory>
+#include "components.h"
+#include "assert.h"
 #include "../thread_support/thread_support.h"
-
+using namespace quadro;
 Component::Component(ID id, Mesh* mesh) : id(id), mesh(mesh) {
 }
 
 Component::Component(const Component& comp) {
 	id = comp.id;
-	valid = comp.valid;
-	displayed = comp.displayed;
 	mesh = comp.mesh;
 }
 
@@ -115,7 +113,10 @@ Halfedge* Mesh::createHalfedge(Vertex* source, Vertex* target) {
 	return &halfedges[id];
 }
 
-Mesh::Mesh() : positionAttrib(createVertexAttribute<glm::vec4>()){
+Mesh::Mesh() : 
+	positionAttrib(createVertexAttribute<glm::vec4>()),
+	vertexNormalAttrib(createVertexAttribute<glm::vec3>())
+{
 	meshAssert = std::make_unique<MeshAssert>();
 }
 
@@ -151,7 +152,6 @@ void Mesh::deleteVertex(Vertex* v) {
 }
 
 void Mesh::deleteFace(Face* face) {
-	face->setDeleted(true);
 	Halfedge* he = face->getHalfedge();
 	do
 	{
@@ -178,8 +178,6 @@ void Mesh::deleteEdge(Halfedge* he) {
 	Halfedge* v1inbhe = he12->getPrev();
 	Halfedge* v2inbhe = he21->getPrev();
 	Halfedge* v2outbhe = he12->getNext();
-	he->setDeleted(true);
-	he->getSym()->setDeleted(true);
 	if (v1outbhe != he12) {
 		he21->getTarget()->setHalfedge(v1inbhe);
 		v1inbhe->setNext(v1outbhe);
@@ -261,21 +259,6 @@ ID Component::getId() const {
 	return this->id;
 }
 
-bool Component::isValid() const {
-	validate(this);
-	return valid;
-}
-
-bool Component::isDisplayed() const {
-	validate(this);
-	return displayed;
-}
-
-void Component::setDeleted(bool val) {
-	validate(this);
-	deleted = val;
-}
-
 Halfedge* Vertex::getHalfedge() {
 	validate(this);
 	return this->halfedge;
@@ -299,46 +282,24 @@ glm::vec4 Vertex::getPosition() const {
 
 glm::vec3 Vertex::getNormal() const {
 	validate(this);
-	return normal;
-}
-
-glm::vec4 Vertex::getColor() const
-{
-	validate(this);
-	return color;
-}
-
-void Vertex::setColor(glm::vec4 col)
-{
-	validate(this);
-	color = col;
+	return mesh->getVertexNormal(this);
 }
 
 void Vertex::setNormal(glm::vec3 n) {
 	validate(this);
-	normal = n;
-}
-
-void Vertex::setUV(glm::vec2 uv) {
-	validate(this);
-	this->uv = uv;
-}
-
-glm::vec2 Vertex::getUV() const {
-	validate(this);
-	return uv;
+	mesh->setVertexNormal(this, n);
 }
 
 bool Vertex::isBoundary() const {
 	validate(this);
-	//return boundary;
-	const Halfedge* he = halfedge;
-	do {
-		if (he->isBoundary()) {
-			return true;
-		}
-	} while (he = he->getNext()->getSym(), he != halfedge);
-	return false;
+	return boundary;
+	//const Halfedge* he = halfedge;
+	//do {
+	//	if (he->isBoundary()) {
+	//		return true;
+	//	}
+	//} while (he = he->getNext()->getSym(), he != halfedge);
+	//return false;
 }
 
 Vertex* Vertex::getMutable() const {
@@ -538,11 +499,19 @@ ID Mesh::getVertexIdTotal() {
 }
 
 glm::vec4 Mesh::getVertexPosition(const Vertex* v) const {
-	return (*positionAttrib)[v->getId()];
+	return (*positionAttrib)[v];
 }
 
 void Mesh::setVertexPosition(Vertex* v, glm::vec4 pos) {
-	(*positionAttrib)[v->getId()] = pos;
+	(*positionAttrib)[v] = pos;
+}
+
+glm::vec3 Mesh::getVertexNormal(const Vertex* v) const {
+	return (*vertexNormalAttrib)[v];
+}
+
+void Mesh::setVertexNormal(Vertex* v, glm::vec3 normal) {
+	(*vertexNormalAttrib)[v] = normal;
 }
 
 void Mesh::deleteMesh() {
@@ -560,10 +529,6 @@ std::unique_ptr<MeshAttribute<T>> Mesh::createVertexAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::VertexAttribute
 	);
-	for (auto& idVertex : this->getVertices()) {
-		const Vertex* v = &idVertex.second;
-		attrib->insertAttribute(v->getId(), T());
-	}
 	vertexAttributes.push_back(attrib.get());
 	return std::move(attrib);
 }
@@ -573,10 +538,6 @@ std::unique_ptr<MeshAttribute<T>> Mesh::createHalfedgeAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::HalfedgeAttribute
 	);
-	for (auto& idHalfedge : this->getHalfedges()) {
-		const Vertex* he = &idHalfedge.second;
-		attrib->insertAttribute(he->getId(), T());
-	}
 	halfedgeAttributes.push_back(attrib.get());
 	return std::move(attrib);
 }
@@ -586,10 +547,6 @@ std::unique_ptr<MeshAttribute<T>> Mesh::createFaceAttribute() {
 	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
 		this, BaseMeshAttribute::FaceAttribute
 	);
-	for (auto& idFace : this->getFaces()) {
-		const Vertex* f = &idFace.second;
-		attrib->insertAttribute(f->getId(), T());
-	}
 	faceAttributes.push_back(attrib.get());
 	return std::move(attrib);
 }
@@ -608,3 +565,8 @@ template<typename T>
 void Mesh::removeFaceAttribute(MeshAttribute<T>* attrib) {
 	faceAttributes.erase(attrib);
 }
+
+BaseMeshAttribute::BaseMeshAttribute(Mesh* mesh, AttributeType type)
+	: mesh(mesh), type(type) { }
+
+BaseMeshAttribute::~BaseMeshAttribute() {}

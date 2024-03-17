@@ -1,10 +1,11 @@
-#include "meshio.h"
 #include <tiny_obj_loader.h>
 #include <fstream>
+#include <iostream>
+#include "io.h"
 #include "misc/strutil.h"
 
 #define MAX_LINE 2048
-
+using namespace quadro;
 MeshIO::MeshIO(Mesh* mesh) :mesh(mesh) {
 
 }

@@ -1,8 +1,7 @@
-#include "meshassert.h"
-#include "meshcomponents.h"
+#include "assert.h"
 #include "../thread_support/thread_support.h"
 #include <sstream>
-
+using namespace quadro;
 void MeshAssert::callResume() {
 	call_resume();
 }

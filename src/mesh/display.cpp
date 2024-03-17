@@ -1,6 +1,5 @@
-#include "meshdisplay.h"
-
-
+#include "display.h"
+using namespace quadro;
 
 glm::vec3 MeshDisplay::calculateSurfaceNormal(const Face* face) {
 	glm::vec3 result(0, 0, 0);
@@ -39,7 +38,7 @@ glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 }
 
 MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
-
+	colorOfVertex = mesh->createVertexAttribute<glm::vec4>();
 }
 void MeshDisplay::create() {
 	using namespace glm;
@@ -220,7 +219,7 @@ void MeshDisplay::markBoundaries() {
 
 void MeshDisplay::markVertex(const Vertex* vertex) {
 	pointScatter.push_back(vertex->getPosition());
-	pointScatter.push_back(glm::vec4(1, 0, 0, 1));
+	pointScatter.push_back((*colorOfVertex)[vertex]);
 	pointScatter.push_back(glm::vec4(calculateVertexNormal(vertex),0));
 	pointIndices.push_back(pointIndices.size());
 }
