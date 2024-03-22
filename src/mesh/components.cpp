@@ -524,48 +524,6 @@ void Mesh::deleteMesh() {
 	vertices.clear();
 }
 
-template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::createVertexAttribute() {
-	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-		this, BaseMeshAttribute::VertexAttribute
-	);
-	vertexAttributes.push_back(attrib.get());
-	return std::move(attrib);
-}
-
-template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::createHalfedgeAttribute() {
-	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-		this, BaseMeshAttribute::HalfedgeAttribute
-	);
-	halfedgeAttributes.push_back(attrib.get());
-	return std::move(attrib);
-}
-
-template<typename T>
-std::unique_ptr<MeshAttribute<T>> Mesh::createFaceAttribute() {
-	std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-		this, BaseMeshAttribute::FaceAttribute
-	);
-	faceAttributes.push_back(attrib.get());
-	return std::move(attrib);
-}
-
-template<typename T>
-void Mesh::removeVertexAttribute(MeshAttribute<T>* attrib) {
-	vertexAttributes.erase(attrib);
-}
-
-template<typename T>
-void Mesh::removeHalfedgeAttribute(MeshAttribute<T>* attrib) {
-	halfedgeAttributes.erase(attrib);
-}
-
-template<typename T>
-void Mesh::removeFaceAttribute(MeshAttribute<T>* attrib) {
-	faceAttributes.erase(attrib);
-}
-
 BaseMeshAttribute::BaseMeshAttribute(Mesh* mesh, AttributeType type)
 	: mesh(mesh), type(type) { }
 

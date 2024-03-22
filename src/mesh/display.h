@@ -2,9 +2,20 @@
 #include "components.h"
 
 namespace quadro {
+	/**
+	* MeshDisplay is an interface for MeshOperator to display mesh & components for debugging purpose. 
+	* It gives the data for OpenGL buffers.
+	*/
 	class MeshDisplay {
 	protected:
+		/**
+		* Mesh to be displayed
+		*/
 		Mesh* mesh;
+		std::unique_ptr<MeshAttribute<glm::vec4>> vertexColor;
+		std::unique_ptr<MeshAttribute<glm::vec4>> vertexMarkColor;
+		std::unique_ptr<MeshAttribute<bool>> vertexMarked;
+		BaseMeshAttribute* attribute;
 	public:
 		std::vector<glm::vec4> vertexBuffer;
 		std::vector<ID> indices;
@@ -18,7 +29,6 @@ namespace quadro {
 		std::vector<glm::vec4> pointScatter;
 		std::vector<ID> pointIndices;
 
-		std::unique_ptr<MeshAttribute<glm::vec4>> colorOfVertex;
 		int markCount = 0;
 		float vertexSize = 5.0f;
 		float edgeSize = 3.0f;
@@ -41,5 +51,18 @@ namespace quadro {
 		const Vertex* selectVertex(glm::vec4 eye, glm::vec4 ray);
 		const Halfedge* selectHalfedge(glm::vec4 eye, glm::vec4 ray);
 		float getNormalizedScale();
+
+		void setMarked(Vertex* v, bool mark);
+		void setMarkColor(Vertex* v, glm::vec4 color);
+		void setColor(Vertex* v, glm::vec4 color);
+
+		bool getMarked(const Vertex* v) const;
+		glm::vec4 getMarkColor(const Vertex* v) const;
+		glm::vec4 getColor(const Vertex* v) const;
+
+		void drawVertexAttribute(const MeshAttribute<float>* attribute);
+		void drawVertexAttribute(const MeshAttribute<glm::vec2>* attribute);
+		void drawVertexAttribute(const MeshAttribute<glm::vec3>* attribute);
+		void drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute);
 	};
 }

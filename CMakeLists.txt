@@ -15,7 +15,7 @@ add_library(thread_support STATIC
     ./src/thread_support/thread_support.cpp
     ./src/thread_support/thread_support.h
 )
-
+if(FALSE)
 add_library(qmorph STATIC
   ./src/qmorph/frontedge_operator.cpp
   ./src/qmorph/frontedge_operator.h
@@ -38,6 +38,7 @@ target_include_directories(qmorph PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
+endif()
 
 add_library(mesh STATIC
   ./src/mesh/components.cpp
@@ -148,7 +149,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/eigen-3.4.0
 )
 
-target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj opengl32 laplacian morse_smale_complex api)
+target_link_libraries(GLMeshViewer PUBLIC thread_support mesh glad glfw imgui tinyobj opengl32 laplacian morse_smale_complex api)
 
 add_executable(test_thread
     ./src/tests/test_thread.cpp
@@ -157,6 +158,7 @@ add_executable(test_thread
 target_link_libraries(test_thread PUBLIC thread_support api)
 
 target_include_directories(test_thread PUBLIC
+  ./3rdparty/glm
     ./3rdparty/eigen-3.4.0
 )
 

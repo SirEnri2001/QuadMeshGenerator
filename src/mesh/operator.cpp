@@ -51,3 +51,19 @@ void MeshOperator::setDisplay(MeshDisplay* display) {
 void MeshOperator::setAsserts(MeshAssert* ass) {
     asserts = ass;
 }
+
+void MeshOperator::setMesh(Mesh* mesh) {
+    this->mesh = mesh;
+}
+
+MeshInteriorOperator::~MeshInteriorOperator() {
+
+}
+
+MeshUserOperator::~MeshUserOperator() {
+
+}
+
+MeshOperator::~MeshOperator() {
+
+}

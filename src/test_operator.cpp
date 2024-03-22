@@ -1,21 +1,15 @@
 #include "test_operator.h"
-#include "mesh/meshcomponents.h"
-#include "mesh/meshdisplay.h"
-#include "qmorph/frontedge.h"
-#include "qmorph/frontedge_operator.h"
-#include "qmorph/sidedefine_operator.h"
-#include "qmorph/component_operator.h"
-#include "qmorph/qmorph_display.h"
-#include "qmorph/smoother.h"
+#include "mesh/components.h"
+#include "mesh/display.h"
 #include "thread_support/thread_support.h"
-#include "mesh/meshio.h"
+#include "mesh/io.h"
 #include <iostream>
 #include <exception>
 #include <filesystem>
 #include "msc/msc.h"
 
 namespace fs = std::filesystem;
-
+using namespace quadro;
 TestOperator::TestOperator(Mesh* mesh) : MeshUserOperator(mesh) {
 	display = nullptr;
 }
@@ -26,6 +20,7 @@ void TestOperator::create() {
 
 void TestOperator::proceed() {
 	MorseFunction mf(mesh);
+	mf.setDisplay(display);
 	mf();
 }
 
@@ -44,10 +39,6 @@ void TestOperator::integrationTest(std::string path) {
 		Mesh mesh;
 		MeshIO meshio(&mesh);
 		meshio.loadM(entry.path().string());
-		QMorphOperator qmorphOper(&mesh);
-		qmorphOper.setAsserts(asserts);
-		qmorphOper.setDisplay(display->display);
-		qmorphOper();
 		std::cout << "[Test Completed] " << entry.path() << std::endl;
 	}
 	std::cout << "[ INTEGRATION TEST COMPLETED. ALL CASES PASSED ]" << std::endl;

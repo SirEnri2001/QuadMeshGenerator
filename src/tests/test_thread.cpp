@@ -1,18 +1,32 @@
-#include <list>
 #include <iostream>
+using namespace std;
 
-int main()
+template <typename T> 
+class MyTemplateClass
 {
-    std::list<int> l = { 1, 100, 2, 3, 10, 1, 11, -1, 12 };
+public:
+    MyTemplateClass()
+    {
+        std::cout << std::endl << "   CONSTRUCTOR" << std::endl;
+    }
+    template <typename U> 
+    const MyTemplateClass<T>& operator=(const MyTemplateClass<U>& that) 
+    { std::cout << std::endl << "   OPERATOR" << std::endl; 
+    }
+    template <typename U> MyTemplateClass(const MyTemplateClass<U>& that)
+    {
+        std::cout << std::endl << "    COPY CONSTRUCTOR" << std::endl;
+    }
+};
 
-    auto count1 = l.remove(5);
-    std::cout << count1 << " elements equal to 1 were removed\n";
 
-    auto count2 = l.remove_if([](int n) { return n > 10; });
-    std::cout << count2 << " elements greater than 10 were removed\n";
+MyTemplateClass<int> test(void)
+{
+    std::cout << std::endl << "      INSIDE " << std::endl; MyTemplateClass<int> a; return a;
+}
 
-    std::cout << "Finally, the list contains: ";
-    for (int n : l)
-        std::cout << n << ' ';
-    std::cout << '\n';
+int main() {
+    MyTemplateClass<double> a = test();
+
+    return 0;
 }

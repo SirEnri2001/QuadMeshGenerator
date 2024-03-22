@@ -365,17 +365,27 @@ namespace quadro {
 		* Actual data structure for storing attribute.
 		*/
 		std::unordered_map<ID, T> attribMap;
+		T defaultValue;
 	public:
 		/**
 		* Constructor.
 		* @param mesh
 		* @param type
+		* @param default value
 		*/
-		MeshAttribute(Mesh* mesh, AttributeType type) : BaseMeshAttribute(mesh, type) {
+		MeshAttribute(Mesh* mesh, AttributeType type, T defaultValue = T()) : 
+			BaseMeshAttribute(mesh, type), defaultValue(defaultValue) {
+		}
+		/**
+		* Insert a component by id into attribute and assign it with the default value.
+		* @param id The id of the component.
+		*/
+		void insertAttribute(ID id) {
+			attribMap.insert(std::pair<ID, T>(id, defaultValue));
 		}
 		/**
 		* Remove entry from attributes.
-		* @param Component ID that are going to be deleted.
+		* @param id Component ID that are going to be deleted.
 		*/
 		void removeAttribute(ID id) override {
 			attribMap.erase(id);
@@ -407,6 +417,18 @@ namespace quadro {
 		*/
 		T& operator()(Component* comp) {
 			return attribMap.at(comp->getId());
+		}
+		/**
+		* @param func Lambda expression that map a value (with a type) to another value (with another type)
+		* @return The map result.
+		*/
+		template<typename U, typename Func>
+		MeshAttribute<U> map(Func&& func) {
+			MeshAttribute<U> retAttrib;
+			for (auto& idAttrib : attribMap) {
+				retAttrib[idAttrib.first] = func(idAttrib.second);
+			}
+			return retAttrib;
 		}
 	};
 
@@ -618,22 +640,25 @@ namespace quadro {
 		void setVertexNormal(Vertex* v, glm::vec3 normal);
 		/**
 		* Create a vertex MeshAttribute and attach it to the mesh
+		* @param defaultVal Default Value given to this attribute
 		* @return unique_ptr of the MeshAttribute
 		*/
 		template<typename T>
-		std::unique_ptr<MeshAttribute<T>> createVertexAttribute();
+		std::unique_ptr<MeshAttribute<T>> createVertexAttribute(T defaultValue = T());
 		/**
 		* Create a Halfedge MeshAttribute and attach it to the mesh
+		* @param defaultVal Default Value given to this attribute
 		* @return unique_ptr of the MeshAttribute
 		*/
 		template<typename T>
-		std::unique_ptr<MeshAttribute<T>> createHalfedgeAttribute();
+		std::unique_ptr<MeshAttribute<T>> createHalfedgeAttribute(T defaultValue = T());
 		/**
 		* Create a Face MeshAttribute and attach it to the mesh
+		* @param defaultVal Default Value given to this attribute
 		* @return unique_ptr of the MeshAttribute
 		*/
 		template<typename T>
-		std::unique_ptr<MeshAttribute<T>> createFaceAttribute();
+		std::unique_ptr<MeshAttribute<T>> createFaceAttribute(T defaultValue = T());
 		/**
 		* Remove a vertex MeshAttribute from the mesh.
 		* @param attrib MeshAttribute to be removed
@@ -658,4 +683,58 @@ namespace quadro {
 		friend class MeshRecorder;
 	};
 
+
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> Mesh::createVertexAttribute(T defaultValue) {
+		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+			this, BaseMeshAttribute::VertexAttribute, defaultValue
+		);
+		vertexAttributes.push_back(attrib.get());
+		for (auto& idVertex : getVertices()) {
+			attrib->insertAttribute(idVertex.first);
+		}
+		return std::move(attrib);
+	}
+
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> Mesh::createHalfedgeAttribute(T defaultValue) {
+		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+			this, BaseMeshAttribute::HalfedgeAttribute, defaultValue
+		);
+		halfedgeAttributes.push_back(attrib.get());
+		for (auto& idHe : getHalfedges()) {
+			attrib->insertAttribute(idHe.first);
+		}
+		return std::move(attrib);
+	}
+
+	template<typename T>
+	std::unique_ptr<MeshAttribute<T>> Mesh::createFaceAttribute(T defaultValue) {
+		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
+			this, BaseMeshAttribute::FaceAttribute, defaultValue
+		);
+		faceAttributes.push_back(attrib.get());
+		for (auto& idFace : getFaces()) {
+			attrib->insertAttribute(idFace.first);
+		}
+		return std::move(attrib);
+	}
+
+	template<typename T>
+	void Mesh::removeVertexAttribute(MeshAttribute<T>* attrib) {
+		auto it = std::find(vertexAttributes.begin(), vertexAttributes.end(), attrib);
+		vertexAttributes.erase(it);
+	}
+
+	template<typename T>
+	void Mesh::removeHalfedgeAttribute(MeshAttribute<T>* attrib) {
+		auto it = std::find(halfedgeAttributes.begin(), halfedgeAttributes.end(), attrib);
+		halfedgeAttributes.erase(it);
+	}
+
+	template<typename T>
+	void Mesh::removeFaceAttribute(MeshAttribute<T>* attrib) {
+		auto it = std::find(faceAttributes.begin(), faceAttributes.end(), attrib);
+		faceAttributes.erase(it);
+	}
 }

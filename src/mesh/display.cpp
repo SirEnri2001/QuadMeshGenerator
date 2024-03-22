@@ -37,9 +37,15 @@ glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 	return glm::normalize(result);
 }
 
-MeshDisplay::MeshDisplay(Mesh* mesh) :mesh(mesh) {
-	colorOfVertex = mesh->createVertexAttribute<glm::vec4>();
+MeshDisplay::MeshDisplay(Mesh* mesh) :
+	mesh(mesh), 
+	vertexColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(0.5,0.6,0.5,1.0))), 
+	vertexMarkColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(1.0, 0.0, 1.0, 1.0))),
+	vertexMarked(mesh->createVertexAttribute<bool>(false))
+{
+	
 }
+
 void MeshDisplay::create() {
 	using namespace glm;
 	indices.clear();
@@ -70,13 +76,13 @@ void MeshDisplay::create() {
 			indices.push_back(ind++);
 			vertexBuffer.push_back(vertsUntriangulated[0]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vertsUntriangulated[0]->getColor());
+			vertexBuffer.push_back(getColor(vertsUntriangulated[0]));
 			vertexBuffer.push_back(vertsUntriangulated[1]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vertsUntriangulated[1]->getColor());
+			vertexBuffer.push_back(getColor(vertsUntriangulated[1]));
 			vertexBuffer.push_back(vertsUntriangulated[2]->getPosition());
 			vertexBuffer.push_back(normal4);
-			vertexBuffer.push_back(vertsUntriangulated[2]->getColor());
+			vertexBuffer.push_back(getColor(vertsUntriangulated[2]));
 			continue;
 		}
 
@@ -109,7 +115,7 @@ void MeshDisplay::create() {
 			do {
 				vertexBuffer.push_back(he->getTarget()->getPosition());
 				vertexBuffer.push_back(normal4);
-				vertexBuffer.push_back(he->getTarget()->getColor());
+				vertexBuffer.push_back(getColor(he->getTarget()));
 				if (he == face->getHalfedge()->getNext() || he == face->getHalfedge()->getPrev()) {
 					continue;
 				}
@@ -219,7 +225,7 @@ void MeshDisplay::markBoundaries() {
 
 void MeshDisplay::markVertex(const Vertex* vertex) {
 	pointScatter.push_back(vertex->getPosition());
-	pointScatter.push_back((*colorOfVertex)[vertex]);
+	pointScatter.push_back(getColor(vertex));
 	pointScatter.push_back(glm::vec4(calculateVertexNormal(vertex),0));
 	pointIndices.push_back(pointIndices.size());
 }
@@ -325,4 +331,52 @@ float MeshDisplay::getNormalizedScale() {
 		}
 	}
 	return maxScale;
+}
+
+void MeshDisplay::setMarked(Vertex* v, bool mark) {
+	(*vertexMarked)[v] = mark;
+}
+void MeshDisplay::setMarkColor(Vertex* v, glm::vec4 color) {
+	(*vertexMarkColor)[v] = color;
+}
+void MeshDisplay::setColor(Vertex* v, glm::vec4 color) {
+	(*vertexColor)[v] = color;
+}
+
+bool MeshDisplay::getMarked(const Vertex* v) const {
+	return (*vertexMarked)[v];
+}
+glm::vec4 MeshDisplay::getMarkColor(const Vertex* v) const {
+	return (*vertexMarkColor)[v];
+}
+glm::vec4 MeshDisplay::getColor(const Vertex* v) const {
+	return (*vertexColor)[v];
+}
+
+void MeshDisplay::drawVertexAttribute(const MeshAttribute<float>* attribute) {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		setColor(v->getMutable(), glm::vec4(glm::vec3((*attribute)[v]),1.0));
+	}
+}
+
+void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec2>* attribute) {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		setColor(v->getMutable(), glm::vec4((*attribute)[v], 0.0, 1.0));
+	}
+}
+
+void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec3>* attribute) {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		setColor(v->getMutable(), glm::vec4((*attribute)[v], 1.0));
+	}
+}
+
+void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute) {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		setColor(v->getMutable(), (*attribute)[v]);
+	}
 }
