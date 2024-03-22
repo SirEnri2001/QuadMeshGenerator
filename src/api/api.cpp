@@ -1,8 +1,6 @@
 #include "eigen.h"
-#include "json.hpp"
 #include "httplib.h"
 
-using json = nlohmann::json;
 using namespace httplib;
 
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> eigh(const Eigen::MatrixXd& matrix) {

@@ -1,6 +1,8 @@
 #pragma once
 #include <Eigen/Core>
-#include "../mesh/mesh.h"
+#include "../mesh/core.h"
 
-void laplacianTest(const Mesh* mesh);
-Eigen::MatrixXd laplacian(const Mesh& mesh);
+namespace quadro {
+	void laplacianTest(const Mesh* mesh);
+	Eigen::MatrixXd laplacian(const Mesh& mesh);
+}

@@ -1,11 +1,17 @@
 #include "msc.h"
 #include "../laplacian/laplacian.h"
 #include "../api/eigen.h"
-#include "../mesh/meshcomponents.h"
+#include "../mesh/components.h"
+#include "../mesh/display.h"
 #include <Eigen/Core>
-
+using namespace quadro;
 MorseFunction::MorseFunction(Mesh* mesh) : MeshUserOperator(mesh) {
+	scalarFunction = mesh->createVertexAttribute<float>();
+}
 
+MorseFunction::~MorseFunction()
+{
+	mesh->removeVertexAttribute(scalarFunction.get());
 }
 
 void MorseFunction::extractWaveFunction() {
@@ -14,13 +20,9 @@ void MorseFunction::extractWaveFunction() {
 	Eigen::VectorXd eigenvector = eigenresult.second.col(mesh->getVertices().size()-10);
 	for (auto& idVertex : mesh->getVertices()) {
 		const Vertex* vertex = &idVertex.second;
-		if (eigenvector[idVertex.first] < 0) {
-			vertex->getMutable()->setColor(glm::vec4(1,0, 0, 1));
-		}
-		if (eigenvector[idVertex.first] > 0) {
-			vertex->getMutable()->setColor(glm::vec4(0, 1, 0, 1));
-		}
+		(*scalarFunction)[vertex->getMutable()] = eigenvector[idVertex.first];
 	}
+	display->drawVertexAttribute(scalarFunction.get());
 }
 
 void MorseFunction::markMorseFunctionPoints() {

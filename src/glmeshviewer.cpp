@@ -1,13 +1,14 @@
 #include "glmeshviewer.h"
-#include "mesh/meshdisplay.h"
-#include "mesh/meshoperator.h"
-#include "mesh/meshio.h"
-#include "mesh/meshassert.h"
-#include "qmorph/qmorph_display.h"
+#include "mesh/display.h"
+#include "mesh/operator.h"
+#include "mesh/io.h"
+#include "mesh/assert.h"
 #include "thread_support/thread_support.h"
 #include <future>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+using namespace quadro;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -131,15 +132,9 @@ Viewer::Viewer(const std::string& name) :
 	//mMeshIO->loadM("../test/data/mesh_44313.m");
     mMeshIO->loadObj("../test/obj/sphere.obj");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
-	qmorphOperator = std::make_unique<QMorphOperator>(mMesh.get());
-	mQMorphDisplay = std::make_unique<QMorphDisplay>(qmorphOperator.get(), mMeshDisplay.get());
-	qmorphOperator->setDisplay(mQMorphDisplay->display);
-	qmorphOperator->setAsserts(mMeshAssert.get());
-	qmorphOperator->create();
+	testOperator->setDisplay(mMeshDisplay.get());
 	pauseMutex = std::make_unique<std::mutex>();
-	testOperator->display = mQMorphDisplay.get();
 	testOperator->setAsserts(mMeshAssert.get());
-	testOperator->qmorphOperator = qmorphOperator.get();
 	mMeshDisplay->create();
 	mMeshDisplay->createFrame();
 	modelScale = mMeshDisplay->getNormalizedScale()*500;
@@ -305,18 +300,6 @@ void Viewer::mainLoop()
 			if (ImGui::Button("Process Test Operation")) {
 				mMesh->setIntegrityCheck(true);
 				fu = testOperator->async();
-			}
-			if (ImGui::Button("Process Q-Morph Operation")) {
-				mMesh->setIntegrityCheck(true);
-				fu = qmorphOperator->async();
-			}
-
-			if (ImGui::Button("Mark Front Edges")) {
-				mQMorphDisplay->markFrontEdges();
-			}
-
-			if (ImGui::Button("Mark Front Edge Classes")) {
-				mQMorphDisplay->markFrontEdgeClass();
 			}
 			if (check_subthread() && ImGui::Button("Resume")) {
 				call_resume();

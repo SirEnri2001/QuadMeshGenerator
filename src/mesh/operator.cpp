@@ -1,6 +1,6 @@
-#include "meshoperator.h"
+#include "operator.h"
 #include "../thread_support/thread_support.h"
-
+using namespace quadro;
 MeshOperator::MeshOperator(Mesh* mesh, MeshDisplay* display) : mesh(mesh), display(display)
 {
     
@@ -50,4 +50,20 @@ void MeshOperator::setDisplay(MeshDisplay* display) {
 
 void MeshOperator::setAsserts(MeshAssert* ass) {
     asserts = ass;
+}
+
+void MeshOperator::setMesh(Mesh* mesh) {
+    this->mesh = mesh;
+}
+
+MeshInteriorOperator::~MeshInteriorOperator() {
+
+}
+
+MeshUserOperator::~MeshUserOperator() {
+
+}
+
+MeshOperator::~MeshOperator() {
+
 }

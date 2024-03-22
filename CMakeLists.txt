@@ -15,7 +15,7 @@ add_library(thread_support STATIC
     ./src/thread_support/thread_support.cpp
     ./src/thread_support/thread_support.h
 )
-
+if(FALSE)
 add_library(qmorph STATIC
   ./src/qmorph/frontedge_operator.cpp
   ./src/qmorph/frontedge_operator.h
@@ -38,31 +38,24 @@ target_include_directories(qmorph PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
+endif()
 
 add_library(mesh STATIC
-  ./src/mesh/meshcomponents.cpp
-  ./src/mesh/meshcomponents.h
-  ./src/mesh/mesh.h
-  ./src/mesh/meshdisplay.cpp
-  ./src/mesh/meshdisplay.h
-  ./src/mesh/meshio.cpp
-  ./src/mesh/meshio.h
-  ./src/mesh/meshoperator.h
-  ./src/mesh/meshoperator.cpp
+  ./src/mesh/components.cpp
+  ./src/mesh/components.h
+  ./src/mesh/core.h
+  ./src/mesh/display.cpp
+  ./src/mesh/display.h
+  ./src/mesh/io.cpp
+  ./src/mesh/io.h
+  ./src/mesh/operator.h
+  ./src/mesh/operator.cpp
   ./src/mesh/misc/parser.h
   ./src/mesh/misc/strutil.h
-  ./src/mesh/meshassert.h
-  ./src/mesh/meshassert.cpp
-  ./src/mesh/meshattribute.h
-  ./src/mesh/meshattribute.cpp
-  ./src/mesh/meshnormal.h
-  ./src/mesh/meshnormal.cpp
-  ./src/mesh/meshuv.h
-  ./src/mesh/meshuv.cpp
-  ./src/mesh/meshrecorder.cpp
-  ./src/mesh/meshrecorder.h
-  ./src/mesh/meshcontroller.cpp
-  ./src/mesh/meshcontroller.h
+  ./src/mesh/assert.h
+  ./src/mesh/assert.cpp
+  ./src/mesh/recorder.cpp
+  ./src/mesh/recorder.h
 )
 
 target_include_directories(mesh PUBLIC
@@ -133,9 +126,6 @@ add_library(tinyobj STATIC
     ./3rdparty/tinyobj/tiny_obj_loader.cc
 )
 
-# Add OpenFBX
-add_subdirectory(./3rdparty/OpenFBX)
-
 add_executable(GLMeshViewer
     ./src/glmeshviewer_main.cpp
     ./src/glmeshviewer.cpp
@@ -159,7 +149,7 @@ target_include_directories(GLMeshViewer PUBLIC
     ./3rdparty/eigen-3.4.0
 )
 
-target_link_libraries(GLMeshViewer PUBLIC thread_support qmorph mesh glad glfw imgui tinyobj OpenFBX opengl32 laplacian morse_smale_complex api)
+target_link_libraries(GLMeshViewer PUBLIC thread_support mesh glad glfw imgui tinyobj opengl32 laplacian morse_smale_complex api)
 
 add_executable(test_thread
     ./src/tests/test_thread.cpp
@@ -168,6 +158,7 @@ add_executable(test_thread
 target_link_libraries(test_thread PUBLIC thread_support api)
 
 target_include_directories(test_thread PUBLIC
+  ./3rdparty/glm
     ./3rdparty/eigen-3.4.0
 )
 
