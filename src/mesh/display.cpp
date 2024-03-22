@@ -40,8 +40,7 @@ glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 MeshDisplay::MeshDisplay(Mesh* mesh) :
 	mesh(mesh), 
 	vertexColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(0.5,0.6,0.5,1.0))), 
-	vertexMarkColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(1.0, 0.0, 1.0, 1.0))),
-	vertexMarked(mesh->createVertexAttribute<bool>(false))
+	vertexMark(mesh->createVertexAttribute<std::pair<bool, glm::vec4>>(std::pair<bool, glm::vec4>(false, glm::vec4(1.0, 0.0, 1.0, 1.0))))
 {
 	
 }
@@ -225,7 +224,7 @@ void MeshDisplay::markBoundaries() {
 
 void MeshDisplay::markVertex(const Vertex* vertex) {
 	pointScatter.push_back(vertex->getPosition());
-	pointScatter.push_back(getColor(vertex));
+	pointScatter.push_back(getMarkColor(vertex));
 	pointScatter.push_back(glm::vec4(calculateVertexNormal(vertex),0));
 	pointIndices.push_back(pointIndices.size());
 }
@@ -334,49 +333,40 @@ float MeshDisplay::getNormalizedScale() {
 }
 
 void MeshDisplay::setMarked(Vertex* v, bool mark) {
-	(*vertexMarked)[v] = mark;
+	(*vertexMark)[v].first = mark;
 }
 void MeshDisplay::setMarkColor(Vertex* v, glm::vec4 color) {
-	(*vertexMarkColor)[v] = color;
+	(*vertexMark)[v].second = color;
 }
 void MeshDisplay::setColor(Vertex* v, glm::vec4 color) {
 	(*vertexColor)[v] = color;
 }
 
 bool MeshDisplay::getMarked(const Vertex* v) const {
-	return (*vertexMarked)[v];
+	return (*vertexMark)[v].first;
 }
 glm::vec4 MeshDisplay::getMarkColor(const Vertex* v) const {
-	return (*vertexMarkColor)[v];
+	return (*vertexMark)[v].second;
 }
 glm::vec4 MeshDisplay::getColor(const Vertex* v) const {
 	return (*vertexColor)[v];
-}
-
-void MeshDisplay::drawVertexAttribute(const MeshAttribute<float>* attribute) {
-	for (auto& idVertex : mesh->getVertices()) {
-		const Vertex* v = &idVertex.second;
-		setColor(v->getMutable(), glm::vec4(glm::vec3((*attribute)[v]),1.0));
-	}
-}
-
-void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec2>* attribute) {
-	for (auto& idVertex : mesh->getVertices()) {
-		const Vertex* v = &idVertex.second;
-		setColor(v->getMutable(), glm::vec4((*attribute)[v], 0.0, 1.0));
-	}
-}
-
-void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec3>* attribute) {
-	for (auto& idVertex : mesh->getVertices()) {
-		const Vertex* v = &idVertex.second;
-		setColor(v->getMutable(), glm::vec4((*attribute)[v], 1.0));
-	}
 }
 
 void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute) {
 	for (auto& idVertex : mesh->getVertices()) {
 		const Vertex* v = &idVertex.second;
 		setColor(v->getMutable(), (*attribute)[v]);
+	}
+}
+
+void MeshDisplay::markVertexAttribute(const MeshAttribute<std::pair<bool, glm::vec4>>* attribute) {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		if ((*attribute)[v].first) {
+			setMarkColor(v->getMutable(), (*attribute)[v].second);
+		}
+		else {
+			setMarkColor(v->getMutable(), glm::vec4(0,0,0,0));
+		}
 	}
 }

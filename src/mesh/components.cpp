@@ -524,7 +524,7 @@ void Mesh::deleteMesh() {
 	vertices.clear();
 }
 
-BaseMeshAttribute::BaseMeshAttribute(Mesh* mesh, AttributeType type)
-	: mesh(mesh), type(type) { }
+BaseMeshAttribute::BaseMeshAttribute(AttributeType type)
+	: type(type) { }
 
 BaseMeshAttribute::~BaseMeshAttribute() {}

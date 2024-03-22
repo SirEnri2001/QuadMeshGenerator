@@ -13,9 +13,7 @@ namespace quadro {
 		*/
 		Mesh* mesh;
 		std::unique_ptr<MeshAttribute<glm::vec4>> vertexColor;
-		std::unique_ptr<MeshAttribute<glm::vec4>> vertexMarkColor;
-		std::unique_ptr<MeshAttribute<bool>> vertexMarked;
-		BaseMeshAttribute* attribute;
+		std::unique_ptr<MeshAttribute<std::pair<bool, glm::vec4>>> vertexMark;
 	public:
 		std::vector<glm::vec4> vertexBuffer;
 		std::vector<ID> indices;
@@ -60,9 +58,8 @@ namespace quadro {
 		glm::vec4 getMarkColor(const Vertex* v) const;
 		glm::vec4 getColor(const Vertex* v) const;
 
-		void drawVertexAttribute(const MeshAttribute<float>* attribute);
-		void drawVertexAttribute(const MeshAttribute<glm::vec2>* attribute);
-		void drawVertexAttribute(const MeshAttribute<glm::vec3>* attribute);
 		void drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute);
+		void markVertexAttribute(const MeshAttribute<std::pair<bool, glm::vec4>>* attribute);
+		void markVertexAttribute(const MeshAttribute<bool>* attribute);
 	};
 }

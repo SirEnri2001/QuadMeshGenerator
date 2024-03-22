@@ -313,7 +313,6 @@ namespace quadro {
 	* BaseMeshAttribute as a base class used in Mesh for iterate all attributes.
 	*/
 	class BaseMeshAttribute {
-		Mesh* mesh;
 	public:
 		/**
 		* AttributeType enum tells which type of component that this attribute is for
@@ -331,7 +330,7 @@ namespace quadro {
 		* @param mesh
 		* @param type
 		*/
-		BaseMeshAttribute(Mesh* mesh, AttributeType type);
+		BaseMeshAttribute(AttributeType type);
 		/**
 		* Destructor. Remember to call Mesh::remove[Vertex|Halfedge|Face]Attribute before calling this.
 		*/
@@ -373,8 +372,8 @@ namespace quadro {
 		* @param type
 		* @param default value
 		*/
-		MeshAttribute(Mesh* mesh, AttributeType type, T defaultValue = T()) : 
-			BaseMeshAttribute(mesh, type), defaultValue(defaultValue) {
+		MeshAttribute(AttributeType type, T defaultValue = T()) : 
+			BaseMeshAttribute(type), defaultValue(defaultValue) {
 		}
 		/**
 		* Insert a component by id into attribute and assign it with the default value.
@@ -423,13 +422,16 @@ namespace quadro {
 		* @return The map result.
 		*/
 		template<typename U, typename Func>
-		MeshAttribute<U> map(Func&& func) {
-			MeshAttribute<U> retAttrib;
+		std::unique_ptr<MeshAttribute<U>> map(Func&& func) {
+			std::unique_ptr<MeshAttribute<U>> retAttrib = std::make_unique<MeshAttribute<U>>(this->type);
 			for (auto& idAttrib : attribMap) {
-				retAttrib[idAttrib.first] = func(idAttrib.second);
+				retAttrib->attribMap.insert(std::pair<ID, U>(idAttrib.first, (U)func(idAttrib.second)));
 			}
-			return retAttrib;
+			return std::move(retAttrib);
 		}
+
+		template<typename U>
+		friend class MeshAttribute;
 	};
 
 	/**
@@ -687,7 +689,7 @@ namespace quadro {
 	template<typename T>
 	std::unique_ptr<MeshAttribute<T>> Mesh::createVertexAttribute(T defaultValue) {
 		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-			this, BaseMeshAttribute::VertexAttribute, defaultValue
+			BaseMeshAttribute::VertexAttribute, defaultValue
 		);
 		vertexAttributes.push_back(attrib.get());
 		for (auto& idVertex : getVertices()) {
@@ -699,7 +701,7 @@ namespace quadro {
 	template<typename T>
 	std::unique_ptr<MeshAttribute<T>> Mesh::createHalfedgeAttribute(T defaultValue) {
 		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-			this, BaseMeshAttribute::HalfedgeAttribute, defaultValue
+			BaseMeshAttribute::HalfedgeAttribute, defaultValue
 		);
 		halfedgeAttributes.push_back(attrib.get());
 		for (auto& idHe : getHalfedges()) {
@@ -711,7 +713,7 @@ namespace quadro {
 	template<typename T>
 	std::unique_ptr<MeshAttribute<T>> Mesh::createFaceAttribute(T defaultValue) {
 		std::unique_ptr<MeshAttribute<T>> attrib = std::make_unique<MeshAttribute<T>>(
-			this, BaseMeshAttribute::FaceAttribute, defaultValue
+			BaseMeshAttribute::FaceAttribute, defaultValue
 		);
 		faceAttributes.push_back(attrib.get());
 		for (auto& idFace : getFaces()) {

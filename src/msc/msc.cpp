@@ -22,7 +22,18 @@ void MorseFunction::extractWaveFunction() {
 		const Vertex* vertex = &idVertex.second;
 		(*scalarFunction)[vertex->getMutable()] = eigenvector[idVertex.first];
 	}
-	display->drawVertexAttribute(scalarFunction.get());
+	Mesh* pMesh = mesh;
+	display->drawVertexAttribute(scalarFunction.get()->map<glm::vec4>(
+		[pMesh](float attrib) -> glm::vec4 {
+			Mesh* mesh = pMesh;
+			if (attrib > 0) {
+				return glm::vec4(1, 0, 0, 1);
+			}
+			if (attrib < 0) {
+				return glm::vec4(0, 1, 0, 1);
+			}
+			return glm::vec4(0, 0, 0, 1);
+		}).get());
 }
 
 void MorseFunction::markMorseFunctionPoints() {
