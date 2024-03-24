@@ -14,6 +14,7 @@ namespace quadro {
 		Mesh* mesh;
 		std::unique_ptr<MeshAttribute<glm::vec4>> vertexColor;
 		std::unique_ptr<MeshAttribute<std::pair<bool, glm::vec4>>> vertexMark;
+		std::unique_ptr<MeshAttribute<std::pair<glm::vec4, glm::vec4>>> halfedgeMark;
 	public:
 		std::vector<glm::vec4> vertexBuffer;
 		std::vector<ID> indices;
@@ -58,8 +59,11 @@ namespace quadro {
 		glm::vec4 getMarkColor(const Vertex* v) const;
 		glm::vec4 getColor(const Vertex* v) const;
 
+		void setHalfedgeMark(Halfedge* he, glm::vec4 source, glm::vec4 target);
+
 		void drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute);
 		void markVertexAttribute(const MeshAttribute<std::pair<bool, glm::vec4>>* attribute);
 		void markVertexAttribute(const MeshAttribute<bool>* attribute);
+		void markHalfedgeAttribute(const MeshAttribute<std::pair<glm::vec4, glm::vec4>>* attribute);
 	};
 }

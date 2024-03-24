@@ -38,9 +38,10 @@ glm::vec3 MeshDisplay::calculateVertexNormal(const Vertex* vertex) {
 }
 
 MeshDisplay::MeshDisplay(Mesh* mesh) :
-	mesh(mesh), 
-	vertexColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(0.5,0.6,0.5,1.0))), 
-	vertexMark(mesh->createVertexAttribute<std::pair<bool, glm::vec4>>(std::pair<bool, glm::vec4>(false, glm::vec4(1.0, 0.0, 1.0, 1.0))))
+	mesh(mesh),
+	vertexColor(mesh->createVertexAttribute<glm::vec4>(glm::vec4(0.5, 0.6, 0.5, 1.0))),
+	vertexMark(mesh->createVertexAttribute<std::pair<bool, glm::vec4>>(std::pair<bool, glm::vec4>(false, glm::vec4(1.0, 0.0, 1.0, 1.0)))),
+	halfedgeMark(mesh->createHalfedgeAttribute<std::pair<glm::vec4, glm::vec4>>(std::pair<glm::vec4, glm::vec4>(glm::vec4(0, 0, 0, 1), glm::vec4(0, 0, 0, 1))))
 {
 	
 }
@@ -183,13 +184,16 @@ void MeshDisplay::createFrame() {
 		}
 		const Halfedge* he = &mesh->getHalfedges().at(i);
 		frameVertexBuffer.push_back(he->getSource()->getPosition());
-		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameVertexBuffer.push_back((*halfedgeMark)[he].first);
 		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getSource()), 0));
 		frameVertexBuffer.push_back(he->getTarget()->getPosition());
-		frameVertexBuffer.push_back(glm::vec4(0, 0, 0, 1));
+		frameVertexBuffer.push_back((*halfedgeMark)[he].second);
 		frameVertexBuffer.push_back(glm::vec4(calculateVertexNormal(he->getTarget()), 0));
 		frameIndices.push_back(2*i);
 		frameIndices.push_back(2*i+1);
+		if ((*vertexMark)[he->getTarget()].first) {
+			markVertex(he->getTarget());
+		}
 	}
 }
 
@@ -362,11 +366,18 @@ void MeshDisplay::drawVertexAttribute(const MeshAttribute<glm::vec4>* attribute)
 void MeshDisplay::markVertexAttribute(const MeshAttribute<std::pair<bool, glm::vec4>>* attribute) {
 	for (auto& idVertex : mesh->getVertices()) {
 		const Vertex* v = &idVertex.second;
-		if ((*attribute)[v].first) {
-			setMarkColor(v->getMutable(), (*attribute)[v].second);
-		}
-		else {
-			setMarkColor(v->getMutable(), glm::vec4(0,0,0,0));
-		}
+		(*vertexMark)[v->getMutable()] = (*attribute)[v];
+	}
+}
+
+void MeshDisplay::setHalfedgeMark(Halfedge* he, glm::vec4 source, glm::vec4 target) {
+	(*halfedgeMark)[he].first = source;
+	(*halfedgeMark)[he].second = target;
+}
+
+void MeshDisplay::markHalfedgeAttribute(const MeshAttribute<std::pair<glm::vec4, glm::vec4>>* attribute) {
+	for (auto& idHe : mesh->getHalfedges()) {
+		const Halfedge* he = &idHe.second;
+		setHalfedgeMark(he->getMutable(), (*attribute)[he].first, (*attribute)[he].second);
 	}
 }
