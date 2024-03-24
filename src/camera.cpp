@@ -113,9 +113,11 @@ void Camera::PolarRecomputeAttributes()
 
 void Camera::ChangeViewportSize(int w, int h)
 {
-	width = w;
-	height = h;
-	aspect = (float)w / (float)h;
+	if (w != 0 && h != 0) {
+		width = w;
+		height = h;
+		aspect = (float)w / (float)h;
+	}
 }
 
 glm::vec4 Camera::getRay(int x, int y) {
