@@ -7,6 +7,7 @@
 #include <exception>
 #include <filesystem>
 #include "msc/msc.h"
+#include "wave_quadrangulation/wave_quadrangulation.h"
 
 namespace fs = std::filesystem;
 using namespace quadro;
