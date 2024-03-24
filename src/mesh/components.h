@@ -394,13 +394,13 @@ namespace quadro {
 		* @param id The pointer of the const component.
 		* @return value of the component's attribute.
 		*/
-		T operator[](const Component* comp) const {
+		const T operator[](const Component* comp) const {
 			return attribMap.at(comp->getId());
 		}
 		/**
 		* @see operator[](Component* comp)
 		*/
-		T operator()(const Component* comp) const {
+		const T operator()(const Component* comp) const {
 			return attribMap.at(comp->getId());
 		}
 		/**
