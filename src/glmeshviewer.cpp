@@ -130,7 +130,7 @@ Viewer::Viewer(const std::string& name) :
 	heSelect = std::make_unique<Drawable>();
 	createGridGround();
 	//mMeshIO->loadM("../test/data/mesh_44313.m");
-    mMeshIO->loadObj("../test/obj/sphere.obj");
+    mMeshIO->loadObj("../test/obj/cow.obj");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	testOperator->setDisplay(mMeshDisplay.get());
 	pauseMutex = std::make_unique<std::mutex>();
