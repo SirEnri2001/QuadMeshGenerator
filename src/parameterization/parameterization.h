@@ -2,13 +2,20 @@
 #include"../mesh/components.h"
 #include "../mesh/core.h"
 #include <Eigen/core>
+#include <vector>
+
 
 namespace quadro {
 	class Parameterization {
-		Eigen::MatrixXd laplacian;
-		Parameterization(const Mesh* mesh);
+		Mesh* mMesh;
+		const std::unordered_map<ID, Vertex>& vertices;
+		// TODO: comment: 
+		Eigen::MatrixXd A;	// 
+		Eigen::MatrixX2d B;
 
-		// calculate each 
+	public:
+		Parameterization(Mesh* mesh);
+		void Init();
 
 	};
 }
