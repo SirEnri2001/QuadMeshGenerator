@@ -2,7 +2,7 @@ import json
 import math
 from json import JSONEncoder
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Request
 import numpy as np
 
 app = Flask(__name__)
@@ -29,26 +29,33 @@ def add_message():
 
 @app.route('/eigh', methods=['GET', 'POST'])
 def svd():
-    req_data = request.get_data()
-    bytes_target = bytes("Content-Type: text/plain", 'utf-8')
-    ind = req_data.find(bytes_target)
-    data_size = 0
-    if not ind == -1:
-        parsed_string = (req_data[ind + len(bytes_target)+4:ind + len(bytes_target)+40]).decode("utf-8")
-        data_size = int(parsed_string.split("\r\n")[0])
-    bytes_data_target = bytes("Content-Type: application/octet-stream", 'utf-8')
-    ind = req_data.find(bytes_data_target)+4+len(bytes_data_target)
-    data = req_data[ind:ind+data_size]
-    dimension = round(math.sqrt(data_size/8))
-    np_data = np.ndarray([dimension, dimension], dtype=np.double, buffer=data)
+    np_data = get_matrix_from_request(request, "data")
+    if np_data is None:
+        return "Bad Request: data is None", 400
     np_res = np.linalg.eigh(np_data)
     return np_res.eigenvalues.astype(np.double).tobytes()+np_res.eigenvectors.T.astype(np.double).tobytes()
-    # json_data = request.json
-    # resp = {}
-    # for key, value in json_data.items():
 
-    # print(resp)
-    # return resp
+@app.route('/solve', methods=['GET', 'POST'])
+def solve():
+    np_a = get_matrix_from_request(request, "data_a")
+    np_b = get_matrix_from_request(request, "data_b")
+    if (np_a is None) or (np_b is None):
+        return "Bad Request: data_a or data_b is None", 400
+    dimension = round(math.sqrt(np_a.shape[0]))
+    np_a = np_a.reshape([dimension, dimension])
+    np_b_cols = round(np_b.shape[0]/dimension)
+    np_b = np_b.reshape([dimension, np_b_cols])
+    np_res = np.linalg.solve(np_a, np_b)
+    print(np_res)
+    return np_res.astype(np.double).tobytes()
+
+
+def get_matrix_from_request(request: Request, key: str) -> np.ndarray:
+    req_data = request.files[key].stream.read()
+    bytes_size = len(req_data)
+    data_size = round(bytes_size/8)
+    np_data = np.ndarray([data_size], dtype=np.double, buffer=req_data)
+    return np_data
 
 
 if __name__ == '__main__':
