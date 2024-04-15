@@ -68,28 +68,43 @@ target_include_directories(mesh PUBLIC
 # ---------------------------------------------------------------------------
 # Laplacian 
 
-add_library(laplacian STATIC
+add_library( laplacian STATIC
   ./src/laplacian/laplacian.h
   ./src/laplacian/laplacian.cpp
 )
 
-target_include_directories(laplacian PUBLIC
+target_include_directories( laplacian PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
 # ---------------------------------------------------------------------------
 # Wave-based Anisotropic Quadrangulation 
 
-add_library(wave_quadrangulation STATIC
+add_library( wave_quadrangulation STATIC
   ./src/wave_quadrangulation/wave_quadrangulation.h
   ./src/wave_quadrangulation/wave_quadrangulation.cpp
 )
 
-target_include_directories(wave_quadrangulation PUBLIC
+target_include_directories( wave_quadrangulation PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
 # ---------------------------------------------------------------------------
+# Globally Smooth Parameterization 
+
+add_library( parameterization STATIC
+  ./src/parameterization/parameterization.h
+  ./src/parameterization/parameterization.cpp
+)
+
+target_include_directories( parameterization PUBLIC
+    ./3rdparty/eigen-3.4.0
+)
+target_link_libraries( parameterization PUBLIC laplacian )
+
+
+# ---------------------------------------------------------------------------
+
 
 add_library(morse_smale_complex STATIC
   ./src/msc/msc.h
