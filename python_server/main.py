@@ -32,6 +32,8 @@ def svd():
     np_data = get_matrix_from_request(request, "data")
     if np_data is None:
         return "Bad Request: data is None", 400
+    dimension = round(math.sqrt(np_data.shape[0]))
+    np_data = np_data.reshape([dimension, dimension])
     np_res = np.linalg.eigh(np_data)
     return np_res.eigenvalues.astype(np.double).tobytes()+np_res.eigenvectors.T.astype(np.double).tobytes()
 
