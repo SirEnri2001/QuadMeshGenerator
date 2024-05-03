@@ -1,7 +1,12 @@
+global string $eigenSlider = "";
+global string $tessellationSlider = "";
+global int $eigenValue = 1;
+global int $tessellationValue = 1;
+
 proc CreateQuadroMainWindow() {
     string $mainWindowName = "QuadroMainWindow";
-    int $width = 300;
-    int $height = 300;
+    int $width = 600;
+    int $height = 400;
     string $mainWindowTitle = "Quadro";
     
     // delete the same-name existing UI window if any;
@@ -15,16 +20,21 @@ proc CreateQuadroMainWindow() {
         -widthHeight $width $height 
         $mainWindowName`;
     
-    
-    
+    global string $eigenSlider;
+    global string $tessellationSlider;
     // layouts  
+    columnLayout -adjustableColumn 1 -columnAlign "left";
+        $eigenSlider = `intSliderGrp -label "Eigen" -field true -minValue 1 -maxValue 50 -value 1`;
+        $tessellationSlider = `intSliderGrp -label "Tessellation" -field true -minValue 1 -maxValue 50 -value 1`;
+    setParent ..;
+    
     rowLayout -numberOfColumns 2  -adjustableColumn 1 -adjustableColumn 2;
         button -label "Quadrangulate" -command "quadrangulateConfirm()";
         button -label "Close" -command ("deleteUI -window " + $quadroMainWindow);
     setParent ..;
     
     showWindow $quadroMainWindow;
-
+   
 }
 
 proc quadrangulateConfirm() {
@@ -36,18 +46,27 @@ proc quadrangulateConfirm() {
     -defaultButton "Yes"
     -cancelButton "Cancel" 
     -dismissString "Cancel"`;
-    // add eigen function
-    // add tessellation
+
     if ($cfm == "Yes!") {
+        global string $eigenSlider;
+        global string $tessellationSlider;
+        global int $eigenValue;
+        global int $tessellationValue;
+        // Get the values from both sliders
+        $eigenValue = `intSliderGrp -query -value $eigenSlider`;
+        $tessellationValue = `intSliderGrp -query -value $tessellationSlider`;
         quadroQuadrangulate();
     }
     
 }
 
 proc quadroQuadrangulate() {
-    print("quadrangulate! TODO\n");
-    string $selected[] = `ls -sl`;
-    print($selected);
+    print("quadrangulate!\n");
+    global int $eigenValue;
+    global int $tessellationValue;
+    print ("Eigen Value: " + $eigenValue + "\n");
+    print ("Tessellation Value: " + $tessellationValue + "\n");
+    // Quadro $eigenValue $tessellationValue
 }
 
 
@@ -63,5 +82,7 @@ proc myTest() {
 	
     print($tmp);
 }
+
+
 
 CreateQuadroMainWindow();
