@@ -234,6 +234,22 @@ int saveQuad(const std::vector<T>& pointSet,
     return 0;
 }
 
+struct hash_pair {
+    template <class T1, class T2>
+    size_t operator()(const std::pair<T1, T2>& p) const
+    {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+
+        if (hash1 != hash2) {
+            return hash1 ^ hash2;
+        }
+
+        // If hash1 == hash2, their XOR is zero.
+        return hash1;
+    }
+};
+
 int scalarFieldNormalize(std::vector<double>& input,
     std::vector<double>& output) {
     double min = 0, max = 0;
@@ -391,6 +407,70 @@ int main(int argc, char** argv) {
     //    out1Separatrices.pt.points_.data());
     //triangulation.setInputCells(
     //    out1Separatrices.cl., triangleSetCo.data(), triangleSetOff.data());
+    struct Tree {
+        std::array<long long int, 4>* current;
+        std::vector<Tree*> children;
+        Tree* parent;
+        bool flip = false;
+    };
+    std::unordered_map<std::array<long long int, 4>*, bool> hasTree;
+    std::unordered_map<std::pair<long long int, long long int>, std::vector<std::array<long long int, 4>*>, hash_pair> edges;
+    for (auto& q : morseSmaleQuadrangulation.outputCells_) {
+        for (int i = 0; i < 4; i++) {
+            long long int idx1 = q[i], idx2 = q[(i + 1) % 4];
+            if (idx1 > idx2) {
+                std::swap(idx1, idx2);
+            }
+            edges[{idx1, idx2}].push_back(&q);
+        }
+    }
+
+    Tree* root = new Tree({ &morseSmaleQuadrangulation.outputCells_[0], {}, nullptr });
+    hasTree[&morseSmaleQuadrangulation.outputCells_[0]] = true;
+    std::queue<Tree*> treeQueue;
+    treeQueue.push(root);
+    while (treeQueue.size() != 0) {
+        std::array<long long int, 4>* rootQ = treeQueue.front()->current;
+        for (int i = 0; i < 4; i++) {
+            long long int idx1 = (*rootQ)[i], idx2 = (*rootQ)[(i + 1) % 4];
+            if (idx1 > idx2) {
+                std::swap(idx1, idx2);
+            }
+            for (auto& q : edges[{idx1, idx2}]) {
+                if (hasTree[q] || q==rootQ) {
+                    continue;
+                }
+                Tree* t = new Tree({ q, {}, treeQueue.front() });
+                hasTree[q] = true;
+                treeQueue.push(t);
+                treeQueue.front()->children.push_back(t);
+            }
+        }
+        treeQueue.pop();
+    }
+    treeQueue = std::queue<Tree*>();
+    treeQueue.push(root);
+    while (treeQueue.size() != 0) {
+        Tree* cur = treeQueue.front();
+        for (auto& child : cur->children) {
+            bool nextChild = false;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    if ((*cur->current)[i] == (*child->current)[j] && (*cur->current)[(i + 1) % 4] == (*child->current)[(j + 1) % 4]) {
+                        std::reverse(child->current->begin(), child->current->end());
+                        nextChild = true;
+                        break;
+                    }
+                }
+                if (nextChild) {
+                    break;
+                }
+            }
+            treeQueue.push(child);
+        }
+        treeQueue.pop();
+    }
+
     ttk::QuadrangulationSubdivision quadrangulationSubdivision;
     quadrangulationSubdivision.preconditionTriangulation(&triangulation);
     quadrangulationSubdivision.setInputQuads(
