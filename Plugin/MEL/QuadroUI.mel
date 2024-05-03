@@ -1,0 +1,67 @@
+proc CreateQuadroMainWindow() {
+    string $mainWindowName = "QuadroMainWindow";
+    int $width = 300;
+    int $height = 300;
+    string $mainWindowTitle = "Quadro";
+    
+    // delete the same-name existing UI window if any;
+    if (`window -exists $mainWindowName`) {
+        deleteUI $mainWindowName;
+    }
+    
+    // create new window if none exist
+    string $quadroMainWindow = `window 
+        -title mainWindowTitle   
+        -widthHeight $width $height 
+        $mainWindowName`;
+    
+    
+    
+    // layouts  
+    rowLayout -numberOfColumns 2  -adjustableColumn 1 -adjustableColumn 2;
+        button -label "Quadrangulate" -command "quadrangulateConfirm()";
+        button -label "Close" -command ("deleteUI -window " + $quadroMainWindow);
+    setParent ..;
+    
+    showWindow $quadroMainWindow;
+
+}
+
+proc quadrangulateConfirm() {
+    string $cfm = `confirmDialog 
+    -title "Quadrangulate" 
+    -message "Are you sure?"
+    -button "Yes!"
+    -button "Cancel"
+    -defaultButton "Yes"
+    -cancelButton "Cancel" 
+    -dismissString "Cancel"`;
+    // add eigen function
+    // add tessellation
+    if ($cfm == "Yes!") {
+        quadroQuadrangulate();
+    }
+    
+}
+
+proc quadroQuadrangulate() {
+    print("quadrangulate! TODO\n");
+    string $selected[] = `ls -sl`;
+    print($selected);
+}
+
+
+proc myTest() {
+    string $tmp = `confirmDialog 
+    -title "Confirm" 
+    -message "Are you sure?"
+    -button "OK" 
+    -button "Cancel"
+    -defaultButton "OK"
+    -cancelButton "Cancel" 
+    -dismissString "Cancel"`;
+	
+    print($tmp);
+}
+
+CreateQuadroMainWindow();
