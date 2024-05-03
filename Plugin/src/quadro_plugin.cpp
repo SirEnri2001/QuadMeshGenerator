@@ -29,7 +29,7 @@ public:
     static void* creator();
 
 private:
-    void quadrangulate();
+    MStatus quadrangulate(MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity);
 
     // helper functions
     MStatus testfunc();
@@ -38,9 +38,14 @@ private:
             MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity);
 };
 
-void QuadroPlugin::quadrangulate()
+MStatus QuadroPlugin::quadrangulate(MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity)
 {
+    MStatus stat = MS::kSuccess;
+    // TODO: quadrangulate
+    this->eigen;
+    this->tessellation;
 
+    return stat;
 }
 
 MStatus QuadroPlugin::testfunc() {
