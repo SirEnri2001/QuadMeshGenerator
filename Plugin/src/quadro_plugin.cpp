@@ -32,8 +32,8 @@ private:
     // helper functions
     MStatus testfunc();
     MStatus createAndDisplayMesh();
-    MObject createPolygonMesh(const MPointArray& vertices, const MIntArray& counts, const MIntArray& connectivity, MStatus* status = NULL);
-    MStatus extractMeshData(MPointArray& vertices);
+    MStatus extractMeshData(MDagPath& dagPath, 
+            MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity);
 };
 
 void QuadroPlugin::quadrangulate()
@@ -161,15 +161,77 @@ MStatus uninitializePlugin(MObject obj) {
     return MS::kSuccess;
 }
 
+MStatus QuadroPlugin::extractMeshData(MDagPath& dagPath, 
+        MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity)
+{   
+    vertices.clear();
+    facesVertsCount.clear();
+    facesConnectivity.clear();
 
-MObject QuadroPlugin::createPolygonMesh(const MPointArray& vertices, const MIntArray& counts, const MIntArray& connectivity, MStatus* status)
-{
-    MObject meshObj;
-    MFnMesh meshFn;
-    // Create a new mesh using the specified vertices and face connectivity
-    meshObj = meshFn.create(vertices.length(), counts.length(), vertices, counts, connectivity, MObject::kNullObj, status);
-    // Return the new mesh object
-    return meshObj;
+    MStatus stat = MS::kSuccess;
+    // retreaving the mesh of this selected node
+    unsigned int numShapes;
+    stat = dagPath.numberOfShapesDirectlyBelow(numShapes);
+    if (stat != MS::kSuccess) {
+        MGlobal::displayWarning("No shapes attached");
+        return stat;
+    }
+    
+    MDagPath tmpDagPath = dagPath;
+    if (!tmpDagPath.hasFn(MFn::kMesh)) {
+        for (unsigned int i = 0; i < numShapes; ++i) {
+            tmpDagPath = dagPath;
+            tmpDagPath.extendToShapeDirectlyBelow(i);
+            if (tmpDagPath.hasFn(MFn::kMesh)) {
+                break;
+            }
+        }
+        dagPath = tmpDagPath;
+    }
+    if (!dagPath.hasFn(MFn::kMesh, &stat)) {
+        MGlobal::displayWarning("No mesh found in selected object.");
+        return stat;
+    }
+    MFnMesh meshFn(dagPath, &stat);
+    if (stat != MS::kSuccess) {
+        MGlobal::displayWarning("Failed to attach mesh function set");
+        return stat;
+    }
+
+    // Get mesh's vertex positions
+    MPointArray vertices;
+    meshFn.getPoints(vertices, MSpace::kWorld);
+    
+    // Print vertex positions
+    for (unsigned int i = 0; i < vertices.length(); ++i) {
+        MPoint& pt = vertices[i];
+        MGlobal::displayInfo(MString("Vertex ") + i + ": (" + pt.x + ", " + pt.y + ", " + pt.z + ")");
+    }
+
+    MItMeshPolygon polyIter(dagPath, MObject::kNullObj, &stat);
+    if (stat != MS::kSuccess) {
+        MGlobal::displayWarning("Fail to get surface");
+        return MS::kFailure;
+    }
+
+    // Iterate over each polygon to get each face's number of vertices and connectivity 
+    // Print connectivity
+    while (!polyIter.isDone()) {
+        MIntArray vertexList;
+        polyIter.getVertices(vertexList);
+        facesVertsCount.append(vertexList.length());
+        MString vertexIndices = "Face Vertex Indices: ";
+        for (unsigned int i = 0; i < vertexList.length(); ++i) {
+            vertexIndices += vertexList[i];
+            facesConnectivity.append(vertexList[i]);
+            if (i < vertexList.length() - 1)
+                vertexIndices += ", ";
+        }
+        MGlobal::displayInfo(vertexIndices);
+        polyIter.next();
+    }
+
+    return MStatus();
 }
 
 MStatus QuadroPlugin::createAndDisplayMesh()
@@ -195,7 +257,7 @@ MStatus QuadroPlugin::createAndDisplayMesh()
 
     // Create the mesh
     MFnMesh meshFn;
-    MObject newMesh = createPolygonMesh(vertices, faceCounts, faceConnectivity, &stat);
+    MObject newMesh;
     newMesh = meshFn.create(vertices.length(), faceCounts.length(), vertices, faceCounts, faceConnectivity, MObject::kNullObj, &stat);
     if (stat != MStatus::kSuccess)
     {
