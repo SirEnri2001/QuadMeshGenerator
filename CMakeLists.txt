@@ -68,12 +68,12 @@ target_include_directories(mesh PUBLIC
 # ---------------------------------------------------------------------------
 # Laplacian 
 
-add_library( laplacian STATIC
+add_library( quad_laplacian STATIC
   ./src/laplacian/laplacian.h
   ./src/laplacian/laplacian.cpp
 )
 
-target_include_directories( laplacian PUBLIC
+target_include_directories( quad_laplacian PUBLIC
     ./3rdparty/eigen-3.4.0
     ./3rdparty/glm
 )
@@ -116,7 +116,7 @@ target_include_directories(morse_smale_complex PUBLIC
   ./3rdparty/glm
 )
 
-target_link_libraries(morse_smale_complex PUBLIC laplacian )
+target_link_libraries(morse_smale_complex PUBLIC quad_laplacian )
 
 add_library(api STATIC
     ./src/api/api.h
@@ -146,6 +146,9 @@ add_subdirectory(./3rdparty/glad)
 
 # Add ImGUI
 add_subdirectory(./3rdparty/imgui-1.90)
+
+# Add TTK 
+add_subdirectory(./src/ttk)
 
 # Add tinyobj
 add_library(tinyobj STATIC
