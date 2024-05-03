@@ -44,6 +44,10 @@ MStatus QuadroPlugin::quadrangulate(MPointArray& vertices, MIntArray& facesVerts
     // TODO: quadrangulate
     this->eigen;
     this->tessellation;
+        // MPointArray vertices;
+        // MPoint& pt = vertices[i];
+        // pt.x, pt.y, pt.z
+    
 
     return stat;
 }

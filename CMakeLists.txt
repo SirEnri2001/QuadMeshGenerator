@@ -103,8 +103,6 @@ target_include_directories( parameterization PUBLIC
 target_link_libraries( parameterization PUBLIC laplacian )
 
 
-# ---------------------------------------------------------------------------
-
 
 add_library(morse_smale_complex STATIC
   ./src/msc/msc.h
@@ -155,6 +153,9 @@ add_library(tinyobj STATIC
     ./3rdparty/tinyobj/tiny_obj_loader.h
     ./3rdparty/tinyobj/tiny_obj_loader.cc
 )
+
+# Add plugin
+add_subdirectory(./Plugin)
 
 add_executable(GLMeshViewer
     ./src/glmeshviewer_main.cpp
