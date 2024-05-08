@@ -4,7 +4,6 @@
 #include <map>
 #include "../mesh/io.h"
 #include <glm.hpp>
-#include <omp.h>
 #include <iostream>
 #include <chrono>
 
@@ -12,28 +11,28 @@ namespace quadro {
 	float desbrunWeight(const Halfedge* halfEdge);
 	Eigen::MatrixXd laplacian(const Mesh& mesh);
 
-	void svdTest(const Eigen::MatrixXd& laplacianMatrix) {
-		Eigen::setNbThreads(16);
-		int n = Eigen::nbThreads();
+	//void svdTest(const Eigen::MatrixXd& laplacianMatrix) {
+	//	Eigen::setNbThreads(16);
+	//	int n = Eigen::nbThreads();
 
-		std::cout << "Threads used: " << n << std::endl;
-		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	//	std::cout << "Threads used: " << n << std::endl;
+	//	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-		auto& ret = Eigen::BDCSVD<Eigen::MatrixXd>::BDCSVD().compute(laplacianMatrix);
-		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//	auto& ret = Eigen::BDCSVD<Eigen::MatrixXd>().compute(laplacianMatrix);
+	//	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-		std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - begin) << std::endl;
+	//	std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - begin) << std::endl;
 
-		return;
-	}
+	//	return;
+	//}
 
 
-	void laplacianTest(const Mesh* mesh) {
-		auto laplacianMatrix = laplacian(*mesh);
-		std::cout << "Vertices: " << mesh->getVertices().size() << std::endl;
-		svdTest(laplacianMatrix);
-		std::cout << "laplacianTest complete" << std::endl << std::flush;
-	}
+	//void laplacianTest(const Mesh* mesh) {
+	//	auto laplacianMatrix = laplacian(*mesh);
+	//	std::cout << "Vertices: " << mesh->getVertices().size() << std::endl;
+	//	svdTest(laplacianMatrix);
+	//	std::cout << "laplacianTest complete" << std::endl << std::flush;
+	//}
 
 
 	Eigen::MatrixXd laplacian(const Mesh& mesh)

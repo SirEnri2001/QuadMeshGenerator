@@ -124,13 +124,16 @@ Viewer::Viewer(const std::string& name) :
 	mGridShader = std::make_unique<Shader>("../glsl/grid.vert.glsl", "../glsl/grid.frag.glsl");
 	mPointShader = std::make_unique<Shader>("../glsl/point.vert.glsl", "../glsl/point.frag.glsl",
 		"../glsl/point.geom.glsl");
+	mFieldShader = std::make_unique<Shader>("../glsl/field3d.vert.glsl", "../glsl/field3d.frag.glsl",
+		"../glsl/field3d.geom.glsl");
 	meshShading = std::make_unique<Drawable>();
 	meshFrame = std::make_unique<Drawable>();
 	meshPoint = std::make_unique<Drawable>();
 	heSelect = std::make_unique<Drawable>();
+	meshField = std::make_unique<Drawable>();
 	createGridGround();
 	//mMeshIO->loadM("../test/data/mesh_44313.m");
-    mMeshIO->loadObj("../test/obj/cow.obj");
+    mMeshIO->loadObj("../test/obj/bunny.obj");
 	testOperator = std::make_unique<TestOperator>(mMesh.get());
 	testOperator->setDisplay(mMeshDisplay.get());
 	pauseMutex = std::make_unique<std::mutex>();
@@ -196,6 +199,9 @@ void Viewer::mainLoop()
 			ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize); // Create main panel
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			//ImGui::Checkbox("Display Frame", &displayFrame);
+			ImGui::Checkbox("Display Field", &displayField);
+			
+			ImGui::SliderFloat("Field Scale", &fieldScale,0.001f, 0.1f);
 			ImGui::SliderFloat("Frame Line Width", &lineWidth, 0.1f, 10.f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::SliderFloat("halfedgeOffset", &halfedgeOffset, 0.1f, 10.f);
 			ImGui::SliderFloat("halfedgeLengthOffset", &halfedgeLengthOffset, 0.1f, 10.f);
@@ -468,7 +474,35 @@ void Viewer::drawScene()
 		glBindVertexArray(meshPoint->VAO);
 		glDrawElements(GL_POINTS, mMeshDisplay->pointIndices.size(), GL_UNSIGNED_INT, 0);
 	}
-
+	if (displayField) {
+		mFieldShader->use();
+		mFieldShader->setVec3("uLightPos", mCamera.eye);
+		mFieldShader->setMat3("uModelInvTr", glm::inverse(model));
+		mFieldShader->setVec2("uScreenSize", glm::vec2(windowWidth, windowHeight));
+		mFieldShader->setInt("markCount", 5);
+		mFieldShader->setFloat("thickness", lineWidth / 1000.f);
+		mFieldShader->setFloat("halfedgeOffset", halfedgeOffset / 1000.f);
+		mFieldShader->setFloat("halfedgeLengthOffset", halfedgeLengthOffset / 1000.f);
+		mFieldShader->setFloat("uSize", 5.0);
+		mFieldShader->setMat4("uModel", model);
+		mFieldShader->setMat4("uProjView", projView);
+		mFieldShader->setVec3("uColor", glm::vec3(1, 0, 0));
+		mFieldShader->setFloat("uFieldScale", fieldScale*0.1f);
+		glBindVertexArray(meshField->VAO);
+		// Allocate space and upload the data from CPU to GPU
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshField->IBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMeshDisplay->fieldVectorsID.size() * sizeof(GLuint), mMeshDisplay->fieldVectorsID.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, meshField->VBO);
+		glBufferData(GL_ARRAY_BUFFER, mMeshDisplay->fieldVectors.size() * sizeof(glm::vec4), mMeshDisplay->fieldVectors.data(), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(sizeof(glm::vec4)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+		glBindVertexArray(meshField->VAO);
+		glDrawElements(GL_POINTS, mMeshDisplay->fieldVectorsID.size(), GL_UNSIGNED_INT, 0);
+	}
 	mMeshDisplay->modelMat = model;
 }
 

@@ -14,6 +14,9 @@
 #include <maya/MPointArray.h>
 #include <maya/MDagModifier.h>
 #include <maya/MItMeshPolygon.h>
+#define TTK_CELL_ARRAY_NEW
+#include <TopologyToolKit.h>
+#include <Triangulation.h>
 
 #define checkStatM(stat, message) if (stat != MS::kSuccess) {MGlobal::displayWarning(message); return stat;}
 #define checkStat(stat) if (stat != MS::kSuccess) {return stat;}
@@ -37,6 +40,252 @@ private:
     MStatus extractMeshData(MDagPath& dagPath, 
             MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity);
 };
+struct hash_pair {
+    template <class T1, class T2>
+    size_t operator()(const std::pair<T1, T2>& p) const
+    {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+
+        if (hash1 != hash2) {
+            return hash1 ^ hash2;
+        }
+
+        // If hash1 == hash2, their XOR is zero.
+        return hash1;
+    }
+};
+int loadFile(const std::string& inputPath,
+    std::vector<double>& pointSet,
+    std::vector<long long int>& triangleSetCo,
+    std::vector<long long int>& triangleSetOff) {
+
+    // load some terrain from some OFF file.
+
+    if (inputPath.empty())
+        return -1;
+
+    int vertexNumber = 0, triangleNumber = 0;
+    std::string keyword;
+
+    std::ifstream f(inputPath.data(), std::ios::in);
+
+    if (!f) {
+        return -1;
+    }
+
+    f >> keyword;
+
+    if (keyword != "OFF") {
+        return -2;
+    }
+
+    f >> vertexNumber;
+    f >> triangleNumber;
+    f >> keyword;
+
+    pointSet.resize(3 * vertexNumber);
+    triangleSetCo.resize(3 * triangleNumber);
+    triangleSetOff.resize(triangleNumber + 1);
+
+    for (int i = 0; i < 3 * vertexNumber; i++) {
+        f >> pointSet[i];
+    }
+
+    int offId = 0;
+    int coId = 0;
+    for (int i = 0; i < triangleNumber; i++) {
+        int cellSize;
+        f >> cellSize;
+        if (cellSize != 3) {
+            std::cerr << "cell size " << cellSize << " != 3" << std::endl;
+            return -3;
+        }
+        triangleSetOff[offId++] = coId;
+        for (int j = 0; j < 3; j++) {
+            int cellId;
+            f >> cellId;
+            triangleSetCo[coId++] = cellId;
+        }
+    }
+    triangleSetOff[offId] = coId; // the last one
+
+    f.close();
+
+    return 0;
+}
+int load(
+    MPointArray& vertices, 
+    MIntArray& facesVertsCount, 
+    MIntArray& facesConnectivity, 
+    std::vector<double>& pointSet,
+    std::vector<long long int>& triangleSetCo,
+    std::vector<long long int>& triangleSetOff) {
+    int vertexNumber = vertices.length(), triangleNumber = facesVertsCount.length();
+    std::string keyword;
+
+    pointSet.resize(3 * vertexNumber);
+    triangleSetCo.resize(3 * triangleNumber);
+    triangleSetOff.resize(triangleNumber + 1);
+
+    for (int i = 0; i < vertexNumber; i++) {
+        pointSet[3 * i + 0] = vertices[i].x;
+        pointSet[3 * i + 1] = vertices[i].y;
+        pointSet[3 * i + 2] = vertices[i].z;
+    }
+    triangleSetOff[0] = 0;
+    for (int i = 1; i < triangleNumber + 1; i++) {
+        triangleSetOff[i] = facesVertsCount[i - 1] + triangleSetOff[i - 1];
+    }
+
+    for (int i = 0; i < 3 * triangleNumber; i++) {
+        triangleSetCo[i] = facesConnectivity[i];
+    }
+
+    return 0;
+}
+
+int dumpOff(MPointArray& vertices,
+    MIntArray& facesVertsCount,
+    MIntArray& facesConnectivity, std::string outputPath) {
+    // save the simplified terrain in some OFF file
+    std::string fileName(outputPath);
+
+    std::ofstream f(fileName.data(), std::ios::out);
+
+    if (!f) {
+        return -1;
+    }
+
+    const int nbTriangles = facesVertsCount.length();
+
+    f << "OFF" << std::endl;
+    f << vertices.length() << " " << nbTriangles << " 0" << std::endl;
+
+    for (int i = 0; i < (int)vertices.length(); i++) {
+        f << vertices[i].x<<" " << vertices[i].y<<" " << vertices[i].z;
+        f << std::endl;
+    }
+    int offset = 0;
+    for (int i = 0; i < nbTriangles; i++) {
+        int cellSize = facesVertsCount[i];
+        f << cellSize << " ";
+        for (int j = 0; j < facesVertsCount[i]; j++) {
+            f << facesConnectivity[j + offset];
+            f << " ";
+        }
+        f << std::endl;
+        offset += cellSize;
+    }
+
+    f.close();
+
+    return 0;
+}
+
+int loadOff(MPointArray& vertices,
+    MIntArray& facesVertsCount,
+    MIntArray& facesConnectivity, std::string inputPath) {
+    // load some terrain from some OFF file.
+
+    if (inputPath.empty())
+        return -1;
+
+    int vertexNumber = 0, faceNumber = 0;
+    std::string keyword;
+
+    std::ifstream f(inputPath.data(), std::ios::in);
+
+    if (!f) {
+        return -1;
+    }
+
+    f >> keyword;
+
+    if (keyword != "OFF") {
+        return -2;
+    }
+
+    f >> vertexNumber;
+    f >> faceNumber;
+    f >> keyword;
+    vertices = MPointArray(vertexNumber);
+    facesVertsCount = MIntArray(faceNumber);
+    facesConnectivity = MIntArray();
+
+    for (int i = 0; i < vertexNumber; i++) {
+        f >> vertices[i].x;
+        f >> vertices[i].y;
+        f >> vertices[i].z;
+        vertices[i].w = 1.0;
+    }
+
+    int offId = 0;
+    int coId = 0;
+    for (int i = 0; i < faceNumber; i++) {
+        int cellSize;
+        f >> cellSize;
+        facesVertsCount[i] = cellSize;
+        for (int j = 0; j < cellSize; j++) {
+            int cellId;
+            f >> cellId;
+            facesConnectivity.append(cellId);
+        }
+    }
+
+    f.close();
+    return 0;
+}
+
+int save(MPointArray& vertices,
+    MIntArray& facesVertsCount,
+    MIntArray& facesConnectivity, 
+    const std::vector<ttk::Quadrangulation::Point>& pointSet,
+    const std::vector<std::array<long long int, 4>>& quadSetCo) {
+    const int nbQuads = quadSetCo.size();
+    vertices.clear();
+    for (int i = 0; i < (int)pointSet.size(); i++) {
+        vertices.append(
+            {
+            pointSet[i][0],
+            pointSet[i][1],
+            pointSet[i][2] 
+            }
+        );
+    }
+    facesVertsCount = MIntArray(quadSetCo.size(), 4);
+    facesConnectivity = MIntArray(quadSetCo.size() * 4, 4);
+    for (int i = 0; i < quadSetCo.size(); i++) {
+        facesConnectivity[4 * i + 0] = quadSetCo[i][0];
+        facesConnectivity[4 * i + 1] = quadSetCo[i][1];
+        facesConnectivity[4 * i + 2] = quadSetCo[i][2];
+        facesConnectivity[4 * i + 3] = quadSetCo[i][3];
+    }
+    return 0;
+}
+
+
+int scalarFieldNormalize(std::vector<double>& input,
+    std::vector<double>& output) {
+    double min = 0, max = 0;
+    for (int i = 0; i < input.size(); i++) {
+        double const value = input[i];
+
+        if ((!i) || (value < min)) {
+            min = value;
+        }
+        if ((!i) || (value > max)) {
+            max = value;
+        }
+    }
+
+    for (int i = 0; i < input.size(); i++) {
+        double value = input[i];
+        value = (value - min) / (max - min);
+        output[i] = value;
+    }
+    return 0;
+}
 
 MStatus QuadroPlugin::quadrangulate(MPointArray& vertices, MIntArray& facesVertsCount, MIntArray& facesConnectivity)
 {
@@ -47,8 +296,9 @@ MStatus QuadroPlugin::quadrangulate(MPointArray& vertices, MIntArray& facesVerts
         // MPointArray vertices;
         // MPoint& pt = vertices[i];
         // pt.x, pt.y, pt.z
-    
-
+    dumpOff(vertices, facesVertsCount, facesConnectivity, "C:\\Users\\SirEnri\\1.off");
+    MGlobal::executeCommand("system \"C:\\Users\\SirEnri\\quad.exe -i C:\\Users\\SirEnri\\1.off\";");
+    loadOff(vertices, facesVertsCount, facesConnectivity, "C:\\Users\\SirEnri\\output.off");
     return stat;
 }
 
@@ -72,6 +322,13 @@ MStatus QuadroPlugin::testfunc() {
         if (stat != MS::kSuccess) {
             return stat;
         }
+        try {
+            stat = quadrangulate(vertices, faceVertCount, faceConnectivity);
+        }
+        catch (const std::runtime_error& e) {
+            assert(0);
+        }
+
         stat = createAndDisplayMesh(vertices, faceVertCount, faceConnectivity);
         if (stat != MS::kSuccess) {
             return stat;
@@ -164,6 +421,7 @@ MStatus QuadroPlugin::extractMeshData(MDagPath& dagPath,
     meshFn.getPoints(vertices, MSpace::kWorld);
     
     // Print vertex positions
+
     for (unsigned int i = 0; i < vertices.length(); ++i) {
         MPoint& pt = vertices[i];
         MGlobal::displayInfo(MString("Vertex ") + i + ": (" + pt.x + ", " + pt.y + ", " + pt.z + ")");

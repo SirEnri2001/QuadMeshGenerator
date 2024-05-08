@@ -54,6 +54,7 @@ def solve():
 
 def get_matrix_from_request(request: Request, key: str) -> np.ndarray:
     req_data = request.files[key].stream.read()
+    print("Bytes received: {}".format(len(req_data)))
     bytes_size = len(req_data)
     data_size = round(bytes_size/8)
     np_data = np.ndarray([data_size], dtype=np.double, buffer=req_data)

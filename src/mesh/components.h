@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <glm.hpp>
 #include <memory>
+#include <algorithm>
 #include "core.h"
 
 namespace quadro {

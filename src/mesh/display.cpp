@@ -381,3 +381,46 @@ void MeshDisplay::markHalfedgeAttribute(const MeshAttribute<std::pair<glm::vec4,
 		setHalfedgeMark(he->getMutable(), (*attribute)[he].first, (*attribute)[he].second);
 	}
 }
+
+void MeshDisplay::displayMeshFieldOnFace(const MeshAttribute<glm::vec3>* attribute) {
+	fieldVectors.resize(mesh->getFaces().size()*3);
+	fieldVectorsID.resize(mesh->getFaces().size());
+	unsigned int id = 0;
+	for (auto& idFace : mesh->getFaces()) {
+		const Face* f = &idFace.second;
+		glm::vec3 central(0.0, 0.0, 0.0);
+		const Halfedge* he = f->getHalfedge();
+		int vCount = 0;
+		do {
+			central += glm::vec3(he->getTarget()->getPosition());
+			vCount++;
+		} while (he = he->getNext(), he != f->getHalfedge());
+		central /= (float)vCount;
+		fieldVectors[3 * id] = glm::vec4(central, 1.0);
+		fieldVectors[3 * id + 1] = glm::vec4((*attribute)[f], 0.0);
+		fieldVectors[3 * id + 2] = glm::vec4(calculateSurfaceNormal(f), 0.0);
+		fieldVectorsID[id] = id;
+		id++;
+	}
+
+}
+
+void MeshDisplay::displayMeshFieldOnEdge(const MeshAttribute<glm::vec3>* attribute) {
+	fieldVectors.resize(mesh->getHalfedges().size() * 3);
+	fieldVectorsID.resize(mesh->getHalfedges().size());
+	unsigned int id = 0;
+	for (auto& idHalfedge : mesh->getHalfedges()) {
+		const Halfedge* he = &idHalfedge.second;
+		if (he->getTarget()->getId() < he->getSource()->getId()) {
+			continue;
+		}
+		glm::vec3 central = glm::vec3(he->getTarget()->getPosition() + he->getSource()->getPosition()) / 2.0f;
+		glm::vec3 normal = (calculateSurfaceNormal(he->getFace()) + calculateSurfaceNormal(he->getSym()->getFace())) * 0.5f;
+		fieldVectors[3 * id] = glm::vec4(central, 1.0);
+		fieldVectors[3 * id + 1] = glm::vec4((*attribute)[he], 0.0);
+		fieldVectors[3 * id + 2] = glm::vec4(normal, 0.0);
+		fieldVectorsID[id] = id;
+		id++;
+	}
+
+}

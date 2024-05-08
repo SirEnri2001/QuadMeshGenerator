@@ -28,6 +28,9 @@ namespace quadro {
 		std::vector<glm::vec4> pointScatter;
 		std::vector<ID> pointIndices;
 
+		std::vector<glm::vec4> fieldVectors;
+		std::vector<ID> fieldVectorsID;
+
 		int markCount = 0;
 		float vertexSize = 5.0f;
 		float edgeSize = 3.0f;
@@ -39,6 +42,8 @@ namespace quadro {
 		MeshDisplay(Mesh* mesh);
 		void create();
 		void createFrame();
+		virtual void display() {};
+		virtual void clear() {};
 		void markHalfedge(const Halfedge* he,
 			glm::vec4 sourceColor = glm::vec4(0, 0, 1, 1),
 			glm::vec4 targetColor = glm::vec4(1, 0, 0, 1));
@@ -65,5 +70,7 @@ namespace quadro {
 		void markVertexAttribute(const MeshAttribute<std::pair<bool, glm::vec4>>* attribute);
 		void markVertexAttribute(const MeshAttribute<bool>* attribute);
 		void markHalfedgeAttribute(const MeshAttribute<std::pair<glm::vec4, glm::vec4>>* attribute);
+		void displayMeshFieldOnFace(const MeshAttribute<glm::vec3>* attribute);
+		void displayMeshFieldOnEdge(const MeshAttribute<glm::vec3>* attribute);
 	};
 }

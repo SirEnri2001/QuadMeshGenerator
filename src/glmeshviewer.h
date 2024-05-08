@@ -38,6 +38,7 @@ namespace quadro {
 
 		// Some shaders
 		std::unique_ptr<Shader> mHalfedgeShader;
+		std::unique_ptr<Shader> mFieldShader;
 		std::unique_ptr<Shader> mLineShader;
 		std::unique_ptr<Shader> mCurveShader;
 		std::unique_ptr<Shader> mModelShader;
@@ -56,6 +57,7 @@ namespace quadro {
 		std::unique_ptr<Drawable> meshFrame;
 		std::unique_ptr<Drawable> heSelect;
 		std::unique_ptr<Drawable> meshPoint;
+		std::unique_ptr<Drawable> meshField;
 
 		std::unique_ptr<std::thread> mThread;
 
@@ -80,7 +82,9 @@ namespace quadro {
 		bool showAnotherWindow = false;
 
 		bool displayFrame = true;
+		bool displayField = false;
 		float lineWidth = 1.f;
+		float fieldScale = 1.f;
 		float modelScale = 500.f;
 		float halfedgeOffset = 2;
 		float halfedgeLengthOffset = 9;

@@ -1,4 +1,6 @@
 #include <iostream>
+#include "Eigen/Core"
+#include "../api/eigen.h"
 using namespace std;
 
 template <typename T> 
@@ -26,7 +28,14 @@ MyTemplateClass<int> test(void)
 }
 
 int main() {
-    MyTemplateClass<double> a = test();
+    Eigen::MatrixXd a{      // construct a 2x2 matrix
+      {1, 2},     // first row
+      {3, 4}      // second row
+    };
+    Eigen::MatrixXd b{
+        {0, 1},     // first row
+      {2, 3}      // second row
+    };
 
-    return 0;
+    std::cout << solve(a, b);
 }

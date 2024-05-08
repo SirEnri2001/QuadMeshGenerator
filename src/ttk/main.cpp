@@ -20,13 +20,11 @@
 
 // include the local headers
 #include <TopologyToolKit.h>
-
 #include <cassert>
 #include <iostream>
-#include <ttkAlgorithm.h>
 #include <Eigen/Dense>
 
-int load(const std::string& inputPath,
+int loadFile(const std::string& inputPath,
     std::vector<double>& pointSet,
     std::vector<long long int>& triangleSetCo,
     std::vector<long long int>& triangleSetOff) {
@@ -275,12 +273,18 @@ int scalarFieldNormalize(std::vector<double>& input,
 int main(int argc, char** argv) {
 
     std::string inputFilePath;
+    int eigenFunctionSelection = 80;
+    int tessellation = 3;
+    int relaxition = 100;
     ttk::CommandLineParser parser;
 
     ttk::globalDebugLevel_ = 3;
 
     // register the arguments to the command line parser
     parser.setArgument("i", &inputFilePath, "Path to input OFF file");
+    parser.setArgument("e", &eigenFunctionSelection, "Eigenfunction selection, recommend value from 5 - 100");
+    parser.setArgument("t", &tessellation, "Tessellation of result quad patches, recommend value 2-5");
+    parser.setArgument("r", &relaxition, "Relaxition iterations, recommend value 50-200, for faster please use smaller values");
     // parse
     parser.parse(argc, argv);
 
@@ -289,7 +293,7 @@ int main(int argc, char** argv) {
     ttk::Triangulation triangulation;
 
     // load the input
-    load(inputFilePath, pointSet, triangleSetCo, triangleSetOff);
+    loadFile(inputFilePath, pointSet, triangleSetCo, triangleSetOff);
     triangulation.setInputPoints(pointSet.size() / 3, pointSet.data(), true);
     long long int triangleNumber = triangleSetOff.size() - 1;
 #ifdef TTK_CELL_ARRAY_NEW
@@ -302,7 +306,7 @@ int main(int argc, char** argv) {
 #endif
 
     // 1. compute eigen scalar function
-    int eigenNumber = triangulation.getNumberOfVertices() - 80;
+    int eigenNumber = triangulation.getNumberOfVertices() - eigenFunctionSelection;
     ttk::EigenField eigenField;
     std::vector<double> eigenFunction;
     eigenFunction.resize(triangulation.getNumberOfVertices() * triangulation.getNumberOfVertices());
@@ -485,8 +489,8 @@ int main(int argc, char** argv) {
         morseSmaleQuadrangulation.outputPointsIds_.data(),
         morseSmaleQuadrangulation.outputPointsIds_.size()
     );
-    quadrangulationSubdivision.setSubdivisionLevel(3);
-    quadrangulationSubdivision.setRelaxationIterations(100);
+    quadrangulationSubdivision.setSubdivisionLevel(tessellation);
+    quadrangulationSubdivision.setRelaxationIterations(relaxition);
     quadrangulationSubdivision.execute(triangulation);
 
     // save the output

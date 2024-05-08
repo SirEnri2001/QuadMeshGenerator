@@ -24,8 +24,9 @@ proc CreateQuadroMainWindow() {
     global string $tessellationSlider;
     // layouts  
     columnLayout -adjustableColumn 1 -columnAlign "left";
-        $eigenSlider = `intSliderGrp -label "Eigen" -field true -minValue 1 -maxValue 50 -value 1`;
-        $tessellationSlider = `intSliderGrp -label "Tessellation" -field true -minValue 1 -maxValue 50 -value 1`;
+        $eigenSlider = `intSliderGrp -label "Eigen" -field true -minValue 5 -maxValue 100 -value 80`;
+        $tessellationSlider = `intSliderGrp -label "Tessellation" -field true -minValue 1 -maxValue 10 -value 3`;
+        $relaxitionSlider = `intSliderGrp -label "Relaxition" -field true -minValue 1 -maxValue 200 -value 100`;
     setParent ..;
     
     rowLayout -numberOfColumns 2  -adjustableColumn 1 -adjustableColumn 2;
@@ -66,7 +67,7 @@ proc quadroQuadrangulate() {
     global int $tessellationValue;
     print ("Eigen Value: " + $eigenValue + "\n");
     print ("Tessellation Value: " + $tessellationValue + "\n");
-    // Quadro $eigenValue $tessellationValue
+    Quadro $eigenValue $tessellationValue;
 }
 
 

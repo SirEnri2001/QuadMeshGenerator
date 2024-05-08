@@ -10,6 +10,7 @@ MorseFunction::MorseFunction(Mesh* mesh) : MeshUserOperator(mesh) {
 	scalarFunction = mesh->createVertexAttribute<double>();
 	vertexType = mesh->createVertexAttribute<VertexType>(NONE);
 	vertexTracelines = mesh->createVertexAttribute<std::vector<Traceline*>>();
+	transitionFunction = mesh->createHalfedgeAttribute<int>();
 }
 
 MorseFunction::~MorseFunction()
@@ -31,7 +32,7 @@ void MorseFunction::smoothScalarFunction(const Vertex* v) {
 void MorseFunction::extractWaveFunction() {
 	Eigen::MatrixXd LMatrix = laplacian(*mesh);
 	auto eigenresult = eigh(LMatrix);
-	Eigen::VectorXd eigenvector = eigenresult.second.col(mesh->getVertices().size()-40);
+	Eigen::VectorXd eigenvector = eigenresult.second.col(mesh->getVertices().size()-15);
 	for (auto& idVertex : mesh->getVertices()) {
 		const Vertex* vertex = &idVertex.second;
 		(*scalarFunction)[vertex->getMutable()] = eigenvector[idVertex.first];
@@ -294,6 +295,7 @@ void MorseFunction::removeMorseFunctionVertex(const Vertex* v) {
 		//tracelines.erase(std::remove_if(tracelines.begin(), tracelines.end(), [tr](const std::unique_ptr<Traceline>& tr1) {return tr1.get() != tr; }), tracelines.end());
 	}
 	(*vertexTracelines)[v->getMutable()].clear();
+	(*vertexType)[v->getMutable()] = REGULAR;
 }
 
 void MorseFunction::cleanUpMorseFunction() {
@@ -417,5 +419,56 @@ void MorseFunction::paintWaveFunction() {
 		if (v == 0) {
 			display->setHalfedgeMark(he->getMutable(), glm::vec4(0, 0, 0, 1), glm::vec4(0, 0, 0, 1));
 		}
+	}
+}
+
+MorseFunction::Traceline* MorseFunction::getTraceline(const Vertex* v1, const Vertex* v2) {
+	for (Traceline* tr : (*vertexTracelines)[v1]) {
+		if (tr->end1 == v2 || tr->end2 == v2) {
+			return tr;
+		}
+	}
+	return nullptr;
+}
+
+void MorseFunction::calculatePathTransitionFunction() {
+	
+}
+
+std::vector<MorseFunction::Traceline*> MorseFunction::nextTracelines(Traceline* tr, const Vertex* targetV) {
+	std::vector<MorseFunction::Traceline*> res;
+	for (Traceline* tr1 : (*vertexTracelines)[targetV]) {
+		if (tr == tr1) {
+			continue;
+		}
+		res.push_back(tr1);
+	}
+	return res;
+}
+
+void MorseFunction::calculatePatch() {
+	for (auto& idVertex : mesh->getVertices()) {
+		const Vertex* v = &idVertex.second;
+		if ((*vertexType)[v] != MAXIMUM || (*vertexType)[v] != MINIMUM) {
+			continue;
+		}
+		std::vector<Traceline*> trs;
+		std::vector<Traceline*> nextTrs;
+		std::vector<const Vertex*> nextTargets;
+		std::vector<const Vertex*> targets;
+		std::unordered_map<Traceline*, std::vector<Traceline*>> tempPatches;
+		trs = nextTracelines(nullptr, v);
+		for (Traceline* tr : trs) {
+			targets.push_back(tr->end1 == v ? tr->end2 : tr->end1);
+
+		}
+		for (int i = 0; i < trs.size(); i++) {
+			auto tempTrs = nextTracelines(trs[i], targets[i]);
+			nextTrs.insert(nextTrs.end(), tempTrs.begin(), tempTrs.end());
+			for (Traceline* tr : nextTrs) {
+				nextTargets.push_back(tr->end1 == v ? tr->end2 : tr->end1);
+			}
+		}
+
 	}
 }

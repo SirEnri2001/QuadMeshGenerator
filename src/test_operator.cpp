@@ -6,8 +6,7 @@
 #include <iostream>
 #include <exception>
 #include <filesystem>
-#include "msc/msc.h"
-#include "wave_quadrangulation/wave_quadrangulation.h"
+#include "gurobi/gurobi_optimize.h"
 
 namespace fs = std::filesystem;
 using namespace quadro;
@@ -20,7 +19,7 @@ void TestOperator::create() {
 }
 
 void TestOperator::proceed() {
-	MorseFunction mf(mesh);
+	GurobiSolver mf(mesh);
 	mf.setDisplay(display);
 	mf();
 }

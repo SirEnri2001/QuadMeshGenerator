@@ -10,7 +10,7 @@ namespace quadro {
 		Mesh* mMesh;
 		const std::unordered_map<ID, Vertex>& vertices;
 		// TODO: comment: 
-		Eigen::MatrixXd A;	// 
+		Eigen::MatrixXd A;
 		Eigen::MatrixX2d B;
 
 	public:
